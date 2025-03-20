@@ -22,6 +22,14 @@ const InfoPanel: React.FC<InfoPanelProps> = ({ isOpen, onClose, selectedCircle }
   
   const isRoleCircle = selectedCircle.isRole;
   
+  // Calculate sum of role FTEs to ensure consistency with the displayed total
+  const calculatedTotalFTE = selectedCircle.roles 
+    ? selectedCircle.roles.reduce((sum, role) => sum + role.value, 0) 
+    : selectedCircle.value;
+  
+  // Use calculatedTotalFTE for circle display, and the direct value for roles
+  const displayValue = isRoleCircle ? selectedCircle.value : calculatedTotalFTE;
+  
   return (
     <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <SheetContent className="overflow-y-auto">
@@ -38,7 +46,7 @@ const InfoPanel: React.FC<InfoPanelProps> = ({ isOpen, onClose, selectedCircle }
               {isRoleCircle ? 'FTE Required' : 'Total FTE'}
             </h3>
             <p className="text-lg font-semibold">
-              {selectedCircle.value.toFixed(2)}
+              {displayValue.toFixed(2)}
             </p>
             
             {isRoleCircle && selectedCircle.parent && (
