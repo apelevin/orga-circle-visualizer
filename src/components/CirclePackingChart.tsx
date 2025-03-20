@@ -1,9 +1,14 @@
+
 import React, { useEffect, useRef, useState } from 'react';
 import * as d3 from 'd3';
 import { HierarchyNode, CirclePackingNode } from '@/types';
 import { toast } from "sonner";
 import InfoPanel from './InfoPanel';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { 
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger
+} from "@/components/ui/hover-card";
 
 interface CirclePackingChartProps {
   data: HierarchyNode;
@@ -23,6 +28,14 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data }) => {
     roles?: { name: string; value: number }[];
     parent?: string;
     isRole?: boolean;
+  } | null>(null);
+
+  // State for tooltip positioning
+  const [tooltipData, setTooltipData] = useState<{
+    x: number;
+    y: number;
+    name: string;
+    isRole: boolean;
   } | null>(null);
 
   // Handle window resize
@@ -144,17 +157,14 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data }) => {
         }
       };
 
-      // Create a foreign object for each node to contain our React tooltip component
-      const tooltipGroups = g.selectAll('.tooltip-group')
+      // Draw circles for all nodes except the root
+      const circles = g.selectAll('circle')
         .data(root.descendants().slice(1))
         .enter()
-        .append('g')
-        .attr('class', 'tooltip-group')
-        .attr('transform', d => `translate(${d.x},${d.y})`);
-      
-      // Draw circles for all nodes except the root
-      tooltipGroups.append('circle')
+        .append('circle')
         .attr('class', 'circle-node')
+        .attr('cx', d => d.x)
+        .attr('cy', d => d.y)
         .attr('r', d => d.r)
         .style('fill', d => {
           if (d.depth === 1) {
@@ -173,34 +183,50 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data }) => {
         .style('cursor', 'pointer')
         .style('opacity', 0) // Start with opacity 0 for animation
         .on('click', handleCircleClick)
-        .on('mouseover', function() {
+        .on('mouseover', function(event, d) {
           d3.select(this)
             .transition()
             .duration(300)
-            .attr('r', d => d.r * 1.05);
+            .attr('r', d.r * 1.05);
+
+          // Set tooltip data for rendering
+          const name = d.data.name || 'Unnamed';
+          const isRole = d.depth === 2;
+          
+          // Create a temporary div to show the tooltip
+          const tooltipDiv = document.createElement('div');
+          tooltipDiv.className = 'tooltip-anchor absolute pointer-events-none';
+          tooltipDiv.style.left = `${d.x}px`;
+          tooltipDiv.style.top = `${d.y}px`;
+          tooltipDiv.setAttribute('data-name', name);
+          tooltipDiv.setAttribute('data-is-role', isRole.toString());
+          
+          if (svgRef.current) {
+            svgRef.current.parentElement?.appendChild(tooltipDiv);
+            
+            // Create a React element for the tooltip
+            setTooltipData({
+              x: d.x,
+              y: d.y,
+              name,
+              isRole
+            });
+          }
         })
         .on('mouseout', function() {
           d3.select(this)
             .transition()
             .duration(300)
             .attr('r', d => d.r);
+          
+          // Remove any temporary tooltip elements
+          document.querySelectorAll('.tooltip-anchor').forEach(el => el.remove());
+          setTooltipData(null);
         })
         .transition()
         .duration(500)
         .delay((d, i) => i * 10)
         .style('opacity', 1);
-      
-      // Add data-name and data-role attributes to circles for tooltips
-      tooltipGroups.each(function(d) {
-        const element = this;
-        // Store data for the tooltip
-        d3.select(element).attr('data-name', d.data.name || 'Unnamed');
-        d3.select(element).attr('data-depth', d.depth);
-        d3.select(element).attr('data-fte', d.value || 0);
-        if (d.depth === 2) {
-          d3.select(element).attr('data-parent', d.parent?.data.name || 'Unnamed');
-        }
-      });
       
       // Create zoom behavior
       const zoom = d3.zoom<SVGSVGElement, unknown>()
@@ -219,7 +245,7 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data }) => {
       svg.call(zoom.transform, initialTransform);
       
       // Double click on circles to zoom
-      tooltipGroups.on('dblclick', (event, d) => {
+      circles.on('dblclick', (event, d) => {
         event.stopPropagation();
         
         const scale = Math.min(8, dimensions.width / (2 * d.r));
@@ -240,8 +266,6 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data }) => {
           .call(zoom.transform, initialTransform);
       });
       
-      // We'll implement React tooltips in the render method below
-      
     } catch (err) {
       console.error("Error rendering visualization:", err);
       setError("Failed to render the organization chart");
@@ -261,124 +285,42 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data }) => {
     );
   }
 
-  // Custom tooltip component to display over SVG elements
-  const CircleTooltip = ({ element }: { element: Element }) => {
-    const name = element.getAttribute('data-name') || 'Unnamed';
-    const depth = parseInt(element.getAttribute('data-depth') || '0');
-    const isRole = depth === 2;
-    const parent = element.getAttribute('data-parent');
-    
-    return (
-      <TooltipContent side="top" className="text-xs font-medium py-1 px-2" sideOffset={5}>
-        {isRole ? (
-          <span>{name} <span className="text-muted-foreground">(Role)</span></span>
-        ) : (
-          <span>{name} <span className="text-muted-foreground">(Circle)</span></span>
-        )}
-      </TooltipContent>
-    );
-  };
-
   return (
-    <TooltipProvider>
-      <div className="w-full h-full flex-1 relative animate-fade-in" ref={containerRef}>
-        <svg 
-          ref={svgRef} 
-          width={dimensions.width} 
-          height={dimensions.height}
-          className="mx-auto bg-white/50 rounded-lg"
-        />
-        
-        <InfoPanel
-          isOpen={isPanelOpen}
-          onClose={() => setIsPanelOpen(false)}
-          selectedCircle={selectedCircle}
-        />
-        
-        <div className="text-center mt-6 text-sm text-muted-foreground">
-          <p>Hover over a circle to see its name. Click on a circle to see details. Double-click on a circle to zoom in. Double-click on the background to reset the view.</p>
-        </div>
-
-        {/* Add tooltips for all circles using mutation observer */}
-        <TooltipWrapper svgRef={svgRef} />
+    <div className="w-full h-full flex-1 relative animate-fade-in" ref={containerRef}>
+      <svg 
+        ref={svgRef} 
+        width={dimensions.width} 
+        height={dimensions.height}
+        className="mx-auto bg-white/50 rounded-lg"
+      />
+      
+      <InfoPanel
+        isOpen={isPanelOpen}
+        onClose={() => setIsPanelOpen(false)}
+        selectedCircle={selectedCircle}
+      />
+      
+      <div className="text-center mt-6 text-sm text-muted-foreground">
+        <p>Hover over a circle to see its name. Click on a circle to see details. Double-click on a circle to zoom in. Double-click on the background to reset the view.</p>
       </div>
-    </TooltipProvider>
-  );
-};
 
-// Component that adds tooltips to SVG elements using mutation observer
-const TooltipWrapper = ({ svgRef }: { svgRef: React.RefObject<SVGSVGElement> }) => {
-  useEffect(() => {
-    if (!svgRef.current) return;
-    
-    // Get all tooltip groups
-    const tooltipGroups = svgRef.current.querySelectorAll('.tooltip-group');
-    
-    tooltipGroups.forEach(group => {
-      // Create a React tooltip for each group
-      const tooltipRoot = document.createElement('div');
-      tooltipRoot.className = 'tooltip-root absolute';
-      tooltipRoot.style.pointerEvents = 'none';
-      document.body.appendChild(tooltipRoot);
-      
-      // Position the tooltip
-      const updateTooltipPosition = () => {
-        const rect = group.getBoundingClientRect();
-        tooltipRoot.style.left = `${rect.left + rect.width / 2}px`;
-        tooltipRoot.style.top = `${rect.top + rect.height / 2}px`;
-      };
-      
-      // Show tooltip on mouseover
-      group.addEventListener('mouseover', () => {
-        updateTooltipPosition();
-        const name = group.getAttribute('data-name');
-        const depth = group.getAttribute('data-depth');
-        
-        // Create tooltip element
-        const tooltip = document.createElement('div');
-        tooltip.className = 'bg-popover text-popover-foreground rounded-md px-3 py-1.5 text-xs font-medium shadow-md fixed -translate-x-1/2 -translate-y-full mt-1 z-50 animate-fade-in';
-        
-        // Add appropriate content
-        if (depth === '2') {
-          tooltip.innerHTML = `${name} <span class="text-muted-foreground">(Role)</span>`;
-        } else {
-          tooltip.innerHTML = `${name} <span class="text-muted-foreground">(Circle)</span>`;
-        }
-        
-        tooltipRoot.appendChild(tooltip);
-        
-        // Position tooltip above the circle
-        tooltip.style.marginTop = '-8px';
-      });
-      
-      // Hide tooltip on mouseout
-      group.addEventListener('mouseout', () => {
-        while (tooltipRoot.firstChild) {
-          tooltipRoot.removeChild(tooltipRoot.firstChild);
-        }
-      });
-      
-      // Update position on scroll and resize
-      window.addEventListener('scroll', updateTooltipPosition);
-      window.addEventListener('resize', updateTooltipPosition);
-      
-      // Clean up
-      return () => {
-        window.removeEventListener('scroll', updateTooltipPosition);
-        window.removeEventListener('resize', updateTooltipPosition);
-        document.body.removeChild(tooltipRoot);
-      };
-    });
-    
-    // Clean up function
-    return () => {
-      document.querySelectorAll('.tooltip-root').forEach(el => {
-        document.body.removeChild(el);
-      });
-    };
-  }, [svgRef]);
-  
-  return null;
+      {/* Simple fixed tooltip */}
+      {tooltipData && (
+        <div 
+          className="fixed z-50 pointer-events-none bg-popover text-popover-foreground rounded-md px-3 py-1.5 text-xs font-medium shadow-md transform -translate-x-1/2 -translate-y-full animate-fade-in"
+          style={{ 
+            left: `${tooltipData.x + containerRef.current?.getBoundingClientRect().left}px`, 
+            top: `${tooltipData.y + containerRef.current?.getBoundingClientRect().top - 10}px` 
+          }}
+        >
+          {tooltipData.name} 
+          <span className="text-muted-foreground ml-1">
+            ({tooltipData.isRole ? 'Role' : 'Circle'})
+          </span>
+        </div>
+      )}
+    </div>
+  );
 };
 
 export default CirclePackingChart;
