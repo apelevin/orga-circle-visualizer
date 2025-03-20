@@ -4,6 +4,7 @@ import * as d3 from 'd3';
 import { HierarchyNode, CirclePackingNode } from '@/types';
 import { toast } from "sonner";
 import InfoPanel from './InfoPanel';
+import { AlertTriangle } from 'lucide-react';
 
 interface CirclePackingChartProps {
   data: HierarchyNode;
@@ -34,6 +35,7 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data }) => {
     y: number;
     name: string;
     isRole: boolean;
+    fte: number;
   } | null>(null);
 
   // Handle window resize
@@ -222,12 +224,14 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data }) => {
           // Set tooltip data for rendering
           const name = d.data.name || 'Unnamed';
           const isRole = d.depth === 2;
+          const fte = d.value || 0;
           
           setTooltipData({
             x: d.x,
             y: d.y,
             name,
-            isRole
+            isRole,
+            fte
           });
         })
         .on('mouseout', function() {
@@ -241,6 +245,22 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data }) => {
         .transition()
         .duration(500)
         .delay((d, i) => i * 10)
+        .style('opacity', 1);
+      
+      // Add warning icons for circles with more than 10 FTE
+      g.selectAll('.warning-icon')
+        .data(root.descendants().filter(d => d.depth === 1 && (d.value || 0) > 10))
+        .enter()
+        .append('g')
+        .attr('class', 'warning-icon')
+        .attr('transform', d => `translate(${d.x + d.r * 0.6}, ${d.y - d.r * 0.6})`)
+        .append('path')
+        .attr('d', 'M23.432 17.925L14.408 3.366c-.933-1.517-3.142-1.517-4.076 0L1.308 17.925c-.933 1.519.235 3.423 2.038 3.423h18.047c1.803 0 2.971-1.904 2.038-3.423zM12.37 16.615a1.219 1.219 0 0 1-1.225 1.224 1.22 1.22 0 0 1-1.225-1.224v-.028c0-.675.55-1.197 1.225-1.197s1.225.522 1.225 1.197v.028zm0-3.824c0 .675-.55 1.224-1.225 1.224a1.22 1.22 0 0 1-1.225-1.224v-4.13c0-.675.55-1.225 1.225-1.225s1.225.55 1.225 1.224v4.131z')
+        .attr('transform', 'scale(0.8)')
+        .attr('fill', '#FF9800')
+        .style('opacity', 0)
+        .transition()
+        .duration(700)
         .style('opacity', 1);
       
       // Create zoom behavior
@@ -303,9 +323,13 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data }) => {
       
       <div className="text-center mt-6 text-sm text-muted-foreground">
         <p>Hover over a circle to see its name. Click on a circle to see details.</p>
+        <p className="text-xs mt-1 flex items-center justify-center gap-1">
+          <AlertTriangle className="h-3 w-3 text-amber-500" /> 
+          Circles with warning icons have more than 10 FTE
+        </p>
       </div>
 
-      {/* Simple fixed tooltip */}
+      {/* Tooltip with FTE information */}
       {tooltipData && (
         <div 
           className="fixed z-50 pointer-events-none bg-popover text-popover-foreground rounded-md px-3 py-1.5 text-xs font-medium shadow-md transform -translate-x-1/2 -translate-y-full animate-fade-in"
@@ -316,7 +340,10 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data }) => {
         >
           {tooltipData.name} 
           <span className="text-muted-foreground ml-1">
-            ({tooltipData.isRole ? 'Role' : 'Circle'})
+            ({tooltipData.isRole ? 'Role' : 'Circle'}) - {tooltipData.fte.toFixed(1)} FTE
+            {!tooltipData.isRole && tooltipData.fte > 10 && (
+              <span className="ml-1 text-amber-500">⚠️</span>
+            )}
           </span>
         </div>
       )}
