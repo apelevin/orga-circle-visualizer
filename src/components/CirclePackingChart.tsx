@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef, useState } from 'react';
 import * as d3 from 'd3';
 import { HierarchyNode, CirclePackingNode } from '@/types';
@@ -87,14 +88,20 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data }) => {
       const circleName = d.data.name || 'Unnamed Circle';
       const totalFTE = d.value || 0;
       
+      // Get the actual roles for this circle
       const roles = d.children?.map(role => ({
         name: role.data.name || 'Unnamed Role',
         value: role.value || 0
       })) || [];
       
+      // Double-check that the total matches the sum of roles
+      const calculatedTotal = roles.reduce((sum, role) => sum + role.value, 0);
+      
+      console.log(`Circle: ${circleName}, D3 Value: ${totalFTE}, Calculated Sum: ${calculatedTotal}`);
+      
       setSelectedCircle({
         name: circleName,
-        value: totalFTE,
+        value: calculatedTotal, // Use the calculated total to ensure accuracy
         roles: roles,
         isRole: false
       });
@@ -141,6 +148,16 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data }) => {
       const hierarchy = d3.hierarchy(data)
         .sum(d => d.value || 0)
         .sort((a, b) => (b.value || 0) - (a.value || 0));
+      
+      // Log the hierarchy values to debug
+      console.log("Hierarchy values:", {
+        root: hierarchy.value,
+        children: hierarchy.children?.map(c => ({ 
+          name: c.data.name, 
+          value: c.value,
+          childrenSum: c.children?.reduce((sum, child) => sum + (child.value || 0), 0)
+        }))
+      });
       
       const pack = d3.pack<HierarchyNode>()
         .size([dimensions.width, dimensions.height])

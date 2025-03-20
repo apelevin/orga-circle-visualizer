@@ -29,8 +29,15 @@ const InfoPanel: React.FC<InfoPanelProps> = ({
   
   const isRoleCircle = selectedCircle.isRole;
   
-  // Use the direct value from the circle/role instead of recalculating
+  // Use the direct value from the circle/role
   const displayValue = selectedCircle.value;
+  
+  // If it's a circle with roles, validate the total against the sum of roles
+  let calculatedTotal = displayValue;
+  if (!isRoleCircle && selectedCircle.roles && selectedCircle.roles.length > 0) {
+    // Double-check by summing up the individual role values
+    calculatedTotal = selectedCircle.roles.reduce((sum, role) => sum + role.value, 0);
+  }
 
   const handleCircleClick = (circleName: string) => {
     if (onCircleClick) {
@@ -54,7 +61,7 @@ const InfoPanel: React.FC<InfoPanelProps> = ({
               {isRoleCircle ? 'FTE Required' : 'Total FTE'}
             </h3>
             <p className="text-lg font-semibold">
-              {displayValue.toFixed(2)}
+              {calculatedTotal.toFixed(2)}
             </p>
             
             {isRoleCircle && selectedCircle.parent && (

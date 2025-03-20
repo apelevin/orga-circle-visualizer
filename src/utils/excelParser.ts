@@ -29,9 +29,10 @@ export const parseExcelFile = async (file: File): Promise<ExcelData[]> => {
 };
 
 export const processExcelData = (data: ExcelData[]): Circle[] => {
+  // Create a Map to store unique circles and their roles
   const circleMap = new Map<string, Circle>();
   
-  // First pass: create circles and add roles
+  // Process each row from the Excel data
   data.forEach((row) => {
     const circleName = row["Circle Name"];
     const role = row["Role"];
@@ -44,6 +45,7 @@ export const processExcelData = (data: ExcelData[]): Circle[] => {
       if (isNaN(fte)) fte = 0;
     }
     
+    // Create the circle if it doesn't exist yet
     if (!circleMap.has(circleName)) {
       circleMap.set(circleName, {
         name: circleName,
@@ -52,13 +54,14 @@ export const processExcelData = (data: ExcelData[]): Circle[] => {
       });
     }
     
+    // Add the role to the circle
     const circle = circleMap.get(circleName)!;
     circle.roles.push({ name: role, fte });
-    // Don't update totalFTE here as it will be calculated correctly in the next step
   });
   
-  // Second pass: calculate correct totalFTE by summing role FTEs
+  // Calculate the correct totalFTE for each circle
   for (const circle of circleMap.values()) {
+    // Sum up the FTE values from all roles in this circle
     circle.totalFTE = circle.roles.reduce((sum, role) => sum + role.fte, 0);
   }
   
@@ -70,7 +73,7 @@ export const transformToHierarchy = (circles: Circle[]): HierarchyNode => {
     name: "Organization",
     children: circles.map(circle => ({
       name: circle.name,
-      value: circle.totalFTE,
+      value: circle.totalFTE, // This is the correct totalFTE from all roles
       children: circle.roles.map(role => ({
         name: role.name,
         value: role.fte
