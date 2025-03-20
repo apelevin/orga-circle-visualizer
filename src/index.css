@@ -77,6 +77,14 @@
   }
 }
 
+/* Improve text wrapping for long role names */
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
 /* Custom styles for d3 visualization */
 .circle-node {
   transition: all 0.3s ease;
