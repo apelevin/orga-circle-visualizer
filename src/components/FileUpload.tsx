@@ -34,12 +34,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileProcessed, isLoading }) =
           return;
         }
         
-        // Check if required columns exist
-        const firstRow = excelData[0];
-        if (!('Circle Name' in firstRow) || !('Role' in firstRow) || !('FTE Required' in firstRow)) {
-          toast.error('Excel file must contain "Circle Name", "Role", and "FTE Required" columns');
-          return;
-        }
+        // We no longer check for specific column names, as we'll use positional columns
         
         const circles = processExcelData(excelData);
         console.log('Processed circles:', circles);
@@ -93,7 +88,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileProcessed, isLoading }) =
       </div>
       <p className="text-sm text-muted-foreground mt-3 flex items-center gap-1.5">
         <FileSpreadsheet className="h-3.5 w-3.5" />
-        <span>Excel files with Circle Name, Role, and FTE Required columns</span>
+        <span>Excel files with circle, role, and FTE data (first 3 columns)</span>
       </p>
     </div>
   );

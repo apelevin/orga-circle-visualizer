@@ -2,7 +2,7 @@
 import * as XLSX from 'xlsx';
 import { Circle, ExcelData, HierarchyNode } from '@/types';
 
-export const parseExcelFile = async (file: File): Promise<ExcelData[]> => {
+export const parseExcelFile = async (file: File): Promise<any[]> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     
@@ -12,7 +12,24 @@ export const parseExcelFile = async (file: File): Promise<ExcelData[]> => {
         const workbook = XLSX.read(data, { type: 'binary' });
         const sheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[sheetName];
-        const jsonData = XLSX.utils.sheet_to_json<ExcelData>(worksheet);
+        
+        // Get raw data as array instead of objects with named keys
+        const rawData = XLSX.utils.sheet_to_json<any[]>(worksheet, { header: 1 });
+        
+        // Skip empty rows
+        const nonEmptyRows = rawData.filter(row => row && row.length >= 3);
+        
+        if (nonEmptyRows.length <= 1) {
+          resolve([]);
+          return;
+        }
+        
+        // Skip header row and transform data to our desired format
+        const jsonData = nonEmptyRows.slice(1).map(row => ({
+          circleName: row[0]?.toString().trim() || 'Unknown Circle',
+          role: row[1]?.toString().trim() || 'Unknown Role',
+          fte: parseFloat(row[2]) || 0
+        }));
         
         resolve(jsonData);
       } catch (error) {
@@ -28,7 +45,7 @@ export const parseExcelFile = async (file: File): Promise<ExcelData[]> => {
   });
 };
 
-export const processExcelData = (data: ExcelData[]): Circle[] => {
+export const processExcelData = (data: any[]): Circle[] => {
   // Create a Map to store unique circles and their roles
   const circleMap = new Map<string, Circle>();
   
@@ -37,14 +54,14 @@ export const processExcelData = (data: ExcelData[]): Circle[] => {
   
   // Process each row from the Excel data
   data.forEach((row) => {
-    const circleName = row["Circle Name"];
-    const role = row["Role"];
+    const circleName = row.circleName;
+    const role = row.role;
     
     // Ensure FTE is a valid number
     let fte = 0;
-    if (row["FTE Required"] !== undefined && row["FTE Required"] !== null) {
+    if (row.fte !== undefined && row.fte !== null) {
       // Convert to number and ensure it's valid
-      fte = parseFloat(row["FTE Required"].toString());
+      fte = parseFloat(row.fte.toString());
       if (isNaN(fte)) fte = 0;
     }
     
