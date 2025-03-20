@@ -186,37 +186,9 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data }) => {
         .duration(500)
         .delay((d, i) => i * 10)
         .style('opacity', 1);
-
-      // Add labels for main circles only  
-      const circleLabels = root.descendants().filter(d => d.depth === 1);
-      console.log("Circle labels:", circleLabels.length);
       
-      g.selectAll('text')
-        .data(circleLabels)
-        .enter()
-        .append('text')
-        .attr('class', 'circle-label')
-        .attr('dy', '.3em')
-        .style('text-anchor', 'middle')
-        .style('font-size', d => {
-          // Safe calculation for font size that won't cause 'length' of undefined errors
-          const name = d.data.name || '';
-          const fontSize = Math.min(2 * d.r, (2 * d.r - 8) / (name.length || 1) * 10);
-          return `${Math.max(fontSize, 10)}px`; // Ensure minimum font size
-        })
-        .style('fill', 'rgba(0,0,0,0.75)')
-        .attr('opacity', 0) // Start with opacity 0 for animation
-        .attr('x', d => d.x)
-        .attr('y', d => d.y)
-        .text(d => {
-          // Truncate long names
-          const name = d.data.name || '';
-          return name.length > 20 ? name.substring(0, 18) + '...' : name;
-        })
-        .transition()
-        .delay((d, i) => 500 + i * 50)
-        .duration(500)
-        .attr('opacity', 1);
+      // Remove labels for circles
+      // The code that added labels has been removed
       
       // Create zoom behavior
       const zoom = d3.zoom<SVGSVGElement, unknown>()
