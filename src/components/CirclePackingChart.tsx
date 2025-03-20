@@ -253,8 +253,17 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data }) => {
         .delay((d, i) => i * 10)
         .style('opacity', 1);
       
+      // FIX: Update the filter to only show warning icon for circles with more than 10 FTE
+      // We need to filter based on the calculated FTE from children, not just d.value
       g.selectAll('.warning-icon')
-        .data(root.descendants().filter(d => d.depth === 1 && (d.value || 0) > 10))
+        .data(root.descendants().filter(d => {
+          if (d.depth === 1) {
+            // Calculate the actual sum from child nodes for accuracy
+            const actualFTE = d.children?.reduce((sum, child) => sum + (child.value || 0), 0) || 0;
+            return actualFTE > 10;
+          }
+          return false;
+        }))
         .enter()
         .append('g')
         .attr('class', 'warning-icon')
