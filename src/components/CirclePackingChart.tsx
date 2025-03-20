@@ -107,10 +107,27 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data }) => {
           const totalFTE = d.value?.toFixed(2) || '0';
           const roles = d.children?.length || 0;
           
+          // Get roles information for the tooltip
+          let rolesHtml = '';
+          if (d.children && d.children.length > 0) {
+            rolesHtml = '<div class="mt-2 border-t pt-2">';
+            rolesHtml += '<div class="font-medium mb-1 text-xs text-primary">Roles:</div>';
+            rolesHtml += '<ul class="text-xs space-y-1">';
+            
+            d.children.forEach(role => {
+              const roleName = role.data.name || 'Unnamed Role';
+              const roleFTE = role.value?.toFixed(2) || '0';
+              rolesHtml += `<li class="flex justify-between"><span>${roleName}</span><span class="font-medium">${roleFTE} FTE</span></li>`;
+            });
+            
+            rolesHtml += '</ul></div>';
+          }
+          
           content = `
             <div class="font-medium mb-1">${circleName}</div>
             <div class="text-sm">Total FTE: ${totalFTE}</div>
             <div class="text-sm">Roles: ${roles}</div>
+            ${rolesHtml}
           `;
         } else if (isRoleCircle) {
           const roleName = d.data.name || 'Unnamed Role';
@@ -127,11 +144,13 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data }) => {
         tooltip.html(content)
           .style('left', `${event.pageX + 15}px`)
           .style('top', `${event.pageY - 28}px`)
-          .classed('visible', true);
+          .classed('visible', true)
+          .classed('expanded', isMainCircle && d.children && d.children.length > 3);
       };
       
       const hideTooltip = () => {
-        tooltip.classed('visible', false);
+        tooltip.classed('visible', false)
+              .classed('expanded', false);
       };
 
       const moveTooltip = (event: MouseEvent) => {

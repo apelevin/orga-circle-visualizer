@@ -114,3 +114,30 @@
   opacity: 1;
   animation: scale-in 0.2s ease-out forwards;
 }
+
+.tooltip.expanded {
+  max-width: 340px;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.tooltip ul {
+  margin: 0;
+  padding-left: 0;
+  list-style: none;
+}
+
+.tooltip ul li {
+  padding: 2px 0;
+}
+
+@keyframes scale-in {
+  from {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
