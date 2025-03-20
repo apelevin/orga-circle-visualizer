@@ -221,7 +221,16 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data }) => {
 
           const name = d.data.name || 'Unnamed';
           const isRole = d.depth === 2;
-          const fte = d.value || 0;
+          
+          // Calculate correct FTE based on depth
+          let fte = 0;
+          if (isRole) {
+            // For roles, we can use the value directly
+            fte = d.value || 0;
+          } else if (d.depth === 1) {
+            // For circles, sum up the children's values to ensure accuracy
+            fte = d.children?.reduce((sum, child) => sum + (child.value || 0), 0) || 0;
+          }
           
           setTooltipData({
             x: d.x,
