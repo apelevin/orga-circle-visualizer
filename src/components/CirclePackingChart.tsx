@@ -169,12 +169,17 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data }) => {
       .attr('class', 'circle-label')
       .attr('dy', '.3em')
       .style('text-anchor', 'middle')
-      .style('font-size', d => Math.min(2 * d.r, (2 * d.r - 8) / d.data.name.length * 10) + 'px')
+      .style('font-size', d => {
+        // Safe calculation for font size that won't cause 'length' of undefined errors
+        const name = d.data.name || '';
+        const fontSize = Math.min(2 * d.r, (2 * d.r - 8) / (name.length || 1) * 10);
+        return `${fontSize}px`;
+      })
       .style('fill', 'rgba(0,0,0,0.75)')
       .attr('opacity', 0) // Start with opacity 0 for animation
       .attr('x', d => d.x)
       .attr('y', d => d.y)
-      .text(d => d.data.name)
+      .text(d => d.data.name || '')
       .transition()
       .delay((d, i) => 500 + i * 50)
       .duration(500)
@@ -228,7 +233,10 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data }) => {
         height={dimensions.height}
         className="mx-auto bg-white/50 rounded-lg"
       />
-      <div ref={tooltipRef} className="tooltip absolute pointer-events-none" />
+      <div 
+        ref={tooltipRef} 
+        className="absolute invisible bg-white p-2 rounded shadow-lg border border-border z-50 max-w-xs pointer-events-none tooltip"
+      />
     </div>
   );
 };
