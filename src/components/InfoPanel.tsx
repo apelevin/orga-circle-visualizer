@@ -1,9 +1,10 @@
 
 import React from 'react';
 import { Role } from '@/types';
-import { X } from 'lucide-react';
+import { X, ExternalLink } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { Separator } from '@/components/ui/separator';
+import { Button } from '@/components/ui/button';
 
 interface InfoPanelProps {
   isOpen: boolean;
@@ -15,9 +16,15 @@ interface InfoPanelProps {
     parent?: string;
     isRole?: boolean;
   } | null;
+  onCircleClick?: (circleName: string) => void;
 }
 
-const InfoPanel: React.FC<InfoPanelProps> = ({ isOpen, onClose, selectedCircle }) => {
+const InfoPanel: React.FC<InfoPanelProps> = ({ 
+  isOpen, 
+  onClose, 
+  selectedCircle,
+  onCircleClick 
+}) => {
   if (!selectedCircle) return null;
   
   const isRoleCircle = selectedCircle.isRole;
@@ -29,6 +36,12 @@ const InfoPanel: React.FC<InfoPanelProps> = ({ isOpen, onClose, selectedCircle }
   
   // Use calculatedTotalFTE for circle display, and the direct value for roles
   const displayValue = isRoleCircle ? selectedCircle.value : calculatedTotalFTE;
+
+  const handleCircleClick = (circleName: string) => {
+    if (onCircleClick) {
+      onCircleClick(circleName);
+    }
+  };
   
   return (
     <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
@@ -52,7 +65,14 @@ const InfoPanel: React.FC<InfoPanelProps> = ({ isOpen, onClose, selectedCircle }
             {isRoleCircle && selectedCircle.parent && (
               <div className="text-sm text-muted-foreground">
                 <span>Circle: </span>
-                <span className="font-medium">{selectedCircle.parent}</span>
+                <Button 
+                  variant="link" 
+                  className="p-0 h-auto font-medium text-sm inline-flex items-center"
+                  onClick={() => handleCircleClick(selectedCircle.parent!)}
+                >
+                  {selectedCircle.parent}
+                  <ExternalLink className="ml-1 w-3 h-3" />
+                </Button>
               </div>
             )}
           </div>
@@ -68,8 +88,16 @@ const InfoPanel: React.FC<InfoPanelProps> = ({ isOpen, onClose, selectedCircle }
               
               <div className="space-y-3">
                 {selectedCircle.roles.map((role, index) => (
-                  <div key={`${role.name}-${index}`} className="flex items-center justify-between">
-                    <span className="text-sm">{role.name}</span>
+                  <div key={`${role.name}-${index}`} className="flex items-center justify-between group">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="p-0 h-auto text-sm hover:bg-transparent hover:underline"
+                      onClick={() => handleCircleClick(role.name)}
+                    >
+                      {role.name}
+                      <ExternalLink className="ml-1 w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </Button>
                     <span className="text-sm font-medium">{role.value.toFixed(2)} FTE</span>
                   </div>
                 ))}

@@ -15,6 +15,9 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data }) => {
   const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
   const [error, setError] = useState<string | null>(null);
   
+  // Hierarchy data reference for finding nodes
+  const [hierarchyData, setHierarchyData] = useState<d3.HierarchyCircularNode<HierarchyNode> | null>(null);
+  
   // State for the info panel
   const [isPanelOpen, setIsPanelOpen] = useState(false);
   const [selectedCircle, setSelectedCircle] = useState<{
@@ -53,6 +56,74 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data }) => {
     };
   }, []);
 
+  // Function to handle clicking a circle or role name in the info panel
+  const handleCircleOrRoleClick = (nodeName: string) => {
+    if (!hierarchyData) return;
+    
+    // First try to find a circle with this name
+    const foundCircle = hierarchyData
+      .descendants()
+      .find(node => node.depth === 1 && node.data.name === nodeName);
+      
+    // If not found as a circle, try to find as a role
+    const foundRole = !foundCircle ? 
+      hierarchyData
+        .descendants()
+        .find(node => node.depth === 2 && node.data.name === nodeName) : 
+      null;
+      
+    if (foundCircle || foundRole) {
+      const targetNode = foundCircle || foundRole;
+      
+      // Update the selected circle data
+      if (targetNode) {
+        handleNodeClick(null, targetNode);
+      }
+    } else {
+      toast.error(`Could not find "${nodeName}" in the visualization`);
+    }
+  };
+
+  const handleNodeClick = (event: React.MouseEvent | null, d: d3.HierarchyCircularNode<HierarchyNode>) => {
+    if (event) event.stopPropagation();
+    
+    const isMainCircle = d.depth === 1;
+    const isRoleCircle = d.depth === 2;
+    
+    if (isMainCircle) {
+      const circleName = d.data.name || 'Unnamed Circle';
+      const totalFTE = d.value || 0;
+      
+      // Extract roles data
+      const roles = d.children?.map(role => ({
+        name: role.data.name || 'Unnamed Role',
+        value: role.value || 0
+      })) || [];
+      
+      setSelectedCircle({
+        name: circleName,
+        value: totalFTE,
+        roles: roles,
+        isRole: false
+      });
+      
+      setIsPanelOpen(true);
+    } else if (isRoleCircle) {
+      const roleName = d.data.name || 'Unnamed Role';
+      const fte = d.value || 0;
+      const circleName = d.parent?.data.name || 'Unnamed Circle';
+      
+      setSelectedCircle({
+        name: roleName,
+        value: fte,
+        parent: circleName,
+        isRole: true
+      });
+      
+      setIsPanelOpen(true);
+    }
+  };
+
   // Create and update visualization
   useEffect(() => {
     if (!svgRef.current || !data) {
@@ -89,6 +160,9 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data }) => {
       
       const root = pack(hierarchy);
       
+      // Store hierarchy data for later node lookups
+      setHierarchyData(root);
+      
       console.log("D3 hierarchy created:", {
         root: root,
         children: root.children?.length,
@@ -111,47 +185,6 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data }) => {
       // Create group for all circles
       const g = svg.append('g');
       
-      // Handle circle click
-      const handleCircleClick = (event: MouseEvent, d: d3.HierarchyCircularNode<HierarchyNode>) => {
-        event.stopPropagation();
-        
-        const isMainCircle = d.depth === 1;
-        const isRoleCircle = d.depth === 2;
-        
-        if (isMainCircle) {
-          const circleName = d.data.name || 'Unnamed Circle';
-          const totalFTE = d.value || 0;
-          
-          // Extract roles data
-          const roles = d.children?.map(role => ({
-            name: role.data.name || 'Unnamed Role',
-            value: role.value || 0
-          })) || [];
-          
-          setSelectedCircle({
-            name: circleName,
-            value: totalFTE,
-            roles: roles,
-            isRole: false
-          });
-          
-          setIsPanelOpen(true);
-        } else if (isRoleCircle) {
-          const roleName = d.data.name || 'Unnamed Role';
-          const fte = d.value || 0;
-          const circleName = d.parent?.data.name || 'Unnamed Circle';
-          
-          setSelectedCircle({
-            name: roleName,
-            value: fte,
-            parent: circleName,
-            isRole: true
-          });
-          
-          setIsPanelOpen(true);
-        }
-      };
-
       // Draw circles for all nodes except the root
       const circles = g.selectAll('circle')
         .data(root.descendants().slice(1))
@@ -177,7 +210,9 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data }) => {
         .style('stroke-width', 1)
         .style('cursor', 'pointer')
         .style('opacity', 0) // Start with opacity 0 for animation
-        .on('click', handleCircleClick)
+        .on('click', function(event, d) {
+          handleNodeClick(event, d);
+        })
         .on('mouseover', function(event, d) {
           d3.select(this)
             .transition()
@@ -231,9 +266,6 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data }) => {
           .call(zoom.transform, initialTransform);
       });
       
-      // We won't use dblclick on circles anymore as it was causing the error
-      // Instead, we'll rely on the click handler and the zoom controls
-      
     } catch (err) {
       console.error("Error rendering visualization:", err);
       setError("Failed to render the organization chart");
@@ -266,6 +298,7 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data }) => {
         isOpen={isPanelOpen}
         onClose={() => setIsPanelOpen(false)}
         selectedCircle={selectedCircle}
+        onCircleClick={handleCircleOrRoleClick}
       />
       
       <div className="text-center mt-6 text-sm text-muted-foreground">
