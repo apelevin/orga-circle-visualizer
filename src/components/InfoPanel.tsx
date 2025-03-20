@@ -29,13 +29,8 @@ const InfoPanel: React.FC<InfoPanelProps> = ({
   
   const isRoleCircle = selectedCircle.isRole;
   
-  // Calculate sum of role FTEs to ensure consistency with the displayed total
-  const calculatedTotalFTE = selectedCircle.roles 
-    ? selectedCircle.roles.reduce((sum, role) => sum + role.value, 0) 
-    : selectedCircle.value;
-  
-  // Use calculatedTotalFTE for circle display, and the direct value for roles
-  const displayValue = isRoleCircle ? selectedCircle.value : calculatedTotalFTE;
+  // Use the direct value from the circle/role instead of recalculating
+  const displayValue = selectedCircle.value;
 
   const handleCircleClick = (circleName: string) => {
     if (onCircleClick) {

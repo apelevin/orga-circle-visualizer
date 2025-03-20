@@ -35,7 +35,14 @@ export const processExcelData = (data: ExcelData[]): Circle[] => {
   data.forEach((row) => {
     const circleName = row["Circle Name"];
     const role = row["Role"];
-    const fte = parseFloat(row["FTE Required"]?.toString() || "0");
+    
+    // Ensure FTE is a valid number
+    let fte = 0;
+    if (row["FTE Required"] !== undefined && row["FTE Required"] !== null) {
+      // Convert to number and ensure it's valid
+      fte = parseFloat(row["FTE Required"].toString());
+      if (isNaN(fte)) fte = 0;
+    }
     
     if (!circleMap.has(circleName)) {
       circleMap.set(circleName, {
