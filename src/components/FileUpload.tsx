@@ -27,8 +27,31 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileProcessed, isLoading }) =
         const { parseExcelFile, processExcelData, transformToHierarchy } = await import('@/utils/excelParser');
         
         const excelData = await parseExcelFile(file);
+        console.log('Excel data parsed:', excelData);
+        
+        if (!excelData || excelData.length === 0) {
+          toast.error('No data found in the Excel file');
+          return;
+        }
+        
+        // Check if required columns exist
+        const firstRow = excelData[0];
+        if (!('Circle Name' in firstRow) || !('Role' in firstRow) || !('FTE Required' in firstRow)) {
+          toast.error('Excel file must contain "Circle Name", "Role", and "FTE Required" columns');
+          return;
+        }
+        
         const circles = processExcelData(excelData);
+        console.log('Processed circles:', circles);
+        
         const hierarchy = transformToHierarchy(circles);
+        console.log('Hierarchy data:', hierarchy);
+        
+        // Check if hierarchy has children
+        if (!hierarchy.children || hierarchy.children.length === 0) {
+          toast.error('No valid organizational data found in the Excel file');
+          return;
+        }
         
         onFileProcessed(hierarchy);
         toast.success('File processed successfully');

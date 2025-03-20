@@ -8,13 +8,23 @@ const EmptyState = () => {
       <div className="w-16 h-16 mb-6 flex items-center justify-center rounded-full bg-secondary">
         <Network className="h-8 w-8 text-muted-foreground" />
       </div>
-      <h3 className="text-xl font-medium mb-2">No visualization yet</h3>
-      <p className="text-muted-foreground text-center max-w-md mb-2">
+      <h3 className="text-xl font-medium mb-3">No visualization yet</h3>
+      <p className="text-muted-foreground text-center max-w-md mb-4">
         Upload an Excel file to visualize your organizational structure
       </p>
-      <p className="text-sm text-muted-foreground/70 text-center max-w-lg">
-        The file should contain columns for Circle Name, Role, and FTE Required
-      </p>
+      
+      <div className="text-sm text-muted-foreground/70 text-center max-w-lg px-4 py-3 bg-secondary/50 rounded-lg border border-border/30">
+        <h4 className="font-medium mb-2">Excel file requirements:</h4>
+        <ul className="list-disc list-inside text-left space-y-1">
+          <li><strong>Circle Name</strong>: Names of organizational circles</li>
+          <li><strong>Role</strong>: Roles within each circle</li>
+          <li><strong>FTE Required</strong>: Numeric values for full-time equivalents</li>
+        </ul>
+      </div>
+      
+      <div className="mt-6 text-xs text-muted-foreground">
+        Need a sample file? Create an Excel file with the columns listed above.
+      </div>
     </div>
   );
 };
