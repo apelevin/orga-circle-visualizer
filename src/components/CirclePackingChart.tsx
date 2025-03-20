@@ -4,11 +4,6 @@ import * as d3 from 'd3';
 import { HierarchyNode, CirclePackingNode } from '@/types';
 import { toast } from "sonner";
 import InfoPanel from './InfoPanel';
-import { 
-  HoverCard,
-  HoverCardContent,
-  HoverCardTrigger
-} from "@/components/ui/hover-card";
 
 interface CirclePackingChartProps {
   data: HierarchyNode;
@@ -193,25 +188,12 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data }) => {
           const name = d.data.name || 'Unnamed';
           const isRole = d.depth === 2;
           
-          // Create a temporary div to show the tooltip
-          const tooltipDiv = document.createElement('div');
-          tooltipDiv.className = 'tooltip-anchor absolute pointer-events-none';
-          tooltipDiv.style.left = `${d.x}px`;
-          tooltipDiv.style.top = `${d.y}px`;
-          tooltipDiv.setAttribute('data-name', name);
-          tooltipDiv.setAttribute('data-is-role', isRole.toString());
-          
-          if (svgRef.current) {
-            svgRef.current.parentElement?.appendChild(tooltipDiv);
-            
-            // Create a React element for the tooltip
-            setTooltipData({
-              x: d.x,
-              y: d.y,
-              name,
-              isRole
-            });
-          }
+          setTooltipData({
+            x: d.x,
+            y: d.y,
+            name,
+            isRole
+          });
         })
         .on('mouseout', function() {
           d3.select(this)
@@ -219,8 +201,6 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data }) => {
             .duration(300)
             .attr('r', d => d.r);
           
-          // Remove any temporary tooltip elements
-          document.querySelectorAll('.tooltip-anchor').forEach(el => el.remove());
           setTooltipData(null);
         })
         .transition()
@@ -244,27 +224,15 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data }) => {
       );
       svg.call(zoom.transform, initialTransform);
       
-      // Double click on circles to zoom
-      circles.on('dblclick', (event, d) => {
-        event.stopPropagation();
-        
-        const scale = Math.min(8, dimensions.width / (2 * d.r));
-        const transform = d3.zoomIdentity
-          .translate(dimensions.width / 2, dimensions.height / 2)
-          .scale(scale)
-          .translate(-d.x, -d.y);
-        
-        svg.transition()
-          .duration(750)
-          .call(zoom.transform, transform);
-      });
-      
-      // Double click on background to reset zoom
-      svg.on('dblclick', () => {
+      // Modified double-click handling to use proper D3 v7 event binding
+      svg.on('dblclick.zoom', () => {
         svg.transition()
           .duration(750)
           .call(zoom.transform, initialTransform);
       });
+      
+      // We won't use dblclick on circles anymore as it was causing the error
+      // Instead, we'll rely on the click handler and the zoom controls
       
     } catch (err) {
       console.error("Error rendering visualization:", err);
@@ -301,7 +269,7 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data }) => {
       />
       
       <div className="text-center mt-6 text-sm text-muted-foreground">
-        <p>Hover over a circle to see its name. Click on a circle to see details. Double-click on a circle to zoom in. Double-click on the background to reset the view.</p>
+        <p>Hover over a circle to see its name. Click on a circle to see details.</p>
       </div>
 
       {/* Simple fixed tooltip */}
