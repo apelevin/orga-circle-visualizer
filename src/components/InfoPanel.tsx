@@ -94,10 +94,10 @@ const InfoPanel: React.FC<InfoPanelProps> = ({
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="p-0 h-auto text-sm hover:bg-transparent hover:underline text-left whitespace-normal flex-1 mr-2"
+                      className="p-0 h-auto text-sm hover:bg-transparent hover:underline text-left whitespace-normal flex-1 mr-2 justify-start"
                       onClick={() => handleCircleClick(role.name)}
                     >
-                      <span className="line-clamp-2">{role.name}</span>
+                      <span className="line-clamp-2 text-left">{role.name}</span>
                       <ExternalLink className="ml-1 w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity inline-flex shrink-0" />
                     </Button>
                     <span className="text-sm font-medium whitespace-nowrap">{role.value.toFixed(2)} FTE</span>
