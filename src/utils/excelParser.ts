@@ -54,8 +54,13 @@ export const processExcelData = (data: ExcelData[]): Circle[] => {
     
     const circle = circleMap.get(circleName)!;
     circle.roles.push({ name: role, fte });
-    circle.totalFTE += fte;
+    // Don't update totalFTE here as it will be calculated correctly in the next step
   });
+  
+  // Second pass: calculate correct totalFTE by summing role FTEs
+  for (const circle of circleMap.values()) {
+    circle.totalFTE = circle.roles.reduce((sum, role) => sum + role.fte, 0);
+  }
   
   return Array.from(circleMap.values());
 };

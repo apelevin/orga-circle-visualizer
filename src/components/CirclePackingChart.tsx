@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useState } from 'react';
 import * as d3 from 'd3';
 import { HierarchyNode, CirclePackingNode } from '@/types';
@@ -16,10 +15,8 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data }) => {
   const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
   const [error, setError] = useState<string | null>(null);
   
-  // Hierarchy data reference for finding nodes
   const [hierarchyData, setHierarchyData] = useState<d3.HierarchyCircularNode<HierarchyNode> | null>(null);
   
-  // State for the info panel
   const [isPanelOpen, setIsPanelOpen] = useState(false);
   const [selectedCircle, setSelectedCircle] = useState<{
     name: string;
@@ -29,7 +26,6 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data }) => {
     isRole?: boolean;
   } | null>(null);
 
-  // State for tooltip positioning
   const [tooltipData, setTooltipData] = useState<{
     x: number;
     y: number;
@@ -38,7 +34,6 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data }) => {
     fte: number;
   } | null>(null);
 
-  // Handle window resize
   useEffect(() => {
     const handleResize = () => {
       if (containerRef.current) {
@@ -58,16 +53,13 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data }) => {
     };
   }, []);
 
-  // Function to handle clicking a circle or role name in the info panel
   const handleCircleOrRoleClick = (nodeName: string) => {
     if (!hierarchyData) return;
     
-    // First try to find a circle with this name
     const foundCircle = hierarchyData
       .descendants()
       .find(node => node.depth === 1 && node.data.name === nodeName);
       
-    // If not found as a circle, try to find as a role
     const foundRole = !foundCircle ? 
       hierarchyData
         .descendants()
@@ -77,7 +69,6 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data }) => {
     if (foundCircle || foundRole) {
       const targetNode = foundCircle || foundRole;
       
-      // Update the selected circle data
       if (targetNode) {
         handleNodeClick(null, targetNode);
       }
@@ -96,7 +87,6 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data }) => {
       const circleName = d.data.name || 'Unnamed Circle';
       const totalFTE = d.value || 0;
       
-      // Extract roles data
       const roles = d.children?.map(role => ({
         name: role.data.name || 'Unnamed Role',
         value: role.value || 0
@@ -126,7 +116,6 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data }) => {
     }
   };
 
-  // Create and update visualization
   useEffect(() => {
     if (!svgRef.current || !data) {
       console.error("Missing required refs or data", { 
@@ -137,7 +126,6 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data }) => {
       return;
     }
 
-    // Validate data structure
     if (!data.children || data.children.length === 0) {
       setError("No valid organization data found");
       return;
@@ -148,10 +136,8 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data }) => {
     try {
       const svg = d3.select(svgRef.current);
       
-      // Clear the SVG
       svg.selectAll('*').remove();
       
-      // Create hierarchy and pack layout
       const hierarchy = d3.hierarchy(data)
         .sum(d => d.value || 0)
         .sort((a, b) => (b.value || 0) - (a.value || 0));
@@ -162,7 +148,6 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data }) => {
       
       const root = pack(hierarchy);
       
-      // Store hierarchy data for later node lookups
       setHierarchyData(root);
       
       console.log("D3 hierarchy created:", {
@@ -172,22 +157,19 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data }) => {
         height: root.height
       });
       
-      // Define color scale for the circles
       const colorScale = d3.scaleOrdinal<string>()
         .domain(root.children?.map(d => d.data.name || '') || [])
         .range([
-          '#E5DEFF', // Soft Purple
-          '#D3E4FD', // Soft Blue
-          '#FDE1D3', // Soft Peach
-          '#FFDEE2', // Soft Pink
-          '#F2FCE2', // Soft Green
-          '#FEF7CD'  // Soft Yellow
+          '#E5DEFF',
+          '#D3E4FD',
+          '#FDE1D3',
+          '#FFDEE2',
+          '#F2FCE2',
+          '#FEF7CD'
         ]);
       
-      // Create group for all circles
       const g = svg.append('g');
       
-      // Draw circles for all nodes except the root
       const circles = g.selectAll('circle')
         .data(root.descendants().slice(1))
         .enter()
@@ -200,7 +182,6 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data }) => {
           if (d.depth === 1) {
             return colorScale(d.data.name || '');
           } else if (d.depth === 2) {
-            // Make role circles a darker shade of their parent
             const parentColor = d3.color(colorScale(d.parent?.data.name || '')) || d3.color('#E5DEFF')!;
             return parentColor.darker(0.2).toString();
           }
@@ -211,7 +192,7 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data }) => {
         })
         .style('stroke-width', 1)
         .style('cursor', 'pointer')
-        .style('opacity', 0) // Start with opacity 0 for animation
+        .style('opacity', 0)
         .on('click', function(event, d) {
           handleNodeClick(event, d);
         })
@@ -221,7 +202,6 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data }) => {
             .duration(300)
             .attr('r', d.r * 1.05);
 
-          // Set tooltip data for rendering
           const name = d.data.name || 'Unnamed';
           const isRole = d.depth === 2;
           const fte = d.value || 0;
@@ -247,7 +227,6 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data }) => {
         .delay((d, i) => i * 10)
         .style('opacity', 1);
       
-      // Add warning icons for circles with more than 10 FTE
       g.selectAll('.warning-icon')
         .data(root.descendants().filter(d => d.depth === 1 && (d.value || 0) > 10))
         .enter()
@@ -263,7 +242,6 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data }) => {
         .duration(700)
         .style('opacity', 1);
       
-      // Create zoom behavior
       const zoom = d3.zoom<SVGSVGElement, unknown>()
         .scaleExtent([0.5, 8])
         .on('zoom', (event) => {
@@ -272,14 +250,12 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data }) => {
       
       svg.call(zoom);
       
-      // Center the visualization
       const initialTransform = d3.zoomIdentity.translate(
         dimensions.width / 2 - root.x,
         dimensions.height / 2 - root.y
       );
       svg.call(zoom.transform, initialTransform);
       
-      // Modified double-click handling to use proper D3 v7 event binding
       svg.on('dblclick.zoom', () => {
         svg.transition()
           .duration(750)
@@ -329,7 +305,6 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data }) => {
         </p>
       </div>
 
-      {/* Tooltip with FTE information */}
       {tooltipData && (
         <div 
           className="fixed z-50 pointer-events-none bg-popover text-popover-foreground rounded-md px-3 py-1.5 text-xs font-medium shadow-md transform -translate-x-1/2 -translate-y-full animate-fade-in"
