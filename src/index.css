@@ -137,6 +137,23 @@
 
 .tooltip ul li {
   padding: 2px 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.tooltip ul li .role-name {
+  text-align: left;
+  margin-right: 12px;
+  flex: 1;
+  word-break: break-word;
+  max-width: 70%;
+}
+
+.tooltip ul li .role-value {
+  text-align: right;
+  white-space: nowrap;
+  font-weight: 500;
 }
 
 @keyframes scale-in {
