@@ -32,6 +32,9 @@ export const processExcelData = (data: ExcelData[]): Circle[] => {
   // Create a Map to store unique circles and their roles
   const circleMap = new Map<string, Circle>();
   
+  // Create a Map to track which roles appear in which circles
+  const roleToCirclesMap = new Map<string, string[]>();
+  
   // Process each row from the Excel data
   data.forEach((row) => {
     const circleName = row["Circle Name"];
@@ -57,6 +60,15 @@ export const processExcelData = (data: ExcelData[]): Circle[] => {
     // Add the role to the circle
     const circle = circleMap.get(circleName)!;
     circle.roles.push({ name: role, fte });
+    
+    // Track which circles a role appears in
+    if (roleToCirclesMap.has(role)) {
+      if (!roleToCirclesMap.get(role)!.includes(circleName)) {
+        roleToCirclesMap.get(role)!.push(circleName);
+      }
+    } else {
+      roleToCirclesMap.set(role, [circleName]);
+    }
   });
   
   // Calculate the correct totalFTE for each circle

@@ -18,12 +18,16 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data }) => {
   
   const [hierarchyData, setHierarchyData] = useState<d3.HierarchyCircularNode<HierarchyNode> | null>(null);
   
+  // Map to track which roles are in which circles
+  const [roleToCirclesMap, setRoleToCirclesMap] = useState<Map<string, string[]>>(new Map());
+  
   const [isPanelOpen, setIsPanelOpen] = useState(false);
   const [selectedCircle, setSelectedCircle] = useState<{
     name: string;
     value: number;
     roles?: { name: string; value: number }[];
     parent?: string;
+    parentCircles?: string[];
     isRole?: boolean;
   } | null>(null);
 
@@ -53,6 +57,33 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data }) => {
       window.removeEventListener('resize', handleResize);
     };
   }, []);
+
+  // Build a map of roles to their parent circles
+  useEffect(() => {
+    if (!data || !data.children) return;
+    
+    const newRoleToCirclesMap = new Map<string, string[]>();
+    
+    // Iterate through all circles
+    data.children.forEach(circle => {
+      if (!circle.children) return;
+      
+      // For each role in the circle
+      circle.children.forEach(role => {
+        const roleName = role.name;
+        const circleName = circle.name;
+        
+        // Add to the map
+        if (newRoleToCirclesMap.has(roleName)) {
+          newRoleToCirclesMap.get(roleName)!.push(circleName);
+        } else {
+          newRoleToCirclesMap.set(roleName, [circleName]);
+        }
+      });
+    });
+    
+    setRoleToCirclesMap(newRoleToCirclesMap);
+  }, [data]);
 
   const handleCircleOrRoleClick = (nodeName: string) => {
     if (!hierarchyData) return;
@@ -112,10 +143,14 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data }) => {
       const fte = d.value || 0;
       const circleName = d.parent?.data.name || 'Unnamed Circle';
       
+      // Get all circles this role appears in
+      const parentCircles = roleToCirclesMap.get(roleName) || [circleName];
+      
       setSelectedCircle({
         name: roleName,
         value: fte,
         parent: circleName,
+        parentCircles: parentCircles,
         isRole: true
       });
       

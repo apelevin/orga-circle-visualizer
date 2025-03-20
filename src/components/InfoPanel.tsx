@@ -1,10 +1,11 @@
 
 import React from 'react';
 import { Role } from '@/types';
-import { X, ExternalLink } from 'lucide-react';
+import { X, ExternalLink, Users } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 
 interface InfoPanelProps {
   isOpen: boolean;
@@ -14,6 +15,7 @@ interface InfoPanelProps {
     value: number;
     roles?: { name: string; value: number }[];
     parent?: string;
+    parentCircles?: string[];
     isRole?: boolean;
   } | null;
   onCircleClick?: (circleName: string) => void;
@@ -75,6 +77,30 @@ const InfoPanel: React.FC<InfoPanelProps> = ({
                   {selectedCircle.parent}
                   <ExternalLink className="ml-1 w-3 h-3" />
                 </Button>
+              </div>
+            )}
+            
+            {/* Show multiple parent circles if available */}
+            {isRoleCircle && selectedCircle.parentCircles && selectedCircle.parentCircles.length > 1 && (
+              <div className="mt-4 space-y-2">
+                <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                  <Users className="w-3.5 h-3.5" />
+                  <span>Also appears in:</span>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {selectedCircle.parentCircles
+                    .filter(circle => circle !== selectedCircle.parent)
+                    .map((circle, index) => (
+                      <Badge 
+                        key={`${circle}-${index}`} 
+                        variant="outline"
+                        className="cursor-pointer hover:bg-accent transition-colors"
+                        onClick={() => handleCircleClick(circle)}
+                      >
+                        {circle}
+                      </Badge>
+                    ))}
+                </div>
               </div>
             )}
           </div>
