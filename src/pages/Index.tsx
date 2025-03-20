@@ -41,9 +41,6 @@ const Index = () => {
           ) : organizationData ? (
             <div className="h-[70vh] w-full transition-all duration-500 ease-in-out animate-scale-in">
               <CirclePackingChart data={organizationData} />
-              <div className="text-center mt-6 text-sm text-muted-foreground">
-                <p>Double-click on a circle to zoom in. Double-click on the background to reset the view.</p>
-              </div>
             </div>
           ) : (
             <div className="max-w-3xl mx-auto mt-4 animate-slide-up">

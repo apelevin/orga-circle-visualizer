@@ -3,6 +3,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import * as d3 from 'd3';
 import { HierarchyNode, CirclePackingNode } from '@/types';
 import { toast } from "sonner";
+import InfoPanel from './InfoPanel';
 
 interface CirclePackingChartProps {
   data: HierarchyNode;
@@ -10,10 +11,19 @@ interface CirclePackingChartProps {
 
 const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data }) => {
   const svgRef = useRef<SVGSVGElement>(null);
-  const tooltipRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
   const [error, setError] = useState<string | null>(null);
+  
+  // State for the info panel
+  const [isPanelOpen, setIsPanelOpen] = useState(false);
+  const [selectedCircle, setSelectedCircle] = useState<{
+    name: string;
+    value: number;
+    roles?: { name: string; value: number }[];
+    parent?: string;
+    isRole?: boolean;
+  } | null>(null);
 
   // Handle window resize
   useEffect(() => {
@@ -37,11 +47,10 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data }) => {
 
   // Create and update visualization
   useEffect(() => {
-    if (!svgRef.current || !data || !tooltipRef.current) {
+    if (!svgRef.current || !data) {
       console.error("Missing required refs or data", { 
         svgRef: !!svgRef.current, 
-        data: !!data, 
-        tooltipRef: !!tooltipRef.current,
+        data: !!data,
         dataChildren: data?.children?.length
       });
       return;
@@ -57,7 +66,6 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data }) => {
     
     try {
       const svg = d3.select(svgRef.current);
-      const tooltip = d3.select(tooltipRef.current);
       
       // Clear the SVG
       svg.selectAll('*').remove();
@@ -95,68 +103,45 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data }) => {
       // Create group for all circles
       const g = svg.append('g');
       
-      // Tooltip functions
-      const showTooltip = (event: MouseEvent, d: d3.HierarchyCircularNode<HierarchyNode>) => {
+      // Handle circle click
+      const handleCircleClick = (event: MouseEvent, d: d3.HierarchyCircularNode<HierarchyNode>) => {
+        event.stopPropagation();
+        
         const isMainCircle = d.depth === 1;
         const isRoleCircle = d.depth === 2;
         
-        let content = '';
-        
         if (isMainCircle) {
           const circleName = d.data.name || 'Unnamed Circle';
-          const totalFTE = d.value?.toFixed(2) || '0';
-          const roles = d.children?.length || 0;
+          const totalFTE = d.value || 0;
           
-          // Get roles information for the tooltip
-          let rolesHtml = '';
-          if (d.children && d.children.length > 0) {
-            rolesHtml = '<div class="mt-2 border-t pt-2">';
-            rolesHtml += '<div class="font-medium mb-1 text-xs text-primary">Roles:</div>';
-            rolesHtml += '<ul class="text-xs space-y-1">';
-            
-            d.children.forEach(role => {
-              const roleName = role.data.name || 'Unnamed Role';
-              const roleFTE = role.value?.toFixed(2) || '0';
-              rolesHtml += `<li class="flex justify-between"><span>${roleName}</span><span class="font-medium">${roleFTE} FTE</span></li>`;
-            });
-            
-            rolesHtml += '</ul></div>';
-          }
+          // Extract roles data
+          const roles = d.children?.map(role => ({
+            name: role.data.name || 'Unnamed Role',
+            value: role.value || 0
+          })) || [];
           
-          content = `
-            <div class="font-medium mb-1">${circleName}</div>
-            <div class="text-sm">Total FTE: ${totalFTE}</div>
-            <div class="text-sm">Roles: ${roles}</div>
-            ${rolesHtml}
-          `;
+          setSelectedCircle({
+            name: circleName,
+            value: totalFTE,
+            roles: roles,
+            isRole: false
+          });
+          
+          setIsPanelOpen(true);
         } else if (isRoleCircle) {
           const roleName = d.data.name || 'Unnamed Role';
-          const fte = d.value?.toFixed(2) || '0';
+          const fte = d.value || 0;
           const circleName = d.parent?.data.name || 'Unnamed Circle';
           
-          content = `
-            <div class="font-medium mb-1">${roleName}</div>
-            <div class="text-sm">FTE: ${fte}</div>
-            <div class="text-sm">Circle: ${circleName}</div>
-          `;
+          setSelectedCircle({
+            name: roleName,
+            value: fte,
+            parent: circleName,
+            isRole: true
+          });
+          
+          setIsPanelOpen(true);
         }
-        
-        tooltip.html(content)
-          .style('left', `${event.pageX + 15}px`)
-          .style('top', `${event.pageY - 28}px`)
-          .classed('visible', true)
-          .classed('expanded', isMainCircle && d.children && d.children.length > 3);
-      };
-      
-      const hideTooltip = () => {
-        tooltip.classed('visible', false)
-              .classed('expanded', false);
-      };
-
-      const moveTooltip = (event: MouseEvent) => {
-        tooltip
-          .style('left', `${event.pageX + 15}px`)
-          .style('top', `${event.pageY - 28}px`);
       };
       
       // Draw circles for all nodes except the root
@@ -184,16 +169,14 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data }) => {
         .style('stroke-width', 1)
         .style('cursor', 'pointer')
         .style('opacity', 0) // Start with opacity 0 for animation
-        .on('mouseover', function(event, d) {
-          showTooltip(event, d);
+        .on('click', handleCircleClick)
+        .on('mouseover', function() {
           d3.select(this)
             .transition()
             .duration(300)
             .attr('r', d => d.r * 1.05);
         })
-        .on('mousemove', moveTooltip)
-        .on('mouseout', function(event, d) {
-          hideTooltip();
+        .on('mouseout', function() {
           d3.select(this)
             .transition()
             .duration(300)
@@ -205,9 +188,6 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data }) => {
         .duration(500)
         .delay((d, i) => i * 10)
         .style('opacity', 1);
-      
-      // Remove labels for circles
-      // The code that added labels has been removed
       
       // Create zoom behavior
       const zoom = d3.zoom<SVGSVGElement, unknown>()
@@ -274,12 +254,15 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data }) => {
         height={dimensions.height}
         className="mx-auto bg-white/50 rounded-lg"
       />
-      <div 
-        ref={tooltipRef} 
-        className="absolute invisible bg-white p-2 rounded shadow-lg border border-border z-50 max-w-xs pointer-events-none tooltip"
+      
+      <InfoPanel
+        isOpen={isPanelOpen}
+        onClose={() => setIsPanelOpen(false)}
+        selectedCircle={selectedCircle}
       />
+      
       <div className="text-center mt-6 text-sm text-muted-foreground">
-        <p>Double-click on a circle to zoom in. Double-click on the background to reset the view.</p>
+        <p>Click on a circle to see details. Double-click on a circle to zoom in. Double-click on the background to reset the view.</p>
       </div>
     </div>
   );
