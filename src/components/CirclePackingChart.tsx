@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useState } from 'react';
 import { HierarchyNode, PeopleData } from '@/types';
 import InfoPanel from './info-panel/InfoPanel';
@@ -10,6 +9,7 @@ import ChartError from './chart/ChartError';
 import ChartLegend from './chart/ChartLegend';
 import * as d3 from 'd3';
 import { SelectedCircle } from './info-panel/types';
+import { TooltipData } from '@/hooks/useCircleTooltip';
 
 interface CirclePackingChartProps {
   data: HierarchyNode;
@@ -27,14 +27,7 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data, peopleDat
   const [isPersonPanelOpen, setIsPersonPanelOpen] = useState(false);
   const [selectedPerson, setSelectedPerson] = useState<string | null>(null);
 
-  const [tooltipData, setTooltipData] = useState<{
-    x: number;
-    y: number;
-    name: string;
-    isRole: boolean;
-    fte: number;
-    type?: string;
-  } | null>(null);
+  const [tooltipData, setTooltipData] = useState<TooltipData | null>(null);
 
   useEffect(() => {
     const handleResize = () => {
@@ -137,7 +130,6 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data, peopleDat
         style={{ maxHeight: '85vh' }}
       />
       
-      {/* Add debug info */}
       <div className="absolute top-0 right-0 bg-white/80 p-2 text-xs rounded-bl-lg z-10 text-gray-500">
         SVG Dimensions: {dimensions.width} x {dimensions.height}
       </div>
