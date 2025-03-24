@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import CirclePackingChart from '@/components/CirclePackingChart';
 import StructureProblems from '@/components/StructureProblems';
 import OrgDashboard from '@/components/OrgDashboard';
+import VisualizationTabs from '@/components/VisualizationTabs';
 
 interface OrganizationVisualizationProps {
   organizationData: HierarchyNode | null;
