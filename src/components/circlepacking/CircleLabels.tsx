@@ -41,6 +41,7 @@ const CircleLabels: React.FC<CircleLabelsProps> = ({ root, groupElement }) => {
         .style('pointer-events', 'none')
         .style('font-weight', '500')
         .style('font-family', 'Inter, system-ui, sans-serif')
+        .style('z-index', 10) // Ensure higher z-index (though in SVG this alone won't work)
         .text(d => d.data.name || '');
       
       // Handle text wrapping for long labels
@@ -93,6 +94,11 @@ const CircleLabels: React.FC<CircleLabelsProps> = ({ root, groupElement }) => {
             .attr('y', y)
             .text(words[0]);
         }
+      });
+      
+      // Move the labels to the front to ensure they appear on top of circles
+      labels.each(function() {
+        this.parentNode?.appendChild(this);
       });
       
       labelsRef.current = labels;

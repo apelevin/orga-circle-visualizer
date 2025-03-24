@@ -52,7 +52,9 @@ const CircleNodes: React.FC<CircleNodesProps> = ({
       descendants
         .filter(d => d.depth === 1)
         .forEach(d => {
-          types.add(d.data.type || 'Undefined');
+          const type = d.data.type || 'Undefined';
+          types.add(type);
+          console.log(`Circle: ${d.data.name}, Type: ${type}`);
         });
       console.log("Circle types in data:", Array.from(types));
       
@@ -66,8 +68,8 @@ const CircleNodes: React.FC<CircleNodesProps> = ({
         .attr('cy', d => d.y)
         .attr('r', d => Math.max(d.r, 3)) // Ensure circles are visible even if small
         .style('fill', d => {
-          // Get color based on node depth and type
           const color = getNodeColor(d, colorScale);
+          console.log(`Setting color for ${d.data.name} (type: ${d.data.type || 'unknown'}): ${color}`);
           return color;
         })
         .style('stroke', d => d.depth === 1 ? 'rgba(255,255,255,0.7)' : 'none')

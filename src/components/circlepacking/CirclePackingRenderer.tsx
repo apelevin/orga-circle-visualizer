@@ -80,15 +80,17 @@ const CirclePackingRenderer: React.FC<CirclePackingRendererProps> = ({
       
       // Verify the color scale works by testing it
       try {
-        const testType = uniqueTypes[0] || 'Default';
-        const testColor = newColorScale(testType);
-        console.log(`Test color for "${testType}": ${testColor}`);
-        
-        // Test each type
-        uniqueTypes.forEach(type => {
-          const color = newColorScale(type);
-          console.log(`Type "${type}" maps to color: ${color}`);
-        });
+        if (uniqueTypes.length > 0) {
+          const testType = uniqueTypes[0];
+          const testColor = newColorScale(testType);
+          console.log(`Test color for "${testType}": ${testColor}`);
+          
+          // Test each type
+          uniqueTypes.forEach(type => {
+            const color = newColorScale(type);
+            console.log(`Type "${type}" maps to color: ${color}`);
+          });
+        }
         
         // If we got here, the color scale is valid
         setColorScale(newColorScale);

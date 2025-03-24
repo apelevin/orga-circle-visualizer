@@ -66,6 +66,7 @@ export const getNodeColor = (
     } else if (d.depth === 1) {
       // Use the color based on the circle's type
       const type = d.data.type || 'Undefined';
+      console.log(`Getting color for ${d.data.name} (type: ${type})`);
       
       // Manual color assignments to match the reference image
       if (type.includes('KAM') || type.includes('Logos') || type.includes('Experts')) {
@@ -87,12 +88,19 @@ export const getNodeColor = (
       // For roles, slightly darker version of parent color
       const parentType = d.parent?.data.type || 'Undefined';
       const baseColor = colorScale(parentType);
+      console.log(`Role ${d.data.name} (parent type: ${parentType}) -> base color: ${baseColor}`);
+      
+      if (!baseColor) {
+        console.error(`No base color found for parent type: ${parentType}`);
+        return '#A4B9D0'; // Fallback color
+      }
+      
       const parentColor = d3.color(baseColor) || d3.color('#B0C4DE')!;
       return parentColor.darker(0.2).toString();
     }
     return '#FFFFFF'; // Default fallback
   } catch (error) {
-    console.error("Error in getNodeColor:", error);
+    console.error("Error in getNodeColor:", error, "for node:", d.data.name);
     // Fallback colors
     return d.depth === 0 ? '#FFFFFF' : 
            d.depth === 1 ? '#B0C4DE' : 

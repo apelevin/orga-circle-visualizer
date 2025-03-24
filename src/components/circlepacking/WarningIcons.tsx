@@ -51,6 +51,11 @@ const WarningIcons: React.FC<WarningIconsProps> = ({ root, groupElement }) => {
         .attr('stroke-width', '1px')
         .style('opacity', 0.9);
       
+      // Ensure warning icons are at the top layer
+      icons.each(function() {
+        this.parentNode?.appendChild(this);
+      });
+      
       // Store the selection for cleanup
       iconsRef.current = icons;
       
