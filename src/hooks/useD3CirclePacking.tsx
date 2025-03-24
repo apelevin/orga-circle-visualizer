@@ -81,8 +81,13 @@ export const useD3CirclePacking = ({
         height: root.height
       });
 
-      // Create color scale
-      const types = Array.from(new Set(root.children?.map(d => d.data.type || 'The others') || []));
+      // Create color scale with proper type assertion
+      const types = Array.from(
+        new Set(
+          root.children?.map(d => d.data.type || 'The others') || []
+        )
+      ) as string[];
+      
       const colorScale = createColorScale(types);
       
       const g = svg.append('g');
