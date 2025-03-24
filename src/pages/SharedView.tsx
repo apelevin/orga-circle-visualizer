@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { HierarchyNode, PeopleData } from "@/types";
@@ -7,6 +8,7 @@ import SearchInput from "@/components/SearchInput";
 import InfoPanel from "@/components/InfoPanel";
 import PersonInfoPanel from "@/components/PersonInfoPanel";
 import StructureProblems from "@/components/StructureProblems";
+import Header from "@/components/Header";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CircleDot, CircleAlert } from "lucide-react";
@@ -137,6 +139,11 @@ const SharedView = () => {
           </div>
         </div>
       </header>
+      
+      <Header 
+        organizationData={organizationData}
+        peopleData={peopleData}
+      />
       
       <main className="flex-1 container mx-auto px-4 py-6">
         <div className="mb-4">
