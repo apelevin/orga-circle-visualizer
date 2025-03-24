@@ -1,10 +1,23 @@
+
 import React, { useEffect, useRef, useState } from 'react';
 import * as d3 from 'd3';
 import { HierarchyNode, CirclePackingNode, PeopleData } from '@/types';
 import { toast } from "sonner";
+import { AlertTriangle } from 'lucide-react';
 import InfoPanel from './InfoPanel';
 import PersonInfoPanel from './PersonInfoPanel';
-import { AlertTriangle } from 'lucide-react';
+import ChartTooltip from './ChartTooltip';
+import ChartLegend from './ChartLegend';
+import ChartNodes from './ChartNodes';
+import WarningIcons from './WarningIcons';
+import { useRoleToCirclesMap } from '@/hooks/useRoleToCirclesMap';
+import { useChartDimensions } from '@/hooks/useChartDimensions';
+import { 
+  getColorScale, 
+  createHierarchy, 
+  createPack, 
+  getUniqueCircleTypes 
+} from '@/utils/chartUtils';
 
 interface CirclePackingChartProps {
   data: HierarchyNode;
@@ -14,12 +27,12 @@ interface CirclePackingChartProps {
 const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data, peopleData }) => {
   const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const [dimensions, setDimensions] = useState({ width: 1000, height: 800 });
+  const dimensions = useChartDimensions(containerRef);
   const [error, setError] = useState<string | null>(null);
   
   const [hierarchyData, setHierarchyData] = useState<d3.HierarchyCircularNode<HierarchyNode> | null>(null);
   
-  const [roleToCirclesMap, setRoleToCirclesMap] = useState<Map<string, string[]>>(new Map());
+  const roleToCirclesMap = useRoleToCirclesMap(data);
   
   const [isPanelOpen, setIsPanelOpen] = useState(false);
   const [selectedCircle, setSelectedCircle] = useState<{
@@ -43,69 +56,6 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data, peopleDat
     fte: number;
     type?: string;
   } | null>(null);
-
-  const getColorScale = (types: string[]) => {
-    const colorPalette = [
-      '#E5DEFF', // Soft Purple
-      '#D3E4FD', // Soft Blue
-      '#FDE1D3', // Soft Peach
-      '#FFDEE2', // Soft Pink
-      '#F2FCE2', // Soft Green
-      '#FEF7CD', // Soft Yellow
-      '#FEC6A1', // Soft Orange
-      '#F1F0FB', // Soft Gray
-      '#8B5CF6', // Vivid Purple
-      '#D946EF', // Magenta Pink
-      '#F97316', // Bright Orange
-      '#0EA5E9'  // Ocean Blue
-    ];
-
-    return d3.scaleOrdinal<string>()
-      .domain(types)
-      .range(colorPalette);
-  };
-
-  useEffect(() => {
-    const handleResize = () => {
-      if (containerRef.current) {
-        const { width, height } = containerRef.current.getBoundingClientRect();
-        setDimensions({
-          width: Math.max(width, 400),
-          height: Math.max(height * 0.95, 600)
-        });
-      }
-    };
-
-    handleResize();
-    window.addEventListener('resize', handleResize);
-    
-    return () => {
-      window.removeEventListener('resize', handleResize);
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!data || !data.children) return;
-    
-    const newRoleToCirclesMap = new Map<string, string[]>();
-    
-    data.children.forEach(circle => {
-      if (!circle.children) return;
-      
-      circle.children.forEach(role => {
-        const roleName = role.name;
-        const circleName = circle.name;
-        
-        if (newRoleToCirclesMap.has(roleName)) {
-          newRoleToCirclesMap.get(roleName)!.push(circleName);
-        } else {
-          newRoleToCirclesMap.set(roleName, [circleName]);
-        }
-      });
-    });
-    
-    setRoleToCirclesMap(newRoleToCirclesMap);
-  }, [data]);
 
   const handleCircleOrRoleClick = (nodeName: string) => {
     if (!hierarchyData) return;
@@ -134,6 +84,36 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data, peopleDat
   const handlePersonClick = (personName: string) => {
     setSelectedPerson(personName);
     setIsPersonPanelOpen(true);
+  };
+
+  const handleNodeHover = (d: d3.HierarchyCircularNode<HierarchyNode> | null) => {
+    if (!d) {
+      setTooltipData(null);
+      return;
+    }
+
+    const name = d.data.name || 'Unnamed';
+    const isRole = d.depth === 2;
+    const type = isRole ? 
+      (d.parent?.data.type || 'Undefined') : 
+      (d.data.type || 'Undefined');
+    
+    let fte = 0;
+    if (isRole) {
+      fte = d.value || 0;
+    } else if (d.depth === 1) {
+      const actualFTE = d.children?.reduce((sum, child) => sum + (child.value || 0), 0) || 0;
+      fte = actualFTE;
+    }
+    
+    setTooltipData({
+      x: d.x,
+      y: d.y,
+      name,
+      isRole,
+      fte,
+      type
+    });
   };
 
   const handleNodeClick = (event: React.MouseEvent | null, d: d3.HierarchyCircularNode<HierarchyNode>) => {
@@ -205,12 +185,9 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data, peopleDat
     
     try {
       const svg = d3.select(svgRef.current);
-      
       svg.selectAll('*').remove();
       
-      const hierarchy = d3.hierarchy(data)
-        .sum(d => d.value || 0)
-        .sort((a, b) => (b.value || 0) - (a.value || 0));
+      const hierarchy = createHierarchy(data);
       
       console.log("Hierarchy values:", {
         root: hierarchy.value,
@@ -222,10 +199,7 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data, peopleDat
         }))
       });
       
-      const pack = d3.pack<HierarchyNode>()
-        .size([dimensions.width, dimensions.height])
-        .padding(3);
-      
+      const pack = createPack(dimensions.width, dimensions.height);
       const root = pack(hierarchy);
       
       setHierarchyData(root);
@@ -237,17 +211,16 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data, peopleDat
         height: root.height
       });
 
-      const uniqueTypes: string[] = Array.from(new Set(
-        root.children?.map(node => (node.data.type || 'Undefined') as string) || ['Undefined']
-      ));
-      
+      const uniqueTypes: string[] = getUniqueCircleTypes(root);
       console.log("Unique circle types:", uniqueTypes);
       
       const colorScale = getColorScale(uniqueTypes);
       
       const g = svg.append('g');
       
-      const circles = g.selectAll('circle')
+      // This section sets up the circles and event handlers
+      g.append('g')
+        .selectAll('circle')
         .data(root.descendants().slice(1))
         .enter()
         .append('circle')
@@ -278,29 +251,8 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data, peopleDat
             .transition()
             .duration(300)
             .attr('r', d.r * 1.05);
-
-          const name = d.data.name || 'Unnamed';
-          const isRole = d.depth === 2;
-          const type = isRole ? 
-            (d.parent?.data.type || 'Undefined') : 
-            (d.data.type || 'Undefined');
           
-          let fte = 0;
-          if (isRole) {
-            fte = d.value || 0;
-          } else if (d.depth === 1) {
-            const actualFTE = d.children?.reduce((sum, child) => sum + (child.value || 0), 0) || 0;
-            fte = actualFTE;
-          }
-          
-          setTooltipData({
-            x: d.x,
-            y: d.y,
-            name,
-            isRole,
-            fte,
-            type
-          });
+          handleNodeHover(d);
         })
         .on('mouseout', function() {
           d3.select(this)
@@ -308,13 +260,14 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data, peopleDat
             .duration(300)
             .attr('r', d => d.r);
           
-          setTooltipData(null);
+          handleNodeHover(null);
         })
         .transition()
         .duration(500)
         .delay((d, i) => i * 10)
         .style('opacity', 1);
       
+      // Add warning icons
       g.selectAll('.warning-icon')
         .data(root.descendants().filter(d => {
           if (d.depth === 1) {
@@ -336,31 +289,34 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data, peopleDat
         .duration(700)
         .style('opacity', 1);
       
+      // Add legend
       const legend = svg.append('g')
         .attr('class', 'legend')
         .attr('transform', `translate(20, 20)`);
       
-      const legendItems = legend.selectAll('.legend-item')
+      legend.selectAll('.legend-item')
         .data(uniqueTypes)
         .enter()
         .append('g')
         .attr('class', 'legend-item')
-        .attr('transform', (d, i) => `translate(0, ${i * 25})`);
+        .attr('transform', (d, i) => `translate(0, ${i * 25})`)
+        .call(g => {
+          g.append('rect')
+            .attr('width', 15)
+            .attr('height', 15)
+            .attr('rx', 3)
+            .attr('fill', d => colorScale(d));
+          
+          g.append('text')
+            .attr('x', 20)
+            .attr('y', 12)
+            .text(d => d)
+            .style('font-size', '12px')
+            .style('font-weight', '500')
+            .style('fill', '#666');
+        });
       
-      legendItems.append('rect')
-        .attr('width', 15)
-        .attr('height', 15)
-        .attr('rx', 3)
-        .attr('fill', d => colorScale(d));
-      
-      legendItems.append('text')
-        .attr('x', 20)
-        .attr('y', 12)
-        .text(d => d)
-        .style('font-size', '12px')
-        .style('font-weight', '500')
-        .style('fill', '#666');
-      
+      // Add zoom behavior
       const zoom = d3.zoom<SVGSVGElement, unknown>()
         .scaleExtent([0.4, 10])
         .on('zoom', (event) => {
@@ -438,28 +394,7 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data, peopleDat
         </p>
       </div>
 
-      {tooltipData && (
-        <div 
-          className="fixed z-50 pointer-events-none bg-popover text-popover-foreground rounded-md px-3 py-1.5 text-xs font-medium shadow-md transform -translate-x-1/2 -translate-y-full animate-fade-in"
-          style={{ 
-            left: `${tooltipData.x + containerRef.current?.getBoundingClientRect().left}px`, 
-            top: `${tooltipData.y + containerRef.current?.getBoundingClientRect().top - 10}px` 
-          }}
-        >
-          {tooltipData.name} 
-          <span className="text-muted-foreground ml-1">
-            ({tooltipData.isRole ? 'Role' : 'Circle'}) - {tooltipData.fte.toFixed(1)} FTE
-            {!tooltipData.isRole && (
-              <>
-                {tooltipData.fte > 10 && (
-                  <span className="ml-1 text-amber-500">⚠️</span>
-                )}
-                <span className="ml-1">- Type: {tooltipData.type}</span>
-              </>
-            )}
-          </span>
-        </div>
-      )}
+      <ChartTooltip tooltipData={tooltipData} containerRef={containerRef} />
     </div>
   );
 };
