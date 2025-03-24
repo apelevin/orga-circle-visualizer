@@ -40,8 +40,10 @@ const CircleNodes: React.FC<CircleNodesProps> = ({
         return;
       }
       
-      // Clear existing circles first
-      g.selectAll('circle.circle-node').remove();
+      // Create a new group for circles to control the z-index properly
+      g.select('g.circle-nodes-container').remove();
+      const circleGroup = g.append('g')
+        .attr('class', 'circle-nodes-container');
       
       // Get the descendants data for debugging
       const descendants = root.descendants().slice(1);
@@ -59,11 +61,11 @@ const CircleNodes: React.FC<CircleNodesProps> = ({
       console.log("Circle types in data:", Array.from(types));
       
       // Create circles for each node
-      const circles = g.selectAll('circle.circle-node')
+      const circles = circleGroup.selectAll('circle.circle-node')
         .data(descendants)
         .enter()
         .append('circle')
-        .attr('class', 'circle-node')
+        .attr('class', d => `circle-node depth-${d.depth}`)
         .attr('cx', d => d.x)
         .attr('cy', d => d.y)
         .attr('r', d => Math.max(d.r, 3)) // Ensure circles are visible even if small

@@ -11,11 +11,38 @@ interface CircleLabelsProps {
 const CircleLabels: React.FC<CircleLabelsProps> = ({ root, groupElement }) => {
   const labelsRef = useRef<d3.Selection<SVGTextElement, d3.HierarchyCircularNode<HierarchyNode>, SVGGElement, unknown> | null>(null);
 
+  // Function to wrap text in SVG
+  const wrap = (text: d3.Selection<SVGTextElement, unknown, null, undefined>, width: number) => {
+    text.each(function() {
+      const text = d3.select(this);
+      const words = text.text().split(/\s+/).reverse();
+      const lineHeight = 1.1; // ems
+      const y = text.attr("y");
+      const dy = parseFloat(text.attr("dy") || "0");
+      
+      let word;
+      let line: string[] = [];
+      let lineNumber = 0;
+      let tspan = text.text(null).append("tspan").attr("x", 0).attr("y", y).attr("dy", dy + "em");
+      
+      while (word = words.pop()) {
+        line.push(word);
+        tspan.text(line.join(" "));
+        if (tspan.node() && (tspan.node() as SVGTSpanElement).getComputedTextLength() > width) {
+          line.pop();
+          tspan.text(line.join(" "));
+          line = [word];
+          tspan = text.append("tspan").attr("x", 0).attr("y", y).attr("dy", ++lineNumber * lineHeight + dy + "em").text(word);
+        }
+      }
+    });
+  };
+
   useEffect(() => {
     console.log("CircleLabels useEffect running");
     
     try {
-      // Use the group element directly instead of searching for it
+      // Use the group element directly
       const g = d3.select(groupElement);
       
       if (!g || g.empty()) {
@@ -23,89 +50,62 @@ const CircleLabels: React.FC<CircleLabelsProps> = ({ root, groupElement }) => {
         return;
       }
       
-      // Clear any existing labels
-      g.selectAll('text.circle-label').remove();
+      // Create a new group for labels to ensure they're on top
+      g.select('g.circle-labels-container').remove();
+      const labelsGroup = g.append('g')
+        .attr('class', 'circle-labels-container');
       
-      // Create labels for main circles (depth 1)
-      const labels = g.selectAll('text.circle-label')
-        .data(root.descendants().filter(d => d.depth === 1))
+      // Filter for circles (depth 1) that have a radius large enough for a label
+      const circlesWithLabels = root
+        .descendants()
+        .filter(d => d.depth === 1 && d.r > 20)
+        .sort((a, b) => b.r - a.r); // Sort by radius for layering
+      
+      console.log(`Rendering labels for ${circlesWithLabels.length} circles`);
+      
+      // Create text elements for circle labels
+      const labels = labelsGroup
+        .selectAll('text.circle-label')
+        .data(circlesWithLabels)
         .enter()
         .append('text')
         .attr('class', 'circle-label')
-        .attr('text-anchor', 'middle')
         .attr('x', d => d.x)
         .attr('y', d => d.y)
-        .attr('dy', '.35em')
-        .attr('font-size', d => Math.min(d.r / 3, 14))
-        .attr('fill', '#333333')
+        .attr('text-anchor', 'middle')
+        .attr('dy', '0em')
+        .style('fill', '#1A1F2C') // Dark text color
+        .style('font-size', d => Math.min(d.r / 3, 14) + 'px')
         .style('pointer-events', 'none')
         .style('font-weight', '500')
         .style('font-family', 'Inter, system-ui, sans-serif')
-        .style('z-index', 10) // Ensure higher z-index (though in SVG this alone won't work)
         .text(d => d.data.name || '');
       
       // Handle text wrapping for long labels
       labels.each(function(d) {
-        const text = d3.select(this);
-        const words = (d.data.name || '').split(/\s+/);
-        const lineHeight = 1.2;
-        const y = d.y;
+        const textElement = d3.select(this);
+        const circleDiameter = d.r * 1.5; // Use percentage of circle diameter for wrapping
+        wrap(textElement, circleDiameter);
         
-        text.text(null); // Clear text
+        // Adjust vertical position based on number of lines
+        const tspans = textElement.selectAll('tspan');
+        const lineCount = tspans.size();
         
-        // If the circle is large enough, wrap text
-        if (d.r > 30) {
-          let line: string[] = [];
-          let lineNumber = 0;
-          const tspan = text.append('tspan')
-            .attr('x', d.x)
-            .attr('y', y)
-            .attr('dy', 0);
-            
-          // Create wrapped text
-          words.forEach((word, i) => {
-            line.push(word);
-            tspan.text(line.join(' '));
-            
-            // Check if line needs to be wrapped
-            if (tspan.node()?.getComputedTextLength() > d.r * 1.5 && i > 0) {
-              line.pop();
-              tspan.text(line.join(' '));
-              line = [word];
-              lineNumber++;
-              
-              text.append('tspan')
-                .attr('x', d.x)
-                .attr('y', y)
-                .attr('dy', `${lineNumber * lineHeight}em`)
-                .text(word);
-            }
+        if (lineCount > 1) {
+          const verticalOffset = -(lineCount - 1) * 0.5; // Offset to center text vertically
+          tspans.attr('dy', (_, i) => {
+            if (i === 0) return verticalOffset + 'em';
+            return '1.1em'; // Line height for additional lines
           });
-          
-          // Center text vertically
-          const totalLines = text.selectAll('tspan').size();
-          text.selectAll('tspan').attr('dy', (_, i) => 
-            `${(i - (totalLines - 1) / 2) * lineHeight}em`
-          );
-        } else if (d.r > 15) {
-          // For smaller circles, just show the first word
-          text.append('tspan')
-            .attr('x', d.x)
-            .attr('y', y)
-            .text(words[0]);
         }
       });
       
-      // Move the labels to the front to ensure they appear on top of circles
-      labels.each(function() {
-        this.parentNode?.appendChild(this);
-      });
-      
+      // Store the selection for cleanup
       labelsRef.current = labels;
       
       console.log(`Successfully rendered ${labels.size()} labels`);
     } catch (error) {
-      console.error("Error in CircleLabels:", error);
+      console.error("Error rendering circle labels:", error);
     }
     
     return () => {

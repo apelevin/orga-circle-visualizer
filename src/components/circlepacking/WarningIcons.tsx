@@ -15,7 +15,7 @@ const WarningIcons: React.FC<WarningIconsProps> = ({ root, groupElement }) => {
     console.log("WarningIcons useEffect running");
     
     try {
-      // Use the group element directly instead of searching for it
+      // Use the group element directly
       const g = d3.select(groupElement);
       
       if (!g || g.empty()) {
@@ -25,11 +25,13 @@ const WarningIcons: React.FC<WarningIconsProps> = ({ root, groupElement }) => {
       
       console.log("Found SVG group, rendering warning icons");
       
-      // Clear any existing warning icons to prevent duplication
-      g.selectAll('g.warning-icon').remove();
+      // Create a new group for warning icons to ensure they're at the top
+      g.select('g.warning-icons-container').remove();
+      const iconsGroup = g.append('g')
+        .attr('class', 'warning-icons-container');
       
       // Create new warning icons
-      const icons = g.selectAll('g.warning-icon')
+      const icons = iconsGroup.selectAll('g.warning-icon')
         .data(root.descendants().filter(d => {
           if (d.depth === 1) {
             const actualFTE = d.children?.reduce((sum, child) => sum + (child.value || 0), 0) || 0;
@@ -50,11 +52,6 @@ const WarningIcons: React.FC<WarningIconsProps> = ({ root, groupElement }) => {
         .attr('stroke', 'white')
         .attr('stroke-width', '1px')
         .style('opacity', 0.9);
-      
-      // Ensure warning icons are at the top layer
-      icons.each(function() {
-        this.parentNode?.appendChild(this);
-      });
       
       // Store the selection for cleanup
       iconsRef.current = icons;
