@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { useParams, Link, useNavigate, useLocation } from "react-router-dom";
 import { HierarchyNode, PeopleData } from "@/types";
@@ -38,19 +39,35 @@ const SharedView = () => {
     const loadSharedData = async () => {
       try {
         setIsLoading(true);
+        console.log("Loading shared data...");
         
-        // First, check URL parameters for encoded data
+        // Check URL parameters for encoded data first
         const urlParams = new URLSearchParams(location.search);
         const encodedData = urlParams.get('data');
         
+        // Log what we're working with
+        console.log("URL params check:", { 
+          hasEncodedData: !!encodedData, 
+          idFromParams: id,
+          currentPath: location.pathname
+        });
+        
         if (encodedData) {
           try {
+            console.log("Found encoded data in URL, attempting to decode");
             // Try to decode the data from URL
             const { organizationData: decodedOrgData, peopleData: decodedPeopleData, name } = decodeSharedData(encodedData);
             
             if (!decodedOrgData) {
+              console.error("Decoded data is invalid - missing organization data");
               throw new Error("Invalid organization data in URL");
             }
+            
+            console.log("Successfully decoded data from URL", { 
+              hasOrgData: !!decodedOrgData,
+              peopleCount: decodedPeopleData?.length || 0,
+              name
+            });
             
             setOrganizationData(decodedOrgData);
             setPeopleData(decodedPeopleData || []);
@@ -59,13 +76,14 @@ const SharedView = () => {
             return;
           } catch (decodeError) {
             console.error("Error decoding shared data from URL:", decodeError);
-            // Fall back to localStorage if URL decoding fails
+            // We'll fall back to localStorage if URL decoding fails
           }
         }
         
         // If URL parameter not found or invalid, try localStorage (for backward compatibility)
         if (!id) {
-          setError("Invalid share link");
+          console.error("No ID parameter found in URL path");
+          setError("Invalid share link - no ID parameter found");
           setIsLoading(false);
           return;
         }
@@ -74,18 +92,25 @@ const SharedView = () => {
         const sharedData = getSharedData(id);
         
         if (!sharedData) {
+          console.error("No shared data found for ID:", id);
           setError("This shared link has expired or doesn't exist");
           setIsLoading(false);
           return;
         }
 
         if (!sharedData.organizationData) {
+          console.error("Shared data exists but organization data is invalid");
           setError("The shared organization data is invalid");
           setIsLoading(false);
           return;
         }
 
-        console.log("Shared data found:", sharedData);
+        console.log("Shared data found:", { 
+          hasOrgData: !!sharedData.organizationData,
+          peopleCount: sharedData.peopleData?.length || 0,
+          name: sharedData.name
+        });
+        
         setOrganizationData(sharedData.organizationData);
         setPeopleData(sharedData.peopleData || []);
         setOrgName(sharedData.name || "Organization");
@@ -166,8 +191,9 @@ const SharedView = () => {
   if (error || !organizationData) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-background">
-        <p className="text-xl font-semibold">{error || "This shared link has expired or doesn't exist"}</p>
-        <Button asChild className="mt-4 px-8 py-6 text-lg rounded-full">
+        <p className="text-xl font-semibold mb-2">{error || "This shared link has expired or doesn't exist"}</p>
+        <p className="text-muted-foreground mb-6">The shared data could not be loaded.</p>
+        <Button asChild className="px-8 py-6 text-lg rounded-full">
           <Link to="/" className="flex items-center gap-2">
             <Home className="h-5 w-5" />
             <span>Go to Home</span>

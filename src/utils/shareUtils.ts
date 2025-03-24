@@ -20,7 +20,7 @@ export const encodeDataForSharing = (
       throw new Error("No organization data to share");
     }
     
-    // Create a sharing object
+    // Create a sharing object with minimized data
     const sharingObject = {
       org: organizationData,
       people: peopleData,

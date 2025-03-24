@@ -20,6 +20,8 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/admin" element={<Admin />} />
+          {/* Support both URL parameter sharing and ID-based sharing */}
+          <Route path="/shared" element={<SharedView />} />
           <Route path="/shared/:id" element={<SharedView />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />

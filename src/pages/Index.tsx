@@ -1,6 +1,6 @@
 
 import * as React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { toast } from "sonner";
 import FileUpload from '@/components/FileUpload';
 import CirclePackingChart from '@/components/CirclePackingChart';
@@ -14,9 +14,10 @@ import { HierarchyNode, PeopleData } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { CircleDot, RefreshCw, Settings, Share, CircleAlert } from 'lucide-react';
-import { generateShareId, saveSharedData } from '@/utils/shareUtils';
+import { generateShareId, saveSharedData, encodeDataForSharing } from '@/utils/shareUtils';
 
 const Index = () => {
+  const navigate = useNavigate();
   const [organizationData, setOrganizationData] = React.useState<HierarchyNode | null>(null);
   const [peopleData, setPeopleData] = React.useState<PeopleData[]>([]);
   const [isLoading, setIsLoading] = React.useState(false);
@@ -112,16 +113,23 @@ const Index = () => {
     }
     
     try {
-      const shareId = generateShareId();
+      // Create a share name
       const shareName = `Organization Structure ${new Date().toLocaleDateString()}`;
       
-      // Save the data to localStorage
+      // First, try the URL-based sharing approach
+      const encodedData = encodeDataForSharing(organizationData, peopleData, shareName);
+      
+      // Generate the share URL with the data as a URL parameter
+      const shareUrl = `${window.location.origin}/shared?data=${encodedData}`;
+      
+      // Also save to localStorage as a fallback
+      const shareId = generateShareId();
       saveSharedData(shareId, organizationData, peopleData, shareName);
       
-      // Create the share URL
-      const shareUrl = `${window.location.origin}/shared/${shareId}`;
+      // Create a fallback URL that uses the ID-based approach
+      const fallbackUrl = `${window.location.origin}/shared/${shareId}`;
       
-      // Copy to clipboard
+      // Copy the URL parameter based sharing to clipboard
       navigator.clipboard.writeText(shareUrl).then(() => {
         toast.success("Share link copied to clipboard!", {
           description: "You can now share this link with others.",
@@ -132,10 +140,16 @@ const Index = () => {
         });
       }).catch(err => {
         console.error("Failed to copy link: ", err);
-        toast.info("Share link created: " + shareUrl, {
-          description: "Copy this link manually to share with others.",
+        toast.info("Share link created", {
+          description: "Copy this link manually to share with others: " + shareUrl,
         });
       });
+      
+      console.log("Generated share URLs:", {
+        primaryUrl: shareUrl,
+        fallbackUrl: fallbackUrl
+      });
+      
     } catch (error) {
       console.error("Error sharing organization:", error);
       toast.error("Failed to create share link", {
