@@ -74,20 +74,23 @@ const CirclePackingRenderer: React.FC<CirclePackingRendererProps> = ({
         )
       );
       
-      console.log("Unique circle types:", uniqueTypes);
+      // Make sure uniqueTypes is an array of strings
+      const uniqueTypeStrings: string[] = uniqueTypes.map(type => String(type));
       
-      // Create a new color scale
-      const newColorScale = getColorScale(uniqueTypes);
+      console.log("Unique circle types:", uniqueTypeStrings);
+      
+      // Create a new color scale with properly typed argument
+      const newColorScale = getColorScale(uniqueTypeStrings);
       
       // Verify the color scale works by testing it
       try {
-        if (uniqueTypes.length > 0) {
-          const testType = uniqueTypes[0];
+        if (uniqueTypeStrings.length > 0) {
+          const testType = uniqueTypeStrings[0];
           const testColor = newColorScale(testType);
           console.log(`Test color for "${testType}": ${testColor}`);
           
           // Test each type
-          uniqueTypes.forEach(type => {
+          uniqueTypeStrings.forEach(type => {
             const color = newColorScale(type);
             console.log(`Type "${type}" maps to color: ${color}`);
           });
