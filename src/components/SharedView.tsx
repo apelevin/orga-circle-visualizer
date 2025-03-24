@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { HierarchyNode, PeopleData } from '@/types';
@@ -147,11 +146,6 @@ const SharedView: React.FC = () => {
       
       <main className="flex-1 container mx-auto px-4 py-4">
         <div className="w-full mx-auto">
-          <div className="mb-4 p-4 bg-card rounded-lg border shadow-sm">
-            <h2 className="text-2xl font-semibold mb-2">Shared Organization Structure</h2>
-            <p className="text-muted-foreground">This organization structure has been shared with you</p>
-          </div>
-          
           {(organizationData || peopleData.length > 0) && (
             <div className="mb-4">
               <SearchInput 
