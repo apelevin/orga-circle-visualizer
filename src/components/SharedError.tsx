@@ -3,7 +3,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Home, AlertTriangle, ExternalLink, HardDrive } from "lucide-react";
+import { Home, AlertTriangle, ExternalLink, HardDrive, RefreshCw } from "lucide-react";
 
 interface SharedErrorProps {
   errorMessage: string | null;
@@ -37,6 +37,14 @@ const SharedError = ({ errorMessage, shareId }: SharedErrorProps) => {
             If you received this link from someone else, ask them to create a new share. If you created this link yourself, 
             it may only be available on the device where it was created if server storage wasn't available.
           </p>
+          {!shareId ? null : (
+            <div className="mt-4 p-3 bg-muted rounded-lg">
+              <p className="text-sm font-medium">Technical information:</p>
+              <p className="text-xs mt-1">
+                The server storage service (JSONBin.io) might be experiencing issues. Shares are currently stored locally in the browser.
+              </p>
+            </div>
+          )}
         </div>
       </div>
       
@@ -57,6 +65,16 @@ const SharedError = ({ errorMessage, shareId }: SharedErrorProps) => {
             <span>Create New Organization</span>
           </Link>
         </Button>
+        {shareId && (
+          <Button 
+            variant="ghost" 
+            onClick={() => window.location.reload()}
+            className="mt-2 text-sm"
+          >
+            <RefreshCw className="h-4 w-4 mr-2" />
+            <span>Try again</span>
+          </Button>
+        )}
         <p className="text-sm text-muted-foreground mt-2 text-center">
           You'll need to upload your data again or request a new share link.
         </p>
