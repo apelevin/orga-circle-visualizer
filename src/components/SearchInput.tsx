@@ -30,9 +30,20 @@ const SearchInput: React.FC<SearchInputProps> = ({
   const inputRef = React.useRef<HTMLInputElement>(null);
   const searchRef = React.useRef<HTMLDivElement>(null);
 
+  // Use useEffect to update search results whenever the search term changes
   React.useEffect(() => {
     const results = performSearch(searchTerm, organizationData, peopleData);
     setSearchResults(results);
+    
+    // Automatically open popover when we have results
+    if (searchTerm.trim().length >= 4) {
+      setIsOpen(results.length > 0);
+    } else {
+      setIsOpen(false);
+    }
+    
+    // Log for debugging
+    console.log('Search term:', searchTerm, 'Results:', results.length);
   }, [searchTerm, organizationData, peopleData]);
 
   const handleItemClick = (result: SearchResult) => {
@@ -62,7 +73,7 @@ const SearchInput: React.FC<SearchInputProps> = ({
 
   return (
     <div className="relative max-w-md w-full mx-auto" ref={searchRef}>
-      <Popover open={isOpen && shouldShowSuggestions} onOpenChange={setIsOpen}>
+      <Popover open={isOpen} onOpenChange={setIsOpen}>
         <PopoverTrigger asChild>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -73,11 +84,11 @@ const SearchInput: React.FC<SearchInputProps> = ({
               value={searchTerm}
               onChange={(e) => {
                 setSearchTerm(e.target.value);
-                if (e.target.value.trim().length >= 4) setIsOpen(true);
-                else setIsOpen(false);
               }}
               onFocus={() => {
-                if (searchTerm.trim().length >= 4 && searchResults.length > 0) setIsOpen(true);
+                if (shouldShowSuggestions) {
+                  setIsOpen(true);
+                }
               }}
               disabled={noDataAvailable}
             />
@@ -96,12 +107,8 @@ const SearchInput: React.FC<SearchInputProps> = ({
           </div>
         </PopoverTrigger>
         <PopoverContent
-          className="p-0 w-[var(--radix-popover-trigger-width)] max-h-80"
+          className="p-0 w-[var(--radix-popover-trigger-width)] max-h-80 overflow-auto"
           align="start"
-          onInteractOutside={(e) => {
-            // Prevent closing when interacting with popover content
-            e.preventDefault();
-          }}
         >
           <Command>
             <SearchResults 

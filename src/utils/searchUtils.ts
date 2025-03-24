@@ -70,5 +70,8 @@ export const performSearch = (
     });
   }
 
+  // Log for debugging
+  console.log(`Search for "${normalizedSearchTerm}" found: ${results.length} results`);
+  
   return results;
 };

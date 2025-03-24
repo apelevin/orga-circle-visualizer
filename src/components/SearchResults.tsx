@@ -15,23 +15,33 @@ const SearchResults: React.FC<SearchResultsProps> = ({
   searchResults,
   onItemClick
 }) => {
+  if (searchTerm.trim().length < 4) {
+    return (
+      <CommandList>
+        <CommandEmpty>Type at least 4 characters to search</CommandEmpty>
+      </CommandList>
+    );
+  }
+  
+  if (searchResults.length === 0) {
+    return (
+      <CommandList>
+        <CommandEmpty>No results found</CommandEmpty>
+      </CommandList>
+    );
+  }
+  
   return (
     <CommandList>
-      {searchTerm.trim().length < 4 ? (
-        <CommandEmpty>Type at least 4 characters to search</CommandEmpty>
-      ) : searchResults.length === 0 ? (
-        <CommandEmpty>No results found</CommandEmpty>
-      ) : (
-        <CommandGroup heading="Search Results">
-          {searchResults.map((result) => (
-            <SearchResultItem
-              key={result.id}
-              result={result}
-              onSelect={onItemClick}
-            />
-          ))}
-        </CommandGroup>
-      )}
+      <CommandGroup heading="Search Results">
+        {searchResults.map((result) => (
+          <SearchResultItem
+            key={result.id}
+            result={result}
+            onSelect={onItemClick}
+          />
+        ))}
+      </CommandGroup>
     </CommandList>
   );
 };
