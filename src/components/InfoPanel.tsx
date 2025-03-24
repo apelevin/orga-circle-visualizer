@@ -65,7 +65,13 @@ const InfoPanel: React.FC<InfoPanelProps> = ({
     }
   };
 
+  // Get alphabetically sorted people
+  const getAlphabeticallySortedPeople = (people: PeopleData[]) => {
+    return [...people].sort((a, b) => a.personName.localeCompare(b.personName));
+  };
+
   const assignedPeople = getAssignedPeople();
+  const sortedAssignedPeople = getAlphabeticallySortedPeople(assignedPeople);
   const totalAssignedFTE = assignedPeople.reduce((sum, p) => sum + p.fte, 0);
   
   // Get people grouped by role (for circle view)
@@ -80,14 +86,16 @@ const InfoPanel: React.FC<InfoPanelProps> = ({
         roleMap.get(person.roleName)!.push(person);
       });
       
-      return Array.from(roleMap.entries()).map(([roleName, people]) => {
-        const totalRoleFTE = people.reduce((sum, p) => sum + p.fte, 0);
-        return {
-          roleName,
-          people,
-          totalFTE: totalRoleFTE
-        };
-      });
+      return Array.from(roleMap.entries())
+        .map(([roleName, people]) => {
+          const sortedPeople = getAlphabeticallySortedPeople(people);
+          const totalRoleFTE = people.reduce((sum, p) => sum + p.fte, 0);
+          return {
+            roleName,
+            people: sortedPeople,
+            totalFTE: totalRoleFTE
+          };
+        });
     }
     return [];
   };
@@ -171,7 +179,7 @@ const InfoPanel: React.FC<InfoPanelProps> = ({
             )}
           </div>
           
-          {/* Show roles section for circles - NOW BEFORE PEOPLE ASSIGNED */}
+          {/* Show roles section for circles */}
           {!isRoleCircle && selectedCircle.roles && selectedCircle.roles.length > 0 && (
             <div className="space-y-4 pt-2">
               <Separator />
@@ -199,7 +207,7 @@ const InfoPanel: React.FC<InfoPanelProps> = ({
             </div>
           )}
           
-          {/* People Assigned Section - NOW AFTER ROLES */}
+          {/* People Assigned Section */}
           {assignedPeople.length > 0 && (
             <div className="space-y-4">
               <Separator />
@@ -212,8 +220,8 @@ const InfoPanel: React.FC<InfoPanelProps> = ({
               {isRoleCircle ? (
                 <div className="mt-2">
                   <ol className="list-decimal pl-5 space-y-1">
-                    {assignedPeople.map((person, index) => (
-                      <li key={`${person.personName}-${index}`} className="flex justify-between items-baseline">
+                    {sortedAssignedPeople.map((person, index) => (
+                      <li key={`${person.personName}-${index}`} className="flex justify-between items-baseline py-1">
                         <span className="text-sm">{person.personName}</span>
                         <span className="text-xs text-muted-foreground">{person.fte.toFixed(2)}</span>
                       </li>
@@ -242,7 +250,7 @@ const InfoPanel: React.FC<InfoPanelProps> = ({
                       <div className="mt-1 pl-2 border-l-2 border-muted space-y-1">
                         <ol className="list-decimal pl-5 space-y-1">
                           {roleGroup.people.map((person, pIndex) => (
-                            <li key={`${person.personName}-${pIndex}`} className="flex justify-between items-baseline">
+                            <li key={`${person.personName}-${pIndex}`} className="flex justify-between items-baseline py-1">
                               <span className="text-sm">{person.personName}</span>
                               <span className="text-xs text-muted-foreground">{person.fte.toFixed(2)}</span>
                             </li>
