@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Person, PeopleData } from '@/types';
 import { X, ExternalLink, Users, User } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
@@ -7,6 +7,7 @@ import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
+import PersonInfoPanel from './PersonInfoPanel';
 
 interface InfoPanelProps {
   isOpen: boolean;
@@ -30,6 +31,9 @@ const InfoPanel: React.FC<InfoPanelProps> = ({
   peopleData = [],
   onCircleClick 
 }) => {
+  const [selectedPerson, setSelectedPerson] = useState<string | null>(null);
+  const [isPersonPanelOpen, setIsPersonPanelOpen] = useState<boolean>(false);
+
   if (!selectedCircle) return null;
   
   const isRoleCircle = selectedCircle.isRole;
@@ -140,199 +144,233 @@ const InfoPanel: React.FC<InfoPanelProps> = ({
       onCircleClick(circleName);
     }
   };
+
+  const handlePersonClick = (personName: string) => {
+    setSelectedPerson(personName);
+    setIsPersonPanelOpen(true);
+  };
   
   return (
-    <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <SheetContent className="overflow-y-auto w-96 max-w-full">
-        <SheetHeader className="pb-4">
-          <SheetTitle className="text-xl">{selectedCircle.name}</SheetTitle>
-          <SheetDescription>
-            {isRoleCircle ? 'Role Information' : 'Circle Information'}
-          </SheetDescription>
-        </SheetHeader>
-        
-        <div className="space-y-6">
-          <div className="space-y-2">
-            <h3 className="text-sm font-medium text-muted-foreground">
-              {isRoleCircle ? 'FTE Required (Total across all circles)' : 'Total FTE'}
-            </h3>
-            <p className="text-lg font-semibold">
-              {calculatedTotal.toFixed(2)}
-            </p>
-            
-            {assignedPeople.length > 0 && (
-              <div className="flex items-baseline gap-2 mt-1">
-                <span className="text-sm text-muted-foreground">Assigned:</span>
-                <span className="text-sm font-medium">{totalAssignedFTE.toFixed(2)}</span>
-                
-                {calculatedTotal > 0 && (
-                  <Badge variant={totalAssignedFTE >= calculatedTotal ? "secondary" : "destructive"} className="ml-auto">
-                    {Math.round((totalAssignedFTE / calculatedTotal) * 100)}%
-                  </Badge>
-                )}
-              </div>
-            )}
-            
-            {isRoleCircle && selectedCircle.parent && (
-              <div className="text-sm text-muted-foreground">
-                <span>Circle: </span>
-                <Button 
-                  variant="link" 
-                  className="p-0 h-auto font-medium text-sm inline-flex items-center"
-                  onClick={() => handleCircleClick(selectedCircle.parent!)}
-                >
-                  {selectedCircle.parent}
-                  <ExternalLink className="ml-1 w-3 h-3" />
-                </Button>
-              </div>
-            )}
-            
-            {/* Show multiple parent circles if available */}
-            {isRoleCircle && selectedCircle.parentCircles && selectedCircle.parentCircles.length > 1 && (
-              <div className="mt-4 space-y-2">
-                <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                  <Users className="w-3.5 h-3.5" />
-                  <span>Also appears in:</span>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {selectedCircle.parentCircles
-                    .filter(circle => circle !== selectedCircle.parent)
-                    .map((circle, index) => (
-                      <Badge 
-                        key={`${circle}-${index}`} 
-                        variant="outline"
-                        className="cursor-pointer hover:bg-accent transition-colors"
-                        onClick={() => handleCircleClick(circle)}
-                      >
-                        {circle}
-                      </Badge>
-                    ))}
-                </div>
-              </div>
-            )}
-          </div>
+    <>
+      <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
+        <SheetContent className="overflow-y-auto w-96 max-w-full">
+          <SheetHeader className="pb-4">
+            <SheetTitle className="text-xl">{selectedCircle.name}</SheetTitle>
+            <SheetDescription>
+              {isRoleCircle ? 'Role Information' : 'Circle Information'}
+            </SheetDescription>
+          </SheetHeader>
           
-          {/* Show roles section for circles */}
-          {!isRoleCircle && selectedCircle.roles && selectedCircle.roles.length > 0 && (
-            <div className="space-y-4 pt-2">
-              <Separator />
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-medium">Roles</h3>
-                <span className="text-xs text-muted-foreground">{selectedCircle.roles.length} roles</span>
-              </div>
+          <div className="space-y-6">
+            <div className="space-y-2">
+              <h3 className="text-sm font-medium text-muted-foreground">
+                {isRoleCircle ? 'FTE Required (Total across all circles)' : 'Total FTE'}
+              </h3>
+              <p className="text-lg font-semibold">
+                {calculatedTotal.toFixed(2)}
+              </p>
               
-              <div className="space-y-3">
-                {selectedCircle.roles.map((role, index) => (
-                  <div key={`${role.name}-${index}`} className="flex items-start justify-between group">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="p-0 h-auto text-sm hover:bg-transparent hover:underline text-left whitespace-normal flex-1 mr-2 justify-start"
-                      onClick={() => handleCircleClick(role.name)}
-                    >
-                      <span className="line-clamp-2 text-left">{role.name}</span>
-                      <ExternalLink className="ml-1 w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity inline-flex shrink-0" />
-                    </Button>
-                    <span className="text-sm font-medium whitespace-nowrap">{role.value.toFixed(2)} FTE</span>
+              {assignedPeople.length > 0 && (
+                <div className="flex items-baseline gap-2 mt-1">
+                  <span className="text-sm text-muted-foreground">Assigned:</span>
+                  <span className="text-sm font-medium">{totalAssignedFTE.toFixed(2)}</span>
+                  
+                  {calculatedTotal > 0 && (
+                    <Badge variant={totalAssignedFTE >= calculatedTotal ? "secondary" : "destructive"} className="ml-auto">
+                      {Math.round((totalAssignedFTE / calculatedTotal) * 100)}%
+                    </Badge>
+                  )}
+                </div>
+              )}
+              
+              {isRoleCircle && selectedCircle.parent && (
+                <div className="text-sm text-muted-foreground">
+                  <span>Circle: </span>
+                  <Button 
+                    variant="link" 
+                    className="p-0 h-auto font-medium text-sm inline-flex items-center"
+                    onClick={() => handleCircleClick(selectedCircle.parent!)}
+                  >
+                    {selectedCircle.parent}
+                    <ExternalLink className="ml-1 w-3 h-3" />
+                  </Button>
+                </div>
+              )}
+              
+              {/* Show multiple parent circles if available */}
+              {isRoleCircle && selectedCircle.parentCircles && selectedCircle.parentCircles.length > 1 && (
+                <div className="mt-4 space-y-2">
+                  <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                    <Users className="w-3.5 h-3.5" />
+                    <span>Also appears in:</span>
                   </div>
-                ))}
-              </div>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedCircle.parentCircles
+                      .filter(circle => circle !== selectedCircle.parent)
+                      .map((circle, index) => (
+                        <Badge 
+                          key={`${circle}-${index}`} 
+                          variant="outline"
+                          className="cursor-pointer hover:bg-accent transition-colors"
+                          onClick={() => handleCircleClick(circle)}
+                        >
+                          {circle}
+                        </Badge>
+                      ))}
+                  </div>
+                </div>
+              )}
             </div>
-          )}
-          
-          {/* People Assigned Section */}
-          {assignedPeople.length > 0 && (
-            <div className="space-y-4">
-              <Separator />
-              <div className="flex items-center gap-2">
-                <User className="h-4 w-4" />
-                <h3 className="text-sm font-medium">People Assigned</h3>
-                <span className="text-xs text-muted-foreground ml-auto">{assignedPeople.length} people</span>
+            
+            {/* Show roles section for circles */}
+            {!isRoleCircle && selectedCircle.roles && selectedCircle.roles.length > 0 && (
+              <div className="space-y-4 pt-2">
+                <Separator />
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-medium">Roles</h3>
+                  <span className="text-xs text-muted-foreground">{selectedCircle.roles.length} roles</span>
+                </div>
+                
+                <div className="space-y-3">
+                  {selectedCircle.roles.map((role, index) => (
+                    <div key={`${role.name}-${index}`} className="flex items-start justify-between group">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="p-0 h-auto text-sm hover:bg-transparent hover:underline text-left whitespace-normal flex-1 mr-2 justify-start"
+                        onClick={() => handleCircleClick(role.name)}
+                      >
+                        <span className="line-clamp-2 text-left">{role.name}</span>
+                        <ExternalLink className="ml-1 w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity inline-flex shrink-0" />
+                      </Button>
+                      <span className="text-sm font-medium whitespace-nowrap">{role.value.toFixed(2)} FTE</span>
+                    </div>
+                  ))}
+                </div>
               </div>
-              
-              {isRoleCircle ? (
-                <div className="space-y-4">
-                  {peopleByCircle.length > 0 ? (
-                    peopleByCircle.map((circleGroup, index) => (
-                      <div key={`${circleGroup.circleName}-${index}`}>
+            )}
+            
+            {/* People Assigned Section */}
+            {assignedPeople.length > 0 && (
+              <div className="space-y-4">
+                <Separator />
+                <div className="flex items-center gap-2">
+                  <User className="h-4 w-4" />
+                  <h3 className="text-sm font-medium">People Assigned</h3>
+                  <span className="text-xs text-muted-foreground ml-auto">{assignedPeople.length} people</span>
+                </div>
+                
+                {isRoleCircle ? (
+                  <div className="space-y-4">
+                    {peopleByCircle.length > 0 ? (
+                      peopleByCircle.map((circleGroup, index) => (
+                        <div key={`${circleGroup.circleName}-${index}`}>
+                          <div className="flex items-baseline justify-between">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="p-0 h-auto text-sm hover:bg-transparent hover:underline text-left whitespace-normal flex-1 mr-2 justify-start"
+                              onClick={() => handleCircleClick(circleGroup.circleName)}
+                            >
+                              <span className="text-sm font-medium">{circleGroup.circleName}</span>
+                              <ExternalLink className="ml-1 w-3 h-3 opacity-0 hover:opacity-100 transition-opacity inline-flex shrink-0" />
+                            </Button>
+                            <span className="text-xs text-muted-foreground">
+                              {circleGroup.people.length} {circleGroup.people.length === 1 ? 'person' : 'people'} • {circleGroup.totalFTE.toFixed(2)} FTE
+                            </span>
+                          </div>
+                          
+                          <div className="mt-1 pl-2 border-l-2 border-muted space-y-1">
+                            <ol className="list-decimal pl-5 space-y-1">
+                              {circleGroup.people.map((person, pIndex) => (
+                                <li key={`${person.personName}-${pIndex}`} className="flex justify-between items-baseline py-1">
+                                  <Button
+                                    variant="link"
+                                    className="p-0 h-auto text-sm text-foreground hover:underline font-normal"
+                                    onClick={() => handlePersonClick(person.personName)}
+                                  >
+                                    {person.personName}
+                                  </Button>
+                                  <span className="text-xs text-muted-foreground">{person.fte.toFixed(2)}</span>
+                                </li>
+                              ))}
+                            </ol>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="mt-2">
+                        <ol className="list-decimal pl-5 space-y-1">
+                          {sortedAssignedPeople.map((person, index) => (
+                            <li key={`${person.personName}-${index}`} className="flex justify-between items-baseline py-1">
+                              <Button
+                                variant="link"
+                                className="p-0 h-auto text-sm text-foreground hover:underline font-normal"
+                                onClick={() => handlePersonClick(person.personName)}
+                              >
+                                {person.personName}
+                              </Button>
+                              <span className="text-xs text-muted-foreground">{person.fte.toFixed(2)}</span>
+                            </li>
+                          ))}
+                        </ol>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {peopleByRole.map((roleGroup, index) => (
+                      <div key={`${roleGroup.roleName}-${index}`}>
                         <div className="flex items-baseline justify-between">
                           <Button
                             variant="ghost"
                             size="sm"
                             className="p-0 h-auto text-sm hover:bg-transparent hover:underline text-left whitespace-normal flex-1 mr-2 justify-start"
-                            onClick={() => handleCircleClick(circleGroup.circleName)}
+                            onClick={() => handleCircleClick(roleGroup.roleName)}
                           >
-                            <span className="text-sm font-medium">{circleGroup.circleName}</span>
-                            <ExternalLink className="ml-1 w-3 h-3 opacity-0 hover:opacity-100 transition-opacity inline-flex shrink-0" />
+                            <span className="text-sm font-medium">{roleGroup.roleName}</span>
+                            <ExternalLink className="ml-1 w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity inline-flex shrink-0" />
                           </Button>
                           <span className="text-xs text-muted-foreground">
-                            {circleGroup.people.length} {circleGroup.people.length === 1 ? 'person' : 'people'} • {circleGroup.totalFTE.toFixed(2)} FTE
+                            {roleGroup.people.length} {roleGroup.people.length === 1 ? 'person' : 'people'} • {roleGroup.totalFTE.toFixed(2)} FTE
                           </span>
                         </div>
                         
                         <div className="mt-1 pl-2 border-l-2 border-muted space-y-1">
                           <ol className="list-decimal pl-5 space-y-1">
-                            {circleGroup.people.map((person, pIndex) => (
+                            {roleGroup.people.map((person, pIndex) => (
                               <li key={`${person.personName}-${pIndex}`} className="flex justify-between items-baseline py-1">
-                                <span className="text-sm">{person.personName}</span>
+                                <Button
+                                  variant="link"
+                                  className="p-0 h-auto text-sm text-foreground hover:underline font-normal"
+                                  onClick={() => handlePersonClick(person.personName)}
+                                >
+                                  {person.personName}
+                                </Button>
                                 <span className="text-xs text-muted-foreground">{person.fte.toFixed(2)}</span>
                               </li>
                             ))}
                           </ol>
                         </div>
                       </div>
-                    ))
-                  ) : (
-                    <div className="mt-2">
-                      <ol className="list-decimal pl-5 space-y-1">
-                        {sortedAssignedPeople.map((person, index) => (
-                          <li key={`${person.personName}-${index}`} className="flex justify-between items-baseline py-1">
-                            <span className="text-sm">{person.personName}</span>
-                            <span className="text-xs text-muted-foreground">{person.fte.toFixed(2)}</span>
-                          </li>
-                        ))}
-                      </ol>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {peopleByRole.map((roleGroup, index) => (
-                    <div key={`${roleGroup.roleName}-${index}`}>
-                      <div className="flex items-baseline justify-between">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="p-0 h-auto text-sm hover:bg-transparent hover:underline text-left whitespace-normal flex-1 mr-2 justify-start"
-                          onClick={() => handleCircleClick(roleGroup.roleName)}
-                        >
-                          <span className="text-sm font-medium">{roleGroup.roleName}</span>
-                          <ExternalLink className="ml-1 w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity inline-flex shrink-0" />
-                        </Button>
-                        <span className="text-xs text-muted-foreground">
-                          {roleGroup.people.length} {roleGroup.people.length === 1 ? 'person' : 'people'} • {roleGroup.totalFTE.toFixed(2)} FTE
-                        </span>
-                      </div>
-                      
-                      <div className="mt-1 pl-2 border-l-2 border-muted space-y-1">
-                        <ol className="list-decimal pl-5 space-y-1">
-                          {roleGroup.people.map((person, pIndex) => (
-                            <li key={`${person.personName}-${pIndex}`} className="flex justify-between items-baseline py-1">
-                              <span className="text-sm">{person.personName}</span>
-                              <span className="text-xs text-muted-foreground">{person.fte.toFixed(2)}</span>
-                            </li>
-                          ))}
-                        </ol>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      </SheetContent>
-    </Sheet>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </SheetContent>
+      </Sheet>
+
+      <PersonInfoPanel
+        isOpen={isPersonPanelOpen}
+        onClose={() => setIsPersonPanelOpen(false)}
+        selectedPerson={selectedPerson}
+        peopleData={peopleData}
+        onCircleClick={handleCircleClick}
+        onRoleClick={handleCircleClick}
+      />
+    </>
   );
 };
 
