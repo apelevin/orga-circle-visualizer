@@ -44,7 +44,7 @@ export const parseExcelFile = async (file: File, isPeopleData = false): Promise<
             circleName: row[0]?.toString().trim() || 'Unknown Circle',
             role: row[1]?.toString().trim() || 'Unknown Role',
             fte: parseFloat(row[2]) || 0,
-            type: row[3]?.toString().trim() || 'The Others'
+            type: row[3]?.toString().trim() || 'Undefined'
           }));
           resolve(jsonData);
         }
@@ -72,7 +72,7 @@ export const processExcelData = (data: any[]): Circle[] => {
   data.forEach((row) => {
     const circleName = row.circleName;
     const role = row.role;
-    const type = row.type || 'The Others';
+    const type = row.type || 'Undefined';
     
     // Ensure FTE is a valid number
     let fte = 0;
