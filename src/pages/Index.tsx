@@ -1,4 +1,3 @@
-
 import * as React from 'react';
 import FileUpload from '@/components/FileUpload';
 import CirclePackingChart from '@/components/CirclePackingChart';
@@ -8,6 +7,8 @@ import SearchInput from '@/components/SearchInput';
 import InfoPanel from '@/components/InfoPanel';
 import PersonInfoPanel from '@/components/PersonInfoPanel';
 import { HierarchyNode, PeopleData } from '@/types';
+import { Button } from '@/components/ui/button';
+import { RefreshCw } from 'lucide-react';
 
 const Index = () => {
   const [organizationData, setOrganizationData] = React.useState<HierarchyNode | null>(null);
@@ -93,6 +94,10 @@ const Index = () => {
     setIsPersonPanelOpen(true);
   };
 
+  const handleReset = () => {
+    window.location.reload();
+  };
+
   return (
     <div className="flex flex-col min-h-screen bg-background">
       <Header />
@@ -136,6 +141,20 @@ const Index = () => {
             </div>
           )}
         </div>
+        
+        {(organizationData || peopleData.length > 0) && (
+          <div className="mt-12 flex justify-center">
+            <Button 
+              variant="outline"
+              size="sm"
+              onClick={handleReset}
+              className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <RefreshCw className="h-4 w-4" />
+              Reset Data
+            </Button>
+          </div>
+        )}
       </main>
       
       <InfoPanel
