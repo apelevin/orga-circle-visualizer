@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useState } from 'react';
 import * as d3 from 'd3';
 import { HierarchyNode, CirclePackingNode, PeopleData } from '@/types';
@@ -45,7 +44,6 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data, peopleDat
     type?: string;
   } | null>(null);
 
-  // Helper function to get color scale based on unique types
   const getColorScale = (types: string[]) => {
     const colorPalette = [
       '#E5DEFF', // Soft Purple
@@ -239,14 +237,12 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data, peopleDat
         height: root.height
       });
 
-      // Extract unique circle types for color mapping
-      const uniqueTypes = Array.from(new Set(
-        root.children?.map(node => node.data.type || 'Undefined') || ['Undefined']
+      const uniqueTypes: string[] = Array.from(new Set(
+        root.children?.map(node => (node.data.type || 'Undefined') as string) || ['Undefined']
       ));
       
       console.log("Unique circle types:", uniqueTypes);
       
-      // Create color scale based on types
       const colorScale = getColorScale(uniqueTypes);
       
       const g = svg.append('g');
@@ -261,10 +257,8 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data, peopleDat
         .attr('r', d => d.r)
         .style('fill', d => {
           if (d.depth === 1) {
-            // Use the circle type for coloring
             return colorScale(d.data.type || 'Undefined');
           } else if (d.depth === 2) {
-            // For roles, darken the parent circle's color
             const parentColor = d3.color(colorScale(d.parent?.data.type || 'Undefined')) || d3.color('#E5DEFF')!;
             return parentColor.darker(0.2).toString();
           }
@@ -342,7 +336,6 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data, peopleDat
         .duration(700)
         .style('opacity', 1);
       
-      // Create a legend for circle types
       const legend = svg.append('g')
         .attr('class', 'legend')
         .attr('transform', `translate(20, 20)`);
@@ -372,7 +365,6 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data, peopleDat
         .scaleExtent([0.4, 10])
         .on('zoom', (event) => {
           g.attr('transform', event.transform);
-          // Move the legend with zooming
           legend.attr('transform', `translate(${20 + event.transform.x}, ${20 + event.transform.y})`);
         });
       
