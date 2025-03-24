@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { HierarchyNode, PeopleData } from "@/types";
@@ -9,7 +10,7 @@ import PersonInfoPanel from "@/components/PersonInfoPanel";
 import StructureProblems from "@/components/StructureProblems";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { CircleDot, CircleAlert } from "lucide-react";
+import { CircleDot, CircleAlert, Home } from "lucide-react";
 import { toast } from "sonner";
 
 const SharedView = () => {
@@ -31,27 +32,41 @@ const SharedView = () => {
   const [selectedPerson, setSelectedPerson] = useState<string | null>(null);
   const [isPersonPanelOpen, setIsPersonPanelOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("visualization");
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!id) {
-      toast.error("Invalid share link");
-      navigate("/");
-      return;
-    }
-
-    const sharedData = getSharedData(id);
-    
-    if (!sharedData || !sharedData.organizationData) {
+      setError("Invalid share link");
       setIsLoading(false);
-      toast.error("This shared link has expired or doesn't exist");
-      setTimeout(() => navigate("/"), 3000);
       return;
     }
 
-    setOrganizationData(sharedData.organizationData);
-    setPeopleData(sharedData.peopleData || []);
-    setOrgName(sharedData.name || "Organization");
-    setIsLoading(false);
+    try {
+      console.log("Fetching shared data with ID:", id);
+      const sharedData = getSharedData(id);
+      
+      if (!sharedData) {
+        setError("This shared link has expired or doesn't exist");
+        setIsLoading(false);
+        return;
+      }
+
+      if (!sharedData.organizationData) {
+        setError("The shared organization data is invalid");
+        setIsLoading(false);
+        return;
+      }
+
+      console.log("Shared data found:", sharedData);
+      setOrganizationData(sharedData.organizationData);
+      setPeopleData(sharedData.peopleData || []);
+      setOrgName(sharedData.name || "Organization");
+      setIsLoading(false);
+    } catch (error) {
+      console.error("Error loading shared data:", error);
+      setError("An error occurred while loading the shared data");
+      setIsLoading(false);
+    }
   }, [id, navigate]);
 
   const handleCircleOrRoleClick = (nodeName: string) => {
@@ -117,12 +132,15 @@ const SharedView = () => {
     );
   }
 
-  if (!organizationData) {
+  if (error || !organizationData) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-background">
-        <p className="text-xl font-semibold">This shared link has expired or doesn't exist</p>
-        <Button asChild className="mt-4">
-          <Link to="/">Go to Home</Link>
+        <p className="text-xl font-semibold">{error || "This shared link has expired or doesn't exist"}</p>
+        <Button asChild className="mt-4 px-8 py-6 text-lg rounded-full">
+          <Link to="/" className="flex items-center gap-2">
+            <Home className="h-5 w-5" />
+            <span>Go to Home</span>
+          </Link>
         </Button>
       </div>
     );
@@ -135,6 +153,12 @@ const SharedView = () => {
           <div>
             <h1 className="text-2xl font-bold tracking-tight">{orgName}</h1>
           </div>
+          <Button variant="outline" size="sm" asChild>
+            <Link to="/" className="flex items-center gap-2">
+              <Home className="h-4 w-4" />
+              <span>Back to Home</span>
+            </Link>
+          </Button>
         </div>
       </header>
       

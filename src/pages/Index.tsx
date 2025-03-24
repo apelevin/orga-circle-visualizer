@@ -111,28 +111,37 @@ const Index = () => {
       return;
     }
     
-    const shareId = generateShareId();
-    const shareName = `Organization Structure ${new Date().toLocaleDateString()}`;
-    
-    saveSharedData(shareId, organizationData, peopleData, shareName);
-    
-    const shareUrl = `${window.location.origin}/shared/${shareId}`;
-    
-    // Copy to clipboard
-    navigator.clipboard.writeText(shareUrl).then(() => {
-      toast.success("Share link copied to clipboard!", {
-        description: "You can now share this link with others.",
-        action: {
-          label: "View Link",
-          onClick: () => window.open(shareUrl, "_blank"),
-        },
+    try {
+      const shareId = generateShareId();
+      const shareName = `Organization Structure ${new Date().toLocaleDateString()}`;
+      
+      // Save the data to localStorage
+      saveSharedData(shareId, organizationData, peopleData, shareName);
+      
+      // Create the share URL
+      const shareUrl = `${window.location.origin}/shared/${shareId}`;
+      
+      // Copy to clipboard
+      navigator.clipboard.writeText(shareUrl).then(() => {
+        toast.success("Share link copied to clipboard!", {
+          description: "You can now share this link with others.",
+          action: {
+            label: "View Link",
+            onClick: () => window.open(shareUrl, "_blank"),
+          },
+        });
+      }).catch(err => {
+        console.error("Failed to copy link: ", err);
+        toast.info("Share link created: " + shareUrl, {
+          description: "Copy this link manually to share with others.",
+        });
       });
-    }).catch(err => {
-      console.error("Failed to copy link: ", err);
-      toast.info("Share link created but couldn't copy to clipboard", {
-        description: shareUrl,
+    } catch (error) {
+      console.error("Error sharing organization:", error);
+      toast.error("Failed to create share link", {
+        description: "There was an error creating the share link. Please try again.",
       });
-    });
+    }
   };
 
   return (

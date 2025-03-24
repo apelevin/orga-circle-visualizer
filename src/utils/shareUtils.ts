@@ -26,44 +26,68 @@ export const saveSharedData = (
   peopleData: PeopleData[],
   name: string
 ): void => {
-  const storage = localStorage.getItem(STORAGE_KEY);
-  const existingData: Record<string, SharedData> = storage ? JSON.parse(storage) : {};
-  
-  existingData[id] = {
-    organizationData,
-    peopleData,
-    timestamp: Date.now(),
-    name
-  };
-  
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(existingData));
+  try {
+    const storage = localStorage.getItem(STORAGE_KEY);
+    const existingData: Record<string, SharedData> = storage ? JSON.parse(storage) : {};
+    
+    // Clone the data to avoid circular reference issues
+    const cleanOrgData = JSON.parse(JSON.stringify(organizationData));
+    const cleanPeopleData = JSON.parse(JSON.stringify(peopleData));
+    
+    existingData[id] = {
+      organizationData: cleanOrgData,
+      peopleData: cleanPeopleData,
+      timestamp: Date.now(),
+      name
+    };
+    
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(existingData));
+    console.log("Data saved successfully with ID:", id);
+  } catch (error) {
+    console.error("Error saving shared data:", error);
+    throw new Error("Failed to save shared data");
+  }
 };
 
 // Get organization data by ID
 export const getSharedData = (id: string): SharedData | null => {
-  const storage = localStorage.getItem(STORAGE_KEY);
-  if (!storage) return null;
-  
-  const data: Record<string, SharedData> = JSON.parse(storage);
-  return data[id] || null;
+  try {
+    const storage = localStorage.getItem(STORAGE_KEY);
+    if (!storage) return null;
+    
+    const data: Record<string, SharedData> = JSON.parse(storage);
+    return data[id] || null;
+  } catch (error) {
+    console.error("Error retrieving shared data:", error);
+    return null;
+  }
 };
 
 // Get all saved shares
 export const getAllSharedData = (): Record<string, SharedData> => {
-  const storage = localStorage.getItem(STORAGE_KEY);
-  if (!storage) return {};
-  
-  return JSON.parse(storage);
+  try {
+    const storage = localStorage.getItem(STORAGE_KEY);
+    if (!storage) return {};
+    
+    return JSON.parse(storage);
+  } catch (error) {
+    console.error("Error retrieving all shared data:", error);
+    return {};
+  }
 };
 
 // Delete a shared data entry
 export const deleteSharedData = (id: string): void => {
-  const storage = localStorage.getItem(STORAGE_KEY);
-  if (!storage) return;
-  
-  const data: Record<string, SharedData> = JSON.parse(storage);
-  if (data[id]) {
-    delete data[id];
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  try {
+    const storage = localStorage.getItem(STORAGE_KEY);
+    if (!storage) return;
+    
+    const data: Record<string, SharedData> = JSON.parse(storage);
+    if (data[id]) {
+      delete data[id];
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    }
+  } catch (error) {
+    console.error("Error deleting shared data:", error);
   }
 };
