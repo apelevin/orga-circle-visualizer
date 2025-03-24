@@ -21,7 +21,7 @@ const SharedError = ({ errorMessage, shareId }: SharedErrorProps) => {
         <Alert variant="destructive" className="mb-6 text-left">
           <AlertTitle>Share link error</AlertTitle>
           <AlertDescription>
-            {errorMessage || "The shared data could not be loaded. It may have expired or been created in a different browser."}
+            {errorMessage || "The shared data could not be loaded. It may have expired or been deleted."}
             {shareId && (
               <div className="mt-2 font-mono text-xs bg-muted p-2 rounded">
                 Share ID: {shareId}
@@ -31,10 +31,10 @@ const SharedError = ({ errorMessage, shareId }: SharedErrorProps) => {
         </Alert>
         <div className="space-y-4 text-muted-foreground mb-6">
           <p>
-            Shared links are stored in your browser's local storage and may not be accessible across different devices or browsers.
+            We couldn't find this shared data on our server. The share may have expired or been deleted.
           </p>
           <p className="text-sm">
-            For best results, open shared links in the same browser where they were created.
+            If you believe this is an error, please contact the person who shared this link with you to create a new share.
           </p>
         </div>
       </div>

@@ -4,7 +4,7 @@ import { Share, Copy, Check, ExternalLink } from 'lucide-react';
 import { toast } from "sonner";
 import { Button } from '@/components/ui/button';
 import { HierarchyNode, PeopleData } from '@/types';
-import { generateShareId, saveSharedData, encodeDataForSharing } from '@/utils/shareUtils';
+import { generateShareId, saveSharedData, encodeDataForSharing, saveSharedDataToServer } from '@/utils/shareUtils';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface ShareButtonProps {
@@ -51,53 +51,37 @@ const ShareButton: React.FC<ShareButtonProps> = ({ organizationData, peopleData 
       // Create a share name
       const shareName = `Organization Structure ${new Date().toLocaleDateString()}`;
       
-      // ALWAYS use the ID-based approach first (most reliable)
+      // Generate a unique ID
       const shareId = generateShareId();
       setShareId(shareId);
       
-      // Save to localStorage with a try-catch to handle storage errors
+      // Save to server first
       try {
-        saveSharedData(shareId, organizationData, peopleData, shareName);
-        console.log("Data saved successfully with ID:", shareId);
-      } catch (storageError) {
-        console.error("Error saving to localStorage:", storageError);
-        toast.error("Could not save share data locally", {
-          description: "The data might not persist if you close your browser."
+        await saveSharedDataToServer(shareId, organizationData, peopleData, shareName);
+        console.log("Data saved successfully to server with ID:", shareId);
+      } catch (serverError) {
+        console.error("Error saving to server:", serverError);
+        toast.error("Could not save share data to server", {
+          description: "Falling back to local storage only, which may not be accessible across different browsers."
         });
+        
+        // Try local storage as fallback
+        try {
+          saveSharedData(shareId, organizationData, peopleData, shareName);
+          console.log("Data saved to local storage as fallback with ID:", shareId);
+        } catch (storageError) {
+          console.error("Error saving to localStorage:", storageError);
+          toast.error("Could not save share data locally", {
+            description: "The data might not persist if you close your browser."
+          });
+        }
       }
       
-      // Create the ID-based URL (this always works)
+      // Create the ID-based URL
       const idBasedUrl = `${window.location.origin}/shared/${shareId}`;
       
-      // Always use the ID-based URL for large datasets
+      // Always use the ID-based URL now that we have server storage
       let shareUrl = idBasedUrl;
-      
-      // For smaller datasets, try the URL parameter approach too
-      try {
-        // Check if the stringified data is manageable for a URL parameter
-        const dataSize = JSON.stringify({
-          org: organizationData,
-          people: peopleData
-        }).length;
-        
-        // Only use URL parameter for reasonably sized data (< 10KB)
-        // This is much more conservative than before to avoid 400 Bad Request errors
-        if (dataSize < 10000) {
-          const encodedData = encodeDataForSharing(organizationData, peopleData, shareName);
-          // Make sure the encoded URL param isn't too long
-          if (encodedData.length < 1500) {
-            shareUrl = `${window.location.origin}/shared?data=${encodedData}`;
-            console.log("Using URL parameter sharing, data size:", dataSize);
-          } else {
-            console.log("Encoded data too long for URL, using ID-based approach instead:", encodedData.length);
-          }
-        } else {
-          console.log("Data too large for URL parameter sharing, using ID-based approach instead:", dataSize);
-        }
-      } catch (encodeError) {
-        console.error("Error encoding data for URL:", encodeError);
-        // Already using ID-based URL if encoding fails
-      }
       
       // Copy the URL to clipboard
       const copied = await copyToClipboard(shareUrl);
@@ -106,7 +90,7 @@ const ShareButton: React.FC<ShareButtonProps> = ({ organizationData, peopleData 
         toast.success("Share link copied to clipboard!", {
           description: (
             <div className="space-y-2">
-              <p>You can now share this link with others.</p>
+              <p>Your link is now saved on our server and can be accessed from any browser.</p>
               <p className="text-xs text-muted-foreground">Share ID: {shareId}</p>
               <div className="flex gap-2 mt-1">
                 <Button size="sm" variant="outline" onClick={() => window.open(shareUrl, "_blank")} className="h-7 text-xs">
@@ -133,10 +117,7 @@ const ShareButton: React.FC<ShareButtonProps> = ({ organizationData, peopleData 
         });
       }
       
-      console.log("Generated share URLs:", {
-        primaryUrl: shareUrl,
-        fallbackUrl: idBasedUrl
-      });
+      console.log("Generated share URL:", shareUrl);
       
     } catch (error) {
       console.error("Error sharing organization:", error);

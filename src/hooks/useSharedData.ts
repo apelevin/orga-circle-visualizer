@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useLocation, useNavigate } from "react-router-dom";
 import { HierarchyNode, PeopleData } from "@/types";
-import { getSharedData, decodeSharedData } from "@/utils/shareUtils";
+import { getSharedData, decodeSharedData, getSharedDataFromServer } from "@/utils/shareUtils";
 
 export interface UseSharedDataReturn {
   organizationData: HierarchyNode | null;
@@ -31,10 +31,30 @@ export const useSharedData = (): UseSharedDataReturn => {
         // If we have an ID, prioritize using that method (more reliable)
         if (id) {
           console.log("Found ID in URL path, attempting to load data by ID:", id);
+          
+          // First try to get data from server
+          const serverData = await getSharedDataFromServer(id);
+          
+          if (serverData && serverData.organizationData) {
+            console.log("Successfully loaded data from server by ID:", {
+              hasOrgData: !!serverData.organizationData,
+              peopleCount: serverData.peopleData?.length || 0,
+              name: serverData.name,
+              timestamp: new Date(serverData.timestamp).toLocaleString()
+            });
+            
+            setOrganizationData(serverData.organizationData);
+            setPeopleData(serverData.peopleData || []);
+            setOrgName(serverData.name || "Organization");
+            setIsLoading(false);
+            return;
+          }
+          
+          // If server fails, try local storage as fallback
           const sharedData = getSharedData(id);
           
           if (sharedData && sharedData.organizationData) {
-            console.log("Successfully loaded data by ID:", {
+            console.log("Successfully loaded data from local storage by ID:", {
               hasOrgData: !!sharedData.organizationData,
               peopleCount: sharedData.peopleData?.length || 0,
               name: sharedData.name,
@@ -50,8 +70,8 @@ export const useSharedData = (): UseSharedDataReturn => {
             // Check if localStorage is available but the data isn't found
             try {
               if (typeof localStorage !== 'undefined') {
-                console.error("localStorage is available but no data found for ID:", id);
-                setError(`This shared link with ID "${id}" has expired or doesn't exist. The shared data could not be found in your browser.`);
+                console.error("Data not found for ID:", id);
+                setError(`This shared link with ID "${id}" has expired or doesn't exist. The shared data could not be found.`);
               } else {
                 console.error("localStorage is not available in this browser context");
                 setError(`Unable to access browser storage. This might be due to privacy settings or using incognito/private browsing mode.`);
@@ -116,7 +136,7 @@ export const useSharedData = (): UseSharedDataReturn => {
         
         // If we reach here, we couldn't load data from either method
         if (id) {
-          setError(`This shared link with ID "${id}" has expired or doesn't exist. The shared data could not be found in your browser.`);
+          setError(`This shared link with ID "${id}" has expired or doesn't exist. The shared data could not be found.`);
         } else {
           setError("Invalid share link - missing required data. Please ask for a new share link.");
         }
