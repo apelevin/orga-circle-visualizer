@@ -62,19 +62,6 @@ const StructureProblems: React.FC<StructureProblemsProps> = ({ organizationData,
     }
   };
 
-  const getSeverityColor = (severity: StructureProblem['severity']) => {
-    switch (severity) {
-      case 'low':
-        return 'text-blue-500';
-      case 'medium':
-        return 'text-amber-500';
-      case 'high':
-        return 'text-red-500';
-      default:
-        return 'text-gray-500';
-    }
-  };
-
   if (!organizationData) {
     return (
       <div className="flex items-center justify-center h-full">
@@ -110,7 +97,6 @@ const StructureProblems: React.FC<StructureProblemsProps> = ({ organizationData,
                   <TableHead>Type</TableHead>
                   <TableHead>Name</TableHead>
                   <TableHead>Details</TableHead>
-                  <TableHead>Severity</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -124,9 +110,6 @@ const StructureProblems: React.FC<StructureProblemsProps> = ({ organizationData,
                     </TableCell>
                     <TableCell className="font-medium">{problem.name}</TableCell>
                     <TableCell>{problem.details}</TableCell>
-                    <TableCell className={`font-medium ${getSeverityColor(problem.severity)}`}>
-                      {problem.severity.charAt(0).toUpperCase() + problem.severity.slice(1)}
-                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
