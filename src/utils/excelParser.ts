@@ -1,3 +1,4 @@
+
 import * as XLSX from 'xlsx';
 import { Circle, ExcelData, HierarchyNode, PeopleData } from '@/types';
 
@@ -12,13 +13,15 @@ export const parseExcelFile = async (file: File, isPeopleData = false): Promise<
         const sheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[sheetName];
         
+        // Get raw data as array instead of objects with named keys
         const rawData = XLSX.utils.sheet_to_json<any[]>(worksheet, { header: 1 });
         
+        // Skip empty rows
         const nonEmptyRows = rawData.filter(row => {
           if (isPeopleData) {
-            return row && row.length >= 4;
+            return row && row.length >= 4; // Need at least 4 columns for people data
           } else {
-            return row && row.length >= 3;
+            return row && row.length >= 3; // Need at least 3 columns for org data
           }
         });
         
@@ -27,6 +30,7 @@ export const parseExcelFile = async (file: File, isPeopleData = false): Promise<
           return;
         }
         
+        // Skip header row and transform data to our desired format
         if (isPeopleData) {
           const jsonData = nonEmptyRows.slice(1).map(row => ({
             circleName: row[0]?.toString().trim() || 'Unknown Circle',
@@ -57,19 +61,26 @@ export const parseExcelFile = async (file: File, isPeopleData = false): Promise<
 };
 
 export const processExcelData = (data: any[]): Circle[] => {
+  // Create a Map to store unique circles and their roles
   const circleMap = new Map<string, Circle>();
+  
+  // Create a Map to track which roles appear in which circles
   const roleToCirclesMap = new Map<string, string[]>();
   
+  // Process each row from the Excel data
   data.forEach((row) => {
     const circleName = row.circleName;
     const role = row.role;
     
+    // Ensure FTE is a valid number
     let fte = 0;
     if (row.fte !== undefined && row.fte !== null) {
+      // Convert to number and ensure it's valid
       fte = parseFloat(row.fte.toString());
       if (isNaN(fte)) fte = 0;
     }
     
+    // Create the circle if it doesn't exist yet
     if (!circleMap.has(circleName)) {
       circleMap.set(circleName, {
         name: circleName,
@@ -78,9 +89,11 @@ export const processExcelData = (data: any[]): Circle[] => {
       });
     }
     
+    // Add the role to the circle
     const circle = circleMap.get(circleName)!;
     circle.roles.push({ name: role, fte });
     
+    // Track which circles a role appears in
     if (roleToCirclesMap.has(role)) {
       if (!roleToCirclesMap.get(role)!.includes(circleName)) {
         roleToCirclesMap.get(role)!.push(circleName);
@@ -90,7 +103,9 @@ export const processExcelData = (data: any[]): Circle[] => {
     }
   });
   
+  // Calculate the correct totalFTE for each circle
   for (const circle of circleMap.values()) {
+    // Sum up the FTE values from all roles in this circle
     circle.totalFTE = circle.roles.reduce((sum, role) => sum + role.fte, 0);
   }
   
@@ -111,35 +126,11 @@ export const transformToHierarchy = (circles: Circle[]): HierarchyNode => {
     name: "Organization",
     children: circles.map(circle => ({
       name: circle.name,
-      value: circle.totalFTE,
+      value: circle.totalFTE, // This is the correct totalFTE from all roles
       children: circle.roles.map(role => ({
         name: role.name,
         value: role.fte
       }))
     }))
   };
-};
-
-export const generateShareableId = (): string => {
-  return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-};
-
-export const storeSharedData = (organizationData: HierarchyNode, peopleData: PeopleData[]): string => {
-  const shareId = generateShareableId();
-  const sharedData = {
-    organizationData,
-    peopleData,
-    createdAt: new Date().toISOString()
-  };
-
-  const existingShares = JSON.parse(localStorage.getItem('orgShares') || '{}');
-  existingShares[shareId] = sharedData;
-  localStorage.setItem('orgShares', JSON.stringify(existingShares));
-
-  return shareId;
-};
-
-export const getSharedData = (shareId: string): { organizationData: HierarchyNode, peopleData: PeopleData[] } | null => {
-  const existingShares = JSON.parse(localStorage.getItem('orgShares') || '{}');
-  return existingShares[shareId] || null;
 };

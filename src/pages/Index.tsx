@@ -1,6 +1,5 @@
 
 import * as React from 'react';
-import { Link } from 'react-router-dom';
 import FileUpload from '@/components/FileUpload';
 import CirclePackingChart from '@/components/CirclePackingChart';
 import EmptyState from '@/components/EmptyState';
@@ -10,7 +9,7 @@ import InfoPanel from '@/components/InfoPanel';
 import PersonInfoPanel from '@/components/PersonInfoPanel';
 import { HierarchyNode, PeopleData } from '@/types';
 import { Button } from '@/components/ui/button';
-import { RefreshCw, Shield } from 'lucide-react';
+import { RefreshCw } from 'lucide-react';
 
 const Index = () => {
   const [organizationData, setOrganizationData] = React.useState<HierarchyNode | null>(null);
@@ -106,23 +105,14 @@ const Index = () => {
       
       <main className="flex-1 container mx-auto px-4 py-4">
         <div className="w-full mx-auto">
-          <div className="mb-4 flex flex-col sm:flex-row justify-center sm:justify-between items-center gap-4">
-            <div className="flex justify-center">
-              <FileUpload 
-                onFileProcessed={handleFileProcessed} 
-                onPeopleFileProcessed={handlePeopleFileProcessed}
-                isLoading={isLoading}
-                hasOrganizationData={!!organizationData}
-                hasPeopleData={peopleData.length > 0}
-              />
-            </div>
-            
-            <Link to="/admin">
-              <Button variant="outline" size="sm" className="flex items-center gap-2">
-                <Shield className="h-4 w-4" />
-                Admin Zone
-              </Button>
-            </Link>
+          <div className="mb-4 flex justify-center">
+            <FileUpload 
+              onFileProcessed={handleFileProcessed} 
+              onPeopleFileProcessed={handlePeopleFileProcessed}
+              isLoading={isLoading}
+              hasOrganizationData={!!organizationData}
+              hasPeopleData={peopleData.length > 0}
+            />
           </div>
           
           {(organizationData || peopleData.length > 0) && (
