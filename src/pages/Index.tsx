@@ -210,7 +210,12 @@ const Index = () => {
                 
                 <TabsContent value="problems" className="w-full mt-4">
                   <div className="min-h-[70vh] w-full transition-all duration-500 ease-in-out animate-scale-in">
-                    <StructureProblems organizationData={organizationData} peopleData={peopleData} />
+                    <StructureProblems 
+                      organizationData={organizationData} 
+                      peopleData={peopleData} 
+                      onCircleClick={handleCircleOrRoleClick}
+                      onPersonClick={handlePersonClick}
+                    />
                   </div>
                 </TabsContent>
               </Tabs>

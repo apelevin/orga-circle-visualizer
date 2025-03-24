@@ -27,9 +27,16 @@ import {
 interface StructureProblemsProps {
   organizationData: HierarchyNode | null;
   peopleData: PeopleData[];
+  onCircleClick?: (circleName: string) => void;
+  onPersonClick?: (personName: string) => void;
 }
 
-const StructureProblems: React.FC<StructureProblemsProps> = ({ organizationData, peopleData }) => {
+const StructureProblems: React.FC<StructureProblemsProps> = ({ 
+  organizationData, 
+  peopleData,
+  onCircleClick,
+  onPersonClick
+}) => {
   const problems = analyzeStructure(organizationData, peopleData);
   
   const getProblemIcon = (type: StructureProblem['type']) => {
@@ -59,6 +66,17 @@ const StructureProblems: React.FC<StructureProblemsProps> = ({ organizationData,
         return 'Circle with only one role';
       default:
         return 'Unknown issue';
+    }
+  };
+  
+  const handleItemClick = (problem: StructureProblem) => {
+    if (problem.type === 'person-low-fte' && onPersonClick) {
+      onPersonClick(problem.name);
+    } else if (
+      ['circle-low-fte', 'circle-high-fte', 'circle-single-role'].includes(problem.type) && 
+      onCircleClick
+    ) {
+      onCircleClick(problem.name);
     }
   };
 
@@ -108,7 +126,14 @@ const StructureProblems: React.FC<StructureProblemsProps> = ({ organizationData,
                         {getProblemDescription(problem.type)}
                       </span>
                     </TableCell>
-                    <TableCell className="font-medium">{problem.name}</TableCell>
+                    <TableCell className="font-medium">
+                      <button 
+                        onClick={() => handleItemClick(problem)}
+                        className="hover:text-primary hover:underline focus:outline-none focus:text-primary transition-colors"
+                      >
+                        {problem.name}
+                      </button>
+                    </TableCell>
                     <TableCell>{problem.details}</TableCell>
                   </TableRow>
                 ))}
