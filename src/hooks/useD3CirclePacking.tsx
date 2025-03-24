@@ -1,3 +1,4 @@
+
 import { useEffect, useState, RefObject } from 'react';
 import * as d3 from 'd3';
 import { HierarchyNode, CirclePackingNode } from '@/types';
@@ -96,6 +97,7 @@ export const useD3CirclePacking = ({
       
       const g = svg.append('g');
       
+      // Draw circles with immediate visibility
       const circles = g.selectAll('circle')
         .data(root.descendants().slice(1))
         .enter()
@@ -118,7 +120,7 @@ export const useD3CirclePacking = ({
         })
         .style('stroke-width', 1)
         .style('cursor', 'pointer')
-        .style('opacity', 0)
+        .style('opacity', 1) // Set immediate opacity to 1 instead of 0
         .on('click', function(event, d) {
           onNodeClick(event, d);
         })
@@ -155,11 +157,12 @@ export const useD3CirclePacking = ({
             .attr('r', d => d.r);
           
           setTooltipData(null);
-        })
-        .transition()
+        });
+      
+      // Animation can be added here if needed
+      circles.transition()
         .duration(500)
-        .delay((d, i) => i * 10)
-        .style('opacity', 1);
+        .delay((d, i) => i * 10);
       
       g.selectAll('.warning-icon')
         .data(root.descendants().filter(d => {
@@ -177,10 +180,7 @@ export const useD3CirclePacking = ({
         .attr('d', 'M23.432 17.925L14.408 3.366c-.933-1.517-3.142-1.517-4.076 0L1.308 17.925c-.933 1.519.235 3.423 2.038 3.423h18.047c1.803 0 2.971-1.904 2.038-3.423zM12.37 16.615a1.219 1.219 0 0 1-1.225 1.224 1.22 1.22 0 0 1-1.225-1.224v-.028c0-.675.55-1.197 1.225-1.197s1.225.522 1.225 1.197v.028zm0-3.824c0 .675-.55 1.224-1.225 1.224a1.22 1.22 0 0 1-1.225-1.224v-4.13c0-.675.55-1.225 1.225-1.225s1.225.55 1.225 1.224v4.131z')
         .attr('transform', 'scale(0.8)')
         .attr('fill', '#FF9800')
-        .style('opacity', 0)
-        .transition()
-        .duration(700)
-        .style('opacity', 1);
+        .style('opacity', 1); // Set immediate opacity to 1 instead of 0
       
       const zoom = d3.zoom<SVGSVGElement, unknown>()
         .scaleExtent([0.4, 10])

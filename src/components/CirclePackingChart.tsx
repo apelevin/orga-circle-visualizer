@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef, useState } from 'react';
 import { HierarchyNode, PeopleData } from '@/types';
 import InfoPanel from './info-panel/InfoPanel';
@@ -135,6 +136,11 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data, peopleDat
         className="mx-auto bg-white/50 rounded-lg"
         style={{ maxHeight: '85vh' }}
       />
+      
+      {/* Add debug info */}
+      <div className="absolute top-0 right-0 bg-white/80 p-2 text-xs rounded-bl-lg z-10 text-gray-500">
+        SVG Dimensions: {dimensions.width} x {dimensions.height}
+      </div>
       
       <InfoPanel
         isOpen={isPanelOpen}
