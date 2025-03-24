@@ -4,7 +4,12 @@ import { Share, Copy, Check, ExternalLink } from 'lucide-react';
 import { toast } from "sonner";
 import { Button } from '@/components/ui/button';
 import { HierarchyNode, PeopleData } from '@/types';
-import { generateShareId, saveSharedData, encodeDataForSharing, saveSharedDataToServer } from '@/utils/shareUtils';
+import { 
+  generateShareId, 
+  saveSharedData, 
+  encodeDataForSharing, 
+  saveSharedDataToServer 
+} from '@/utils/share';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface ShareButtonProps {

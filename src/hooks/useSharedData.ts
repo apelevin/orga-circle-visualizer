@@ -1,8 +1,7 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useLocation, useNavigate } from "react-router-dom";
 import { HierarchyNode, PeopleData } from "@/types";
-import { getSharedData, decodeSharedData, getSharedDataFromServer } from "@/utils/shareUtils";
+import { getSharedData, decodeSharedData, getSharedDataFromServer } from "@/utils/share";
 
 export interface UseSharedDataReturn {
   organizationData: HierarchyNode | null;
