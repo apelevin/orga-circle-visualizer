@@ -5,24 +5,21 @@ import { HierarchyNode } from '@/types';
 
 interface CircleLabelsProps {
   root: d3.HierarchyCircularNode<HierarchyNode>;
+  groupElement: SVGGElement;
 }
 
-const CircleLabels: React.FC<CircleLabelsProps> = ({ root }) => {
+const CircleLabels: React.FC<CircleLabelsProps> = ({ root, groupElement }) => {
   const labelsRef = useRef<d3.Selection<SVGTextElement, d3.HierarchyCircularNode<HierarchyNode>, SVGGElement, unknown> | null>(null);
 
   useEffect(() => {
     console.log("CircleLabels useEffect running");
     
     try {
-      const svg = d3.select('svg');
-      if (!svg || svg.empty()) {
-        console.error("SVG element not found for labels");
-        return;
-      }
+      // Use the group element directly instead of searching for it
+      const g = d3.select(groupElement);
       
-      const g = svg.select('g');
       if (!g || g.empty()) {
-        console.error("SVG group element not found for labels");
+        console.error("SVG group element is invalid in CircleLabels");
         return;
       }
       
@@ -48,6 +45,8 @@ const CircleLabels: React.FC<CircleLabelsProps> = ({ root }) => {
       
       // Store the selection for cleanup
       labelsRef.current = labels;
+      
+      console.log(`Successfully rendered ${labels.size()} labels`);
     } catch (error) {
       console.error("Error rendering labels:", error);
     }
@@ -58,7 +57,7 @@ const CircleLabels: React.FC<CircleLabelsProps> = ({ root }) => {
         labelsRef.current.remove();
       }
     };
-  }, [root]);
+  }, [root, groupElement]);
   
   return null;
 };

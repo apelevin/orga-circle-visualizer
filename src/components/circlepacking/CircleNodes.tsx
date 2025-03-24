@@ -16,13 +16,15 @@ interface CircleNodesProps {
     type?: string;
   } | null) => void;
   handleNodeClick: (event: React.MouseEvent, d: d3.HierarchyCircularNode<HierarchyNode>) => void;
+  groupElement: SVGGElement;
 }
 
 const CircleNodes: React.FC<CircleNodesProps> = ({ 
   root, 
   colorScale, 
   setTooltipData, 
-  handleNodeClick 
+  handleNodeClick,
+  groupElement
 }) => {
   const circlesRef = useRef<d3.Selection<SVGCircleElement, d3.HierarchyCircularNode<HierarchyNode>, SVGGElement, unknown> | null>(null);
   
@@ -30,15 +32,11 @@ const CircleNodes: React.FC<CircleNodesProps> = ({
     console.log("CircleNodes useEffect running, rendering circles");
     
     try {
-      const svg = d3.select('svg');
-      if (!svg || svg.empty()) {
-        console.error("SVG element not found for circles");
-        return;
-      }
+      // Use the group element directly instead of searching for it
+      const g = d3.select(groupElement);
       
-      const g = svg.select('g');
       if (!g || g.empty()) {
-        console.error("SVG group element not found for circles");
+        console.error("SVG group element is invalid in CircleNodes");
         return;
       }
       
@@ -105,6 +103,8 @@ const CircleNodes: React.FC<CircleNodesProps> = ({
           
           setTooltipData(null);
         });
+        
+      console.log(`Successfully rendered ${circles.size()} circles`);
     } catch (error) {
       console.error("Error rendering circles:", error);
     }
@@ -117,7 +117,7 @@ const CircleNodes: React.FC<CircleNodesProps> = ({
           .on('mouseout', null);
       }
     };
-  }, [root, colorScale, setTooltipData, handleNodeClick]);
+  }, [root, colorScale, setTooltipData, handleNodeClick, groupElement]);
   
   return null;
 };

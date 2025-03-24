@@ -7,12 +7,14 @@ interface CirclePackingZoomProps {
   svgRef: React.RefObject<SVGSVGElement>;
   hierarchyData: d3.HierarchyCircularNode<HierarchyNode>;
   dimensions: { width: number; height: number };
+  groupElement: SVGGElement;
 }
 
 const CirclePackingZoom: React.FC<CirclePackingZoomProps> = ({ 
   svgRef, 
   hierarchyData, 
-  dimensions 
+  dimensions,
+  groupElement
 }) => {
   const zoomBehaviorRef = useRef<d3.ZoomBehavior<SVGSVGElement, unknown> | null>(null);
 
@@ -30,9 +32,11 @@ const CirclePackingZoom: React.FC<CirclePackingZoomProps> = ({
         return;
       }
       
-      const g = svg.select('g');
+      // Use the group element directly instead of searching for it
+      const g = d3.select(groupElement);
+      
       if (!g || g.empty()) {
-        console.error("SVG group element not found for zoom");
+        console.error("SVG group element is invalid in CirclePackingZoom");
         return;
       }
       
@@ -85,7 +89,7 @@ const CirclePackingZoom: React.FC<CirclePackingZoomProps> = ({
         svgSelection.on('dblclick', null);
       }
     };
-  }, [hierarchyData, dimensions, svgRef]);
+  }, [hierarchyData, dimensions, svgRef, groupElement]);
   
   return null;
 };

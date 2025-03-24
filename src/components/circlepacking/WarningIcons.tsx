@@ -5,24 +5,21 @@ import { HierarchyNode } from '@/types';
 
 interface WarningIconsProps {
   root: d3.HierarchyCircularNode<HierarchyNode>;
+  groupElement: SVGGElement;
 }
 
-const WarningIcons: React.FC<WarningIconsProps> = ({ root }) => {
+const WarningIcons: React.FC<WarningIconsProps> = ({ root, groupElement }) => {
   const iconsRef = useRef<d3.Selection<SVGGElement, d3.HierarchyCircularNode<HierarchyNode>, SVGGElement, unknown> | null>(null);
 
   useEffect(() => {
     console.log("WarningIcons useEffect running");
     
     try {
-      const svg = d3.select('svg');
-      if (!svg || svg.empty()) {
-        console.error("SVG element not found for warning icons");
-        return;
-      }
+      // Use the group element directly instead of searching for it
+      const g = d3.select(groupElement);
       
-      const g = svg.select('g');
       if (!g || g.empty()) {
-        console.error("SVG group element not found for warning icons");
+        console.error("SVG group element is invalid in WarningIcons");
         return;
       }
       
@@ -53,6 +50,8 @@ const WarningIcons: React.FC<WarningIconsProps> = ({ root }) => {
       
       // Store the selection for cleanup
       iconsRef.current = icons;
+      
+      console.log(`Successfully rendered ${icons.size()} warning icons`);
     } catch (error) {
       console.error("Error rendering warning icons:", error);
     }
@@ -63,7 +62,7 @@ const WarningIcons: React.FC<WarningIconsProps> = ({ root }) => {
         iconsRef.current.remove();
       }
     };
-  }, [root]);
+  }, [root, groupElement]);
   
   return null;
 };
