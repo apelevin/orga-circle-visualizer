@@ -1,19 +1,21 @@
-
 import * as React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { toast } from "sonner";
 import FileUpload from '@/components/FileUpload';
+import CirclePackingChart from '@/components/CirclePackingChart';
 import EmptyState from '@/components/EmptyState';
 import Header from '@/components/Header';
 import SearchInput from '@/components/SearchInput';
 import InfoPanel from '@/components/InfoPanel';
 import PersonInfoPanel from '@/components/PersonInfoPanel';
-import OrganizationVisualization from '@/components/OrganizationVisualization';
-import FooterSection from '@/components/FooterSection';
+import StructureProblems from '@/components/StructureProblems';
 import { HierarchyNode, PeopleData } from '@/types';
+import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { CircleDot, RefreshCw, Settings, Share, CircleAlert } from 'lucide-react';
+import { generateShareId, saveSharedData } from '@/utils/shareUtils';
 
 const Index = () => {
-  const navigate = useNavigate();
   const [organizationData, setOrganizationData] = React.useState<HierarchyNode | null>(null);
   const [peopleData, setPeopleData] = React.useState<PeopleData[]>([]);
   const [isLoading, setIsLoading] = React.useState(false);
@@ -28,6 +30,7 @@ const Index = () => {
   } | null>(null);
   const [selectedPerson, setSelectedPerson] = React.useState<string | null>(null);
   const [isPersonPanelOpen, setIsPersonPanelOpen] = React.useState(false);
+  const [activeTab, setActiveTab] = React.useState("visualization");
 
   const handleFileProcessed = (data: HierarchyNode) => {
     setIsLoading(true);
@@ -101,6 +104,36 @@ const Index = () => {
     window.location.reload();
   };
 
+  const handleShareOrganization = () => {
+    if (!organizationData) {
+      toast.error("No organization data to share");
+      return;
+    }
+    
+    const shareId = generateShareId();
+    const shareName = `Organization Structure ${new Date().toLocaleDateString()}`;
+    
+    saveSharedData(shareId, organizationData, peopleData, shareName);
+    
+    const shareUrl = `${window.location.origin}/shared/${shareId}`;
+    
+    // Copy to clipboard
+    navigator.clipboard.writeText(shareUrl).then(() => {
+      toast.success("Share link copied to clipboard!", {
+        description: "You can now share this link with others.",
+        action: {
+          label: "View Link",
+          onClick: () => window.open(shareUrl, "_blank"),
+        },
+      });
+    }).catch(err => {
+      console.error("Failed to copy link: ", err);
+      toast.info("Share link created but couldn't copy to clipboard", {
+        description: shareUrl,
+      });
+    });
+  };
+
   return (
     <div className="flex flex-col min-h-screen bg-background">
       <Header />
@@ -115,6 +148,22 @@ const Index = () => {
               hasOrganizationData={!!organizationData}
               hasPeopleData={peopleData.length > 0}
             />
+            
+            <div className="flex gap-2">
+              {organizationData && (
+                <Button variant="default" size="sm" onClick={handleShareOrganization} className="flex items-center gap-2">
+                  <Share className="h-4 w-4" />
+                  <span>Share Organization</span>
+                </Button>
+              )}
+              
+              <Button variant="outline" size="sm" asChild>
+                <Link to="/admin" className="flex items-center gap-2">
+                  <Settings className="h-4 w-4" />
+                  <span>Admin Zone</span>
+                </Link>
+              </Button>
+            </div>
           </div>
           
           {(organizationData || peopleData.length > 0) && (
@@ -135,14 +184,59 @@ const Index = () => {
               <p className="mt-4 text-muted-foreground">Processing your organization data...</p>
             </div>
           ) : organizationData ? (
-            <OrganizationVisualization 
-              organizationData={organizationData}
-              peopleData={peopleData}
-              isLoading={isLoading}
-              onCircleClick={handleCircleOrRoleClick}
-              onPersonClick={handlePersonClick}
-              onReset={handleReset}
-            />
+            <div className="flex flex-col items-center">
+              <Tabs 
+                defaultValue="visualization" 
+                value={activeTab}
+                onValueChange={setActiveTab}
+                className="w-full mb-4"
+              >
+                <TabsList className="grid w-full max-w-md mx-auto grid-cols-2">
+                  <TabsTrigger value="visualization" className="flex items-center gap-2">
+                    <CircleDot className="h-4 w-4" />
+                    <span>Visualization</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="problems" className="flex items-center gap-2">
+                    <CircleAlert className="h-4 w-4" />
+                    <span>Structure Problems</span>
+                  </TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="visualization" className="w-full">
+                  <div className="h-[80vh] w-full transition-all duration-500 ease-in-out animate-scale-in">
+                    <CirclePackingChart data={organizationData} peopleData={peopleData} />
+                  </div>
+                </TabsContent>
+                
+                <TabsContent value="problems" className="w-full mt-4">
+                  <div className="min-h-[70vh] w-full transition-all duration-500 ease-in-out animate-scale-in">
+                    <StructureProblems 
+                      organizationData={organizationData} 
+                      peopleData={peopleData} 
+                      onCircleClick={handleCircleOrRoleClick}
+                      onPersonClick={handlePersonClick}
+                    />
+                  </div>
+                </TabsContent>
+              </Tabs>
+              
+              {(organizationData || peopleData.length > 0) && (
+                <div className="mt-4 flex flex-col items-center">
+                  <Button 
+                    variant="outline"
+                    size="sm"
+                    onClick={handleReset}
+                    className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors px-8 py-6 rounded-full"
+                  >
+                    <RefreshCw className="h-5 w-5" />
+                    <span className="text-base">Reset Data</span>
+                  </Button>
+                  <p className="mt-3 text-muted-foreground text-sm">
+                    Reload the page to upload new data
+                  </p>
+                </div>
+              )}
+            </div>
           ) : (
             <div className="max-w-3xl mx-auto mt-4 animate-slide-up">
               <EmptyState />
@@ -169,7 +263,13 @@ const Index = () => {
         onRoleClick={handleCircleOrRoleClick}
       />
       
-      <FooterSection />
+      <footer className="py-4 border-t border-border/40 mt-auto">
+        <div className="container mx-auto px-4">
+          <p className="text-center text-sm text-muted-foreground">
+            Organization Circle Visualizer — Upload an Excel file to visualize your organization structure
+          </p>
+        </div>
+      </footer>
     </div>
   );
 };
