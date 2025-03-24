@@ -47,7 +47,7 @@ const CircleNodes: React.FC<CircleNodesProps> = ({
       const descendants = root.descendants().slice(1);
       console.log(`Rendering ${descendants.length} circles`);
       
-      // Create a group for each node that will contain the circle
+      // Create circles for each node
       const circles = g.selectAll('circle.circle-node')
         .data(descendants)
         .enter()
@@ -59,10 +59,11 @@ const CircleNodes: React.FC<CircleNodesProps> = ({
         .style('fill', d => {
           // Get color based on node depth and type
           const color = getNodeColor(d, colorScale);
-          return color || '#E5DEFF'; // Fallback color
+          console.log(`Circle ${d.data.name}, type: ${d.data.type}, color: ${color}`);
+          return color;
         })
-        .style('stroke', d => d.depth === 1 ? 'rgba(0,0,0,0.1)' : 'none')
-        .style('stroke-width', 2)
+        .style('stroke', d => d.depth === 1 ? 'rgba(255,255,255,0.3)' : 'none')
+        .style('stroke-width', 1.5)
         .style('cursor', 'pointer')
         .style('fill-opacity', 0.9);
       
@@ -80,7 +81,9 @@ const CircleNodes: React.FC<CircleNodesProps> = ({
             .transition()
             .duration(300)
             .attr('r', d.r * 1.05)
-            .style('fill-opacity', 1);
+            .style('fill-opacity', 1)
+            .style('stroke', '#ffffff')
+            .style('stroke-width', 2);
 
           const name = d.data.name || 'Unnamed';
           const isRole = d.depth === 2;
@@ -108,7 +111,9 @@ const CircleNodes: React.FC<CircleNodesProps> = ({
             .transition()
             .duration(300)
             .attr('r', d => d.r)
-            .style('fill-opacity', 0.9);
+            .style('fill-opacity', 0.9)
+            .style('stroke', d => d.depth === 1 ? 'rgba(255,255,255,0.3)' : 'none')
+            .style('stroke-width', d => d.depth === 1 ? 1.5 : 0);
           
           setTooltipData(null);
         });

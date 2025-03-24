@@ -2,20 +2,20 @@
 import * as d3 from 'd3';
 import { HierarchyNode } from '@/types';
 
-// Define color palette for different circle types
+// Define a more vibrant and distinct color palette for different circle types
 export const circleColors: string[] = [
-  '#E5DEFF', // Soft Purple
-  '#D3E4FD', // Soft Blue
-  '#FDE1D3', // Soft Peach
-  '#FFDEE2', // Soft Pink
-  '#F2FCE2', // Soft Green
-  '#FEF7CD', // Soft Yellow
-  '#FEC6A1', // Soft Orange
-  '#F1F0FB', // Soft Gray
   '#8B5CF6', // Vivid Purple
-  '#D946EF', // Magenta Pink
+  '#3B82F6', // Bright Blue
   '#F97316', // Bright Orange
-  '#0EA5E9'  // Ocean Blue
+  '#EF4444', // Bright Red
+  '#10B981', // Emerald Green
+  '#F59E0B', // Amber
+  '#EC4899', // Pink
+  '#6366F1', // Indigo
+  '#14B8A6', // Teal
+  '#D946EF', // Fuchsia
+  '#84CC16', // Lime
+  '#0EA5E9'  // Sky Blue
 ];
 
 // Create a color scale based on circle types
@@ -52,8 +52,8 @@ export const getNodeColor = (
   if (typeof colorScale !== 'function') {
     console.error("Invalid color scale provided to getNodeColor");
     return d.depth === 0 ? '#FFFFFF' : 
-           d.depth === 1 ? '#E5DEFF' : 
-           d.depth === 2 ? '#D3E4FD' : '#FFFFFF';
+           d.depth === 1 ? '#8B5CF6' : 
+           d.depth === 2 ? '#3B82F6' : '#FFFFFF';
   }
   
   try {
@@ -67,7 +67,7 @@ export const getNodeColor = (
       // For roles, slightly darker version of parent color
       const parentType = d.parent?.data.type || 'Undefined';
       const baseColor = colorScale(parentType);
-      const parentColor = d3.color(baseColor) || d3.color('#E5DEFF')!;
+      const parentColor = d3.color(baseColor) || d3.color('#8B5CF6')!;
       return parentColor.darker(0.2).toString();
     }
     return '#FFFFFF'; // Default fallback
@@ -75,7 +75,7 @@ export const getNodeColor = (
     console.error("Error in getNodeColor:", error);
     // Fallback colors
     return d.depth === 0 ? '#FFFFFF' : 
-           d.depth === 1 ? '#E5DEFF' : 
-           d.depth === 2 ? '#D3E4FD' : '#FFFFFF';
+           d.depth === 1 ? '#8B5CF6' : 
+           d.depth === 2 ? '#3B82F6' : '#FFFFFF';
   }
 };
