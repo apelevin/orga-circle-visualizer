@@ -1,3 +1,4 @@
+
 import React, { useCallback } from 'react';
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -141,7 +142,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
           </div>
           <p className="text-sm text-muted-foreground mt-1 flex items-center gap-1.5">
             <FileSpreadsheet className="h-3.5 w-3.5" />
-            <span>Excel files with circle, role, and FTE data (first 3 columns)</span>
+            <span>Excel files with circle (1), role (2), FTE (3), and circle type (4) columns</span>
           </p>
         </>
       )}
