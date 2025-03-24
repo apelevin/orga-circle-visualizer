@@ -1,8 +1,10 @@
+
 import React, { useEffect, useRef, useState } from 'react';
 import * as d3 from 'd3';
 import { HierarchyNode, CirclePackingNode, PeopleData } from '@/types';
 import { toast } from "sonner";
 import InfoPanel from './InfoPanel';
+import PersonInfoPanel from './PersonInfoPanel';
 import { AlertTriangle } from 'lucide-react';
 
 interface CirclePackingChartProps {
@@ -29,6 +31,9 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data, peopleDat
     parentCircles?: string[];
     isRole?: boolean;
   } | null>(null);
+
+  const [isPersonPanelOpen, setIsPersonPanelOpen] = useState(false);
+  const [selectedPerson, setSelectedPerson] = useState<string | null>(null);
 
   const [tooltipData, setTooltipData] = useState<{
     x: number;
@@ -102,6 +107,11 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data, peopleDat
     } else {
       toast.error(`Could not find "${nodeName}" in the visualization`);
     }
+  };
+
+  const handlePersonClick = (personName: string) => {
+    setSelectedPerson(personName);
+    setIsPersonPanelOpen(true);
   };
 
   const handleNodeClick = (event: React.MouseEvent | null, d: d3.HierarchyCircularNode<HierarchyNode>) => {
@@ -352,6 +362,16 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data, peopleDat
         selectedCircle={selectedCircle}
         peopleData={peopleData || []}
         onCircleClick={handleCircleOrRoleClick}
+        onPersonClick={handlePersonClick}
+      />
+      
+      <PersonInfoPanel
+        isOpen={isPersonPanelOpen}
+        onClose={() => setIsPersonPanelOpen(false)}
+        selectedPerson={selectedPerson}
+        peopleData={peopleData || []}
+        onCircleClick={handleCircleOrRoleClick}
+        onRoleClick={handleCircleOrRoleClick}
       />
       
       <div className="text-center mt-6 text-sm text-muted-foreground">
