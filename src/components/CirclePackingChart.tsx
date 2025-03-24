@@ -2,14 +2,17 @@
 import React, { useRef, useState } from 'react';
 import { HierarchyNode, PeopleData } from '@/types';
 import { toast } from "sonner";
-import InfoPanel from './InfoPanel';
-import PersonInfoPanel from './PersonInfoPanel';
-import { useCirclePacking } from '@/hooks/useCirclePacking';
-import { useContainerDimensions } from '@/hooks/useContainerDimensions';
 import CirclePackingRenderer from './circlepacking/CirclePackingRenderer';
 import CircleTooltip from './circlepacking/CircleTooltip';
 import CirclePackingFooter from './circlepacking/CirclePackingFooter';
 import CirclePackingNavigation from './circlepacking/CirclePackingNavigation';
+import CirclePackingContainer from './circlepacking/CirclePackingContainer';
+import CirclePackingError from './circlepacking/CirclePackingError';
+import InfoPanel from './InfoPanel';
+import PersonInfoPanel from './PersonInfoPanel';
+import { useCirclePacking } from '@/hooks/useCirclePacking';
+import { useContainerDimensions } from '@/hooks/useContainerDimensions';
+import { useZoomControls } from '@/hooks/useZoomControls';
 import * as d3 from 'd3';
 
 interface CirclePackingChartProps {
@@ -26,6 +29,8 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data, peopleDat
     data,
     dimensions
   });
+  
+  const zoomControls = useZoomControls({ resetZoomFunction: resetZoom });
   
   const [isPanelOpen, setIsPanelOpen] = useState(false);
   const [selectedCircle, setSelectedCircle] = useState<{
@@ -129,65 +134,20 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data, peopleDat
   };
 
   if (error) {
-    return (
-      <div className="w-full h-full flex items-center justify-center">
-        <div className="text-center p-6 bg-destructive/10 rounded-lg">
-          <h3 className="text-lg font-medium text-destructive mb-2">Visualization Error</h3>
-          <p className="text-muted-foreground">{error}</p>
-          <p className="text-sm mt-2">Please check your Excel file format and try again.</p>
-        </div>
-      </div>
-    );
+    return <CirclePackingError error={error} />;
   }
 
   return (
     <div className="w-full h-full flex-1 relative animate-fade-in" ref={containerRef}>
       <CirclePackingNavigation 
-        zoomIn={() => {
-          const svgElement = document.querySelector('svg');
-          if (svgElement) {
-            const zoomBehavior = d3.select(svgElement).property("__zoom");
-            if (zoomBehavior) {
-              const transform = d3.zoomIdentity
-                .translate(zoomBehavior.translate()[0], zoomBehavior.translate()[1])
-                .scale(zoomBehavior.scale() * 1.2);
-              
-              d3.select(svgElement)
-                .transition()
-                .duration(300)
-                .call(zoomBehavior.transform, transform);
-            }
-          }
-        }}
-        zoomOut={() => {
-          const svgElement = document.querySelector('svg');
-          if (svgElement) {
-            const zoomBehavior = d3.select(svgElement).property("__zoom");
-            if (zoomBehavior) {
-              const transform = d3.zoomIdentity
-                .translate(zoomBehavior.translate()[0], zoomBehavior.translate()[1])
-                .scale(zoomBehavior.scale() / 1.2);
-              
-              d3.select(svgElement)
-                .transition()
-                .duration(300)
-                .call(zoomBehavior.transform, transform);
-            }
-          }
-        }}
-        resetZoom={resetZoom}
+        zoomIn={zoomControls.zoomIn}
+        zoomOut={zoomControls.zoomOut}
+        resetZoom={zoomControls.resetZoom}
       />
       
-      <svg 
-        ref={svgRef} 
-        width={dimensions.width} 
-        height={dimensions.height}
-        className="mx-auto bg-white/50 rounded-lg"
-        style={{ maxHeight: '85vh' }}
-        onClick={(e) => {
-          // This is for the SVG background clicks only, not for circles
-          e.stopPropagation();
-        }}
+      <CirclePackingContainer 
+        svgRef={svgRef} 
+        dimensions={dimensions}
       />
       
       <CirclePackingRenderer
