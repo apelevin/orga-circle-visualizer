@@ -64,9 +64,17 @@ const ShareButton: React.FC<ShareButtonProps> = ({ organizationData, peopleData 
       
       // Save to server first
       try {
-        await saveSharedDataToServer(shareId, organizationData, peopleData, shareName);
-        console.log("Data saved successfully to server with ID:", shareId);
+        const savedId = await saveSharedDataToServer(shareId, organizationData, peopleData, shareName);
+        console.log("Data saved successfully to server with ID:", savedId);
         serverSaveSuccessful = true;
+        
+        // Also save locally as a backup
+        try {
+          saveSharedData(shareId, organizationData, peopleData, shareName);
+        } catch (localError) {
+          console.warn("Could not save to local storage as backup:", localError);
+          // We don't need to notify the user since server save worked
+        }
       } catch (serverError) {
         console.error("Error saving to server:", serverError);
         toast.error("Could not save share data to server", {

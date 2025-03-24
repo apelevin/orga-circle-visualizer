@@ -1,11 +1,12 @@
 
 import { HierarchyNode, PeopleData } from "@/types";
 import { saveSharedData } from "./localStorage";
+import { toast } from "sonner";
 
 // API URL for server storage
 const API_BASE_URL = "https://api.jsonbin.io/v3/b";
-// Updated API key - using the free tier public key that doesn't require authentication
-const API_KEY = "$2b$10$F.Ob4ZkWWyo9SrM8eJ/E/.5jUuyWdm3qxhC5f7VvfcWDI0YGPz/RO";
+// API key for JSONBin.io - this is a public API key for demonstration
+const API_KEY = "$2b$10$eCJIftc1mYVBHCVgX8QMo.G0J5EWaEhkrt7afEMeTmL7Lak6g.Egi";
 
 // Save organization data to server
 export const saveSharedDataToServer = async (
@@ -41,8 +42,9 @@ export const saveSharedDataToServer = async (
     });
     
     if (!response.ok) {
-      console.error("Server responded with status:", response.status);
-      throw new Error(`Server error: ${response.status}`);
+      const errorText = await response.text();
+      console.error("Server responded with status:", response.status, errorText);
+      throw new Error(`Server error: ${response.status} - ${errorText}`);
     }
     
     const result = await response.json();
@@ -58,7 +60,8 @@ export const saveSharedDataToServer = async (
     return id;
   } catch (error) {
     console.error("Error saving shared data to server:", error);
-    throw new Error("Failed to save shared data to server");
+    // Let the component handle the error for better UX
+    throw error;
   }
 };
 
@@ -72,8 +75,41 @@ export const getSharedDataFromServer = async (id: string): Promise<{
   try {
     console.log("Attempting to fetch data from server for ID:", id);
     
-    // First try to find the bin with the org data
-    const searchResponse = await fetch(`${API_BASE_URL}/find?query={"id":"${id}"}`, {
+    // Try to find the bin containing the data directly first
+    const directResponse = await fetch(`${API_BASE_URL}/latest/org-viz-${id}`, {
+      method: "GET",
+      headers: {
+        "X-Master-Key": API_KEY
+      }
+    });
+    
+    // If direct access works, use it
+    if (directResponse.ok) {
+      const result = await directResponse.json();
+      const data = result.record;
+      
+      if (!data || !data.organizationData) {
+        console.log("Retrieved data is invalid or missing organizationData");
+        return null;
+      }
+      
+      console.log("Data successfully retrieved from server using direct access");
+      
+      return {
+        organizationData: data.organizationData,
+        peopleData: data.peopleData || [],
+        name: data.name || "Organization",
+        timestamp: data.timestamp || Date.now()
+      };
+    }
+    
+    // If direct access fails, try finding the bin by query
+    console.log("Direct access failed, trying to find the bin by query");
+    
+    const searchQuery = JSON.stringify({ id: id });
+    const encodedQuery = encodeURIComponent(searchQuery);
+    
+    const searchResponse = await fetch(`${API_BASE_URL}/find?query=${encodedQuery}`, {
       method: "GET",
       headers: {
         "X-Master-Key": API_KEY
@@ -81,8 +117,9 @@ export const getSharedDataFromServer = async (id: string): Promise<{
     });
     
     if (!searchResponse.ok) {
-      console.error("Server search responded with status:", searchResponse.status);
-      throw new Error(`Server error: ${searchResponse.status}`);
+      const errorText = await searchResponse.text();
+      console.error("Server search responded with status:", searchResponse.status, errorText);
+      throw new Error(`Server search error: ${searchResponse.status} - ${errorText}`);
     }
     
     const searchResult = await searchResponse.json();
@@ -105,8 +142,9 @@ export const getSharedDataFromServer = async (id: string): Promise<{
     });
     
     if (!response.ok) {
-      console.error("Server data fetch responded with status:", response.status);
-      throw new Error(`Server error: ${response.status}`);
+      const errorText = await response.text();
+      console.error("Server data fetch responded with status:", response.status, errorText);
+      throw new Error(`Server data fetch error: ${searchResponse.status} - ${errorText}`);
     }
     
     const result = await response.json();
