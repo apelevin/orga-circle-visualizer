@@ -38,15 +38,9 @@ export const getColorScale = (uniqueTypes: string[]): d3.ScaleOrdinal<string, st
   }
   
   // Create and return the scale
-  const scale = d3.scaleOrdinal<string>()
+  return d3.scaleOrdinal<string>()
     .domain(uniqueTypes)
     .range(colorsToUse);
-  
-  // Test the scale to ensure it's working
-  const testResult = scale(uniqueTypes[0]);
-  console.log(`Test color scale: ${uniqueTypes[0]} -> ${testResult}`);
-  
-  return scale;
 };
 
 // Get color for a node based on its depth and type
@@ -54,9 +48,9 @@ export const getNodeColor = (
   d: d3.HierarchyCircularNode<HierarchyNode>, 
   colorScale: d3.ScaleOrdinal<string, string>
 ): string => {
-  // If colorScale is not a function, use fallback colors
+  // For safety, check if colorScale is a function
   if (typeof colorScale !== 'function') {
-    console.warn("Invalid color scale provided to getNodeColor");
+    console.error("Invalid color scale provided to getNodeColor");
     return d.depth === 0 ? '#FFFFFF' : 
            d.depth === 1 ? '#E5DEFF' : 
            d.depth === 2 ? '#D3E4FD' : '#FFFFFF';
@@ -64,23 +58,22 @@ export const getNodeColor = (
   
   try {
     if (d.depth === 0) {
-      return '#FFFFFF'; // Root node
+      return '#FFFFFF'; // Root node is white
     } else if (d.depth === 1) {
       // Use the color based on the circle's type
       const type = d.data.type || 'Undefined';
-      const color = colorScale(type);
-      console.log(`Node ${d.data.name} (type: ${type}) gets color: ${color}`);
-      return color;
+      return colorScale(type);
     } else if (d.depth === 2) {
-      // For roles, darken the parent circle's color
+      // For roles, slightly darker version of parent color
       const parentType = d.parent?.data.type || 'Undefined';
       const baseColor = colorScale(parentType);
       const parentColor = d3.color(baseColor) || d3.color('#E5DEFF')!;
       return parentColor.darker(0.2).toString();
     }
-    return '#FFFFFF';
+    return '#FFFFFF'; // Default fallback
   } catch (error) {
     console.error("Error in getNodeColor:", error);
+    // Fallback colors
     return d.depth === 0 ? '#FFFFFF' : 
            d.depth === 1 ? '#E5DEFF' : 
            d.depth === 2 ? '#D3E4FD' : '#FFFFFF';

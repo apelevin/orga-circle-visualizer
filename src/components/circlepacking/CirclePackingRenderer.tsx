@@ -51,7 +51,6 @@ const CirclePackingRenderer: React.FC<CirclePackingRendererProps> = ({
       const svg = d3.select(svgRef.current);
       svg.selectAll('*').remove();
       setIsGroupCreated(false);
-      setColorScale(null);
       
       // Create a container group for all visualization elements
       const g = svg.append('g');
@@ -61,49 +60,44 @@ const CirclePackingRenderer: React.FC<CirclePackingRendererProps> = ({
       const gElement = g.node();
       if (gElement) {
         setGroupElement(gElement);
+      } else {
+        console.error("Failed to create SVG group element");
+        return;
       }
       
-      console.log("SVG group created:", g.node() ? "success" : "failed");
-      
-      // Get unique types for color mapping
+      // Extract unique types from the hierarchy data
       const types = new Set<string>();
-      
       hierarchyData.children?.forEach((d) => {
         const type = d.data.type || 'Undefined';
         types.add(type);
       });
       
-      // Create array from the set of unique types
       const uniqueTypes = Array.from(types);
-      console.log("Unique types for color scale:", uniqueTypes);
+      console.log("Unique types extracted:", uniqueTypes);
       
-      // Create a color scale and ensure it's a function
+      // Create color scale
       const newColorScale = getColorScale(uniqueTypes);
-      console.log("Color scale created, is function:", typeof newColorScale === 'function');
       
-      // Test the color scale
-      if (uniqueTypes.length > 0) {
-        const testType = uniqueTypes[0];
-        try {
-          const testColor = newColorScale(testType);
-          console.log(`Test color for "${testType}": ${testColor}`);
-        } catch (err) {
-          console.error("Error testing color scale:", err);
-        }
+      // Verify the color scale works by testing it
+      try {
+        const testType = uniqueTypes[0] || 'Default';
+        const testColor = newColorScale(testType);
+        console.log(`Test color for "${testType}": ${testColor}`);
+        
+        // If we got here, the color scale is valid
+        setColorScale(newColorScale);
+        setIsGroupCreated(true);
+      } catch (err) {
+        console.error("Color scale test failed:", err);
+        // Create a fallback color scale
+        const fallbackScale = d3.scaleOrdinal<string>()
+          .domain(['Default'])
+          .range(['#E5DEFF']);
+        setColorScale(fallbackScale);
+        setIsGroupCreated(true);
       }
-      
-      // Wait a tick to ensure the group is in the DOM
-      setTimeout(() => {
-        if (g.node()) {
-          setIsGroupCreated(true);
-          setColorScale(newColorScale);
-          console.log("Group creation confirmed and color scale set after timeout");
-        } else {
-          console.error("Failed to create SVG group even after timeout");
-        }
-      }, 0);
     } catch (err) {
-      console.error("Error rendering visualization:", err);
+      console.error("Error setting up visualization:", err);
     }
     
     // Clean up function
@@ -137,6 +131,12 @@ const CirclePackingRenderer: React.FC<CirclePackingRendererProps> = ({
 
   return (
     <>
+      <CirclePackingZoom 
+        svgRef={svgRef} 
+        hierarchyData={hierarchyData} 
+        dimensions={dimensions} 
+        groupElement={groupElement}
+      />
       <CircleNodes 
         root={hierarchyData} 
         colorScale={colorScale} 
@@ -150,12 +150,6 @@ const CirclePackingRenderer: React.FC<CirclePackingRendererProps> = ({
       />
       <WarningIcons 
         root={hierarchyData} 
-        groupElement={groupElement}
-      />
-      <CirclePackingZoom 
-        svgRef={svgRef} 
-        hierarchyData={hierarchyData} 
-        dimensions={dimensions} 
         groupElement={groupElement}
       />
     </>
