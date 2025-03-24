@@ -1,6 +1,6 @@
 
 import * as React from 'react';
-import { Share } from 'lucide-react';
+import { Share, Copy, Check, ExternalLink } from 'lucide-react';
 import { toast } from "sonner";
 import { Button } from '@/components/ui/button';
 import { HierarchyNode, PeopleData } from '@/types';
@@ -14,6 +14,30 @@ interface ShareButtonProps {
 
 const ShareButton: React.FC<ShareButtonProps> = ({ organizationData, peopleData }) => {
   const [isSharing, setIsSharing] = React.useState(false);
+  const [shareId, setShareId] = React.useState<string | null>(null);
+  const [copied, setCopied] = React.useState(false);
+
+  const copyTimeout = React.useRef<NodeJS.Timeout | null>(null);
+
+  const copyToClipboard = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      
+      if (copyTimeout.current) {
+        clearTimeout(copyTimeout.current);
+      }
+      
+      copyTimeout.current = setTimeout(() => {
+        setCopied(false);
+      }, 2000);
+      
+      return true;
+    } catch (error) {
+      console.error("Failed to copy text:", error);
+      return false;
+    }
+  };
 
   const handleShareOrganization = async () => {
     if (!organizationData) {
@@ -29,6 +53,7 @@ const ShareButton: React.FC<ShareButtonProps> = ({ organizationData, peopleData 
       
       // ALWAYS use the ID-based approach first (most reliable)
       const shareId = generateShareId();
+      setShareId(shareId);
       
       // Save to localStorage with a try-catch to handle storage errors
       try {
@@ -75,19 +100,36 @@ const ShareButton: React.FC<ShareButtonProps> = ({ organizationData, peopleData 
       }
       
       // Copy the URL to clipboard
-      try {
-        await navigator.clipboard.writeText(shareUrl);
+      const copied = await copyToClipboard(shareUrl);
+      
+      if (copied) {
         toast.success("Share link copied to clipboard!", {
-          description: "You can now share this link with others.",
-          action: {
-            label: "View Link",
-            onClick: () => window.open(shareUrl, "_blank"),
-          },
+          description: (
+            <div className="space-y-2">
+              <p>You can now share this link with others.</p>
+              <p className="text-xs text-muted-foreground">Share ID: {shareId}</p>
+              <div className="flex gap-2 mt-1">
+                <Button size="sm" variant="outline" onClick={() => window.open(shareUrl, "_blank")} className="h-7 text-xs">
+                  <ExternalLink className="mr-1 h-3 w-3" />
+                  Open Link
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => copyToClipboard(shareUrl)} className="h-7 text-xs">
+                  <Copy className="mr-1 h-3 w-3" />
+                  Copy Again
+                </Button>
+              </div>
+            </div>
+          ),
         });
-      } catch (clipboardErr) {
-        console.error("Failed to copy link: ", clipboardErr);
+      } else {
         toast.info("Share link created", {
-          description: "Copy this link manually to share with others: " + shareUrl,
+          description: (
+            <div className="space-y-2">
+              <p>Copy this link manually to share with others:</p>
+              <code className="block p-2 bg-muted rounded text-xs overflow-x-auto">{shareUrl}</code>
+              <p className="text-xs text-muted-foreground">Share ID: {shareId}</p>
+            </div>
+          ),
         });
       }
       

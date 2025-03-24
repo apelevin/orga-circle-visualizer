@@ -37,7 +37,8 @@ export const useSharedData = (): UseSharedDataReturn => {
             console.log("Successfully loaded data by ID:", {
               hasOrgData: !!sharedData.organizationData,
               peopleCount: sharedData.peopleData?.length || 0,
-              name: sharedData.name
+              name: sharedData.name,
+              timestamp: new Date(sharedData.timestamp).toLocaleString()
             });
             
             setOrganizationData(sharedData.organizationData);
@@ -46,8 +47,19 @@ export const useSharedData = (): UseSharedDataReturn => {
             setIsLoading(false);
             return;
           } else {
-            console.error("No valid shared data found for ID:", id);
-            // We'll try URL param method next, don't set error yet
+            // Check if localStorage is available but the data isn't found
+            try {
+              if (typeof localStorage !== 'undefined') {
+                console.error("localStorage is available but no data found for ID:", id);
+                setError(`This shared link with ID "${id}" has expired or doesn't exist. The shared data could not be found in your browser.`);
+              } else {
+                console.error("localStorage is not available in this browser context");
+                setError(`Unable to access browser storage. This might be due to privacy settings or using incognito/private browsing mode.`);
+              }
+            } catch (storageError) {
+              console.error("Error accessing localStorage:", storageError);
+              setError(`Cannot access browser storage. This might be due to privacy settings or using incognito/private browsing mode.`);
+            }
           }
         }
         

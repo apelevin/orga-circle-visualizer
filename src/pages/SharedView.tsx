@@ -1,6 +1,7 @@
 
 import React, { useState } from "react";
 import { useSharedData } from "@/hooks/useSharedData";
+import { useParams } from "react-router-dom";
 import SearchInput from "@/components/SearchInput";
 import InfoPanel from "@/components/InfoPanel";
 import PersonInfoPanel from "@/components/PersonInfoPanel";
@@ -11,6 +12,7 @@ import VisualizationTabs from "@/components/VisualizationTabs";
 import FooterSection from "@/components/FooterSection";
 
 const SharedView = () => {
+  const { id } = useParams<{ id: string }>();
   // Use our custom hook for data loading
   const { organizationData, peopleData, orgName, isLoading, error } = useSharedData();
 
@@ -34,7 +36,7 @@ const SharedView = () => {
 
   // If there was an error or no data, show the error component
   if (error || !organizationData) {
-    return <SharedError errorMessage={error} />;
+    return <SharedError errorMessage={error} shareId={id} />;
   }
 
   const handleCircleOrRoleClick = (nodeName: string) => {
