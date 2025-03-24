@@ -1,8 +1,8 @@
 
 import * as XLSX from 'xlsx';
-import { Circle, ExcelData, HierarchyNode } from '@/types';
+import { Circle, ExcelData, HierarchyNode, PeopleData } from '@/types';
 
-export const parseExcelFile = async (file: File): Promise<any[]> => {
+export const parseExcelFile = async (file: File, isPeopleData = false): Promise<any[]> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     
@@ -17,7 +17,13 @@ export const parseExcelFile = async (file: File): Promise<any[]> => {
         const rawData = XLSX.utils.sheet_to_json<any[]>(worksheet, { header: 1 });
         
         // Skip empty rows
-        const nonEmptyRows = rawData.filter(row => row && row.length >= 3);
+        const nonEmptyRows = rawData.filter(row => {
+          if (isPeopleData) {
+            return row && row.length >= 4; // Need at least 4 columns for people data
+          } else {
+            return row && row.length >= 3; // Need at least 3 columns for org data
+          }
+        });
         
         if (nonEmptyRows.length <= 1) {
           resolve([]);
@@ -25,13 +31,22 @@ export const parseExcelFile = async (file: File): Promise<any[]> => {
         }
         
         // Skip header row and transform data to our desired format
-        const jsonData = nonEmptyRows.slice(1).map(row => ({
-          circleName: row[0]?.toString().trim() || 'Unknown Circle',
-          role: row[1]?.toString().trim() || 'Unknown Role',
-          fte: parseFloat(row[2]) || 0
-        }));
-        
-        resolve(jsonData);
+        if (isPeopleData) {
+          const jsonData = nonEmptyRows.slice(1).map(row => ({
+            circleName: row[0]?.toString().trim() || 'Unknown Circle',
+            roleName: row[1]?.toString().trim() || 'Unknown Role',
+            personName: row[2]?.toString().trim() || 'Unknown Person',
+            fte: parseFloat(row[3]) || 0
+          }));
+          resolve(jsonData);
+        } else {
+          const jsonData = nonEmptyRows.slice(1).map(row => ({
+            circleName: row[0]?.toString().trim() || 'Unknown Circle',
+            role: row[1]?.toString().trim() || 'Unknown Role',
+            fte: parseFloat(row[2]) || 0
+          }));
+          resolve(jsonData);
+        }
       } catch (error) {
         reject(error);
       }
@@ -95,6 +110,15 @@ export const processExcelData = (data: any[]): Circle[] => {
   }
   
   return Array.from(circleMap.values());
+};
+
+export const processPeopleData = (data: any[]): PeopleData[] => {
+  return data.map(row => ({
+    circleName: row.circleName,
+    roleName: row.roleName,
+    personName: row.personName,
+    fte: parseFloat(row.fte) || 0
+  }));
 };
 
 export const transformToHierarchy = (circles: Circle[]): HierarchyNode => {

@@ -2,6 +2,12 @@
 export interface Role {
   name: string;
   fte: number;
+  people?: Person[];
+}
+
+export interface Person {
+  name: string;
+  fte: number;
 }
 
 export interface Circle {
@@ -33,4 +39,11 @@ export interface CirclePackingNode {
     roles?: Role[];
     children?: any[];
   };
+}
+
+export interface PeopleData {
+  circleName: string;
+  roleName: string;
+  personName: string;
+  fte: number;
 }

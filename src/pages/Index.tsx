@@ -4,10 +4,11 @@ import FileUpload from '@/components/FileUpload';
 import CirclePackingChart from '@/components/CirclePackingChart';
 import EmptyState from '@/components/EmptyState';
 import Header from '@/components/Header';
-import { HierarchyNode } from '@/types';
+import { HierarchyNode, PeopleData } from '@/types';
 
 const Index = () => {
   const [organizationData, setOrganizationData] = useState<HierarchyNode | null>(null);
+  const [peopleData, setPeopleData] = useState<PeopleData[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
   const handleFileProcessed = (data: HierarchyNode) => {
@@ -20,6 +21,10 @@ const Index = () => {
     }, 800);
   };
 
+  const handlePeopleFileProcessed = (data: PeopleData[]) => {
+    setPeopleData(data);
+  };
+
   return (
     <div className="flex flex-col min-h-screen bg-background">
       <Header />
@@ -29,6 +34,7 @@ const Index = () => {
           <div className="mb-10 flex justify-center">
             <FileUpload 
               onFileProcessed={handleFileProcessed} 
+              onPeopleFileProcessed={handlePeopleFileProcessed}
               isLoading={isLoading}
             />
           </div>
@@ -40,7 +46,7 @@ const Index = () => {
             </div>
           ) : organizationData ? (
             <div className="h-[70vh] w-full transition-all duration-500 ease-in-out animate-scale-in">
-              <CirclePackingChart data={organizationData} />
+              <CirclePackingChart data={organizationData} peopleData={peopleData} />
             </div>
           ) : (
             <div className="max-w-3xl mx-auto mt-4 animate-slide-up">

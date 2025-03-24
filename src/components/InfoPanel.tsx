@@ -1,11 +1,12 @@
 
 import React from 'react';
-import { Role } from '@/types';
-import { X, ExternalLink, Users } from 'lucide-react';
+import { Person, PeopleData } from '@/types';
+import { X, ExternalLink, Users, User } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
 
 interface InfoPanelProps {
   isOpen: boolean;
@@ -18,6 +19,7 @@ interface InfoPanelProps {
     parentCircles?: string[];
     isRole?: boolean;
   } | null;
+  peopleData: PeopleData[];
   onCircleClick?: (circleName: string) => void;
 }
 
@@ -25,6 +27,7 @@ const InfoPanel: React.FC<InfoPanelProps> = ({
   isOpen, 
   onClose, 
   selectedCircle,
+  peopleData,
   onCircleClick 
 }) => {
   if (!selectedCircle) return null;
@@ -41,6 +44,56 @@ const InfoPanel: React.FC<InfoPanelProps> = ({
     calculatedTotal = selectedCircle.roles.reduce((sum, role) => sum + role.value, 0);
   }
 
+  // Get people assigned to the selected role or circle
+  const getAssignedPeople = () => {
+    if (!peopleData.length) return [];
+    
+    if (isRoleCircle) {
+      // For roles, filter by role name and parent circle (if available)
+      if (selectedCircle.parent) {
+        return peopleData.filter(p => 
+          p.roleName === selectedCircle.name && 
+          p.circleName === selectedCircle.parent
+        );
+      } else {
+        // If no parent specified, get all people for this role across circles
+        return peopleData.filter(p => p.roleName === selectedCircle.name);
+      }
+    } else {
+      // For circles, get all people assigned to any role in this circle
+      return peopleData.filter(p => p.circleName === selectedCircle.name);
+    }
+  };
+
+  const assignedPeople = getAssignedPeople();
+  const totalAssignedFTE = assignedPeople.reduce((sum, p) => sum + p.fte, 0);
+  
+  // Get people grouped by role (for circle view)
+  const getPeopleByRole = () => {
+    if (!isRoleCircle && assignedPeople.length > 0) {
+      const roleMap = new Map<string, PeopleData[]>();
+      
+      assignedPeople.forEach(person => {
+        if (!roleMap.has(person.roleName)) {
+          roleMap.set(person.roleName, []);
+        }
+        roleMap.get(person.roleName)!.push(person);
+      });
+      
+      return Array.from(roleMap.entries()).map(([roleName, people]) => {
+        const totalRoleFTE = people.reduce((sum, p) => sum + p.fte, 0);
+        return {
+          roleName,
+          people,
+          totalFTE: totalRoleFTE
+        };
+      });
+    }
+    return [];
+  };
+
+  const peopleByRole = getPeopleByRole();
+
   const handleCircleClick = (circleName: string) => {
     if (onCircleClick) {
       onCircleClick(circleName);
@@ -49,7 +102,7 @@ const InfoPanel: React.FC<InfoPanelProps> = ({
   
   return (
     <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <SheetContent className="overflow-y-auto">
+      <SheetContent className="overflow-y-auto w-96 max-w-full">
         <SheetHeader className="pb-4">
           <SheetTitle className="text-xl">{selectedCircle.name}</SheetTitle>
           <SheetDescription>
@@ -65,6 +118,19 @@ const InfoPanel: React.FC<InfoPanelProps> = ({
             <p className="text-lg font-semibold">
               {calculatedTotal.toFixed(2)}
             </p>
+            
+            {assignedPeople.length > 0 && (
+              <div className="flex items-baseline gap-2 mt-1">
+                <span className="text-sm text-muted-foreground">Assigned:</span>
+                <span className="text-sm font-medium">{totalAssignedFTE.toFixed(2)}</span>
+                
+                {calculatedTotal > 0 && (
+                  <Badge variant={totalAssignedFTE >= calculatedTotal ? "success" : "destructive"} className="ml-auto">
+                    {Math.round((totalAssignedFTE / calculatedTotal) * 100)}%
+                  </Badge>
+                )}
+              </div>
+            )}
             
             {isRoleCircle && selectedCircle.parent && (
               <div className="text-sm text-muted-foreground">
@@ -105,14 +171,77 @@ const InfoPanel: React.FC<InfoPanelProps> = ({
             )}
           </div>
           
+          {/* People Assigned Section */}
+          {assignedPeople.length > 0 && (
+            <div className="space-y-4">
+              <Separator />
+              <div className="flex items-center gap-2">
+                <User className="h-4 w-4" />
+                <h3 className="text-sm font-medium">People Assigned</h3>
+                <span className="text-xs text-muted-foreground ml-auto">{assignedPeople.length} people</span>
+              </div>
+              
+              {isRoleCircle ? (
+                <div className="mt-2">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Name</TableHead>
+                        <TableHead className="text-right">FTE</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {assignedPeople.map((person, index) => (
+                        <TableRow key={`${person.personName}-${index}`}>
+                          <TableCell>{person.personName}</TableCell>
+                          <TableCell className="text-right">{person.fte.toFixed(2)}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {peopleByRole.map((roleGroup, index) => (
+                    <div key={`${roleGroup.roleName}-${index}`}>
+                      <div className="flex items-baseline justify-between">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="p-0 h-auto text-sm hover:bg-transparent hover:underline text-left whitespace-normal flex-1 mr-2 justify-start"
+                          onClick={() => handleCircleClick(roleGroup.roleName)}
+                        >
+                          <span className="text-sm font-medium">{roleGroup.roleName}</span>
+                          <ExternalLink className="ml-1 w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity inline-flex shrink-0" />
+                        </Button>
+                        <span className="text-xs text-muted-foreground">
+                          {roleGroup.people.length} {roleGroup.people.length === 1 ? 'person' : 'people'} • {roleGroup.totalFTE.toFixed(2)} FTE
+                        </span>
+                      </div>
+                      
+                      <div className="mt-1 pl-2 border-l-2 border-muted space-y-1">
+                        {roleGroup.people.map((person, pIndex) => (
+                          <div key={`${person.personName}-${pIndex}`} className="flex items-center justify-between">
+                            <span className="text-sm">{person.personName}</span>
+                            <span className="text-xs text-muted-foreground">{person.fte.toFixed(2)}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+          
+          {/* Show roles section for circles */}
           {!isRoleCircle && selectedCircle.roles && selectedCircle.roles.length > 0 && (
             <div className="space-y-4 pt-2">
+              <Separator />
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-medium">Roles</h3>
                 <span className="text-xs text-muted-foreground">{selectedCircle.roles.length} roles</span>
               </div>
-              
-              <Separator />
               
               <div className="space-y-3">
                 {selectedCircle.roles.map((role, index) => (
