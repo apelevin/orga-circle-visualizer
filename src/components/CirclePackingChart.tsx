@@ -1,7 +1,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { HierarchyNode, PeopleData } from '@/types';
-import InfoPanel from './InfoPanel';
+import InfoPanel from './info-panel/InfoPanel';
 import PersonInfoPanel from './PersonInfoPanel';
 import { useD3CirclePacking } from '@/hooks/useD3CirclePacking';
 import { useCirclePanelData } from '@/hooks/useCirclePanelData';

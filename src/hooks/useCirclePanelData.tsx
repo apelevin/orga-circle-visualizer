@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { HierarchyNode, PeopleData } from '@/types';
 import { toast } from "sonner";
+import * as d3 from 'd3';
 
 export const useCirclePanelData = (data: HierarchyNode) => {
   const [roleToCirclesMap, setRoleToCirclesMap] = useState<Map<string, string[]>>(new Map());

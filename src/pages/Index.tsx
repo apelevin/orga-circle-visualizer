@@ -6,7 +6,7 @@ import FileUpload from '@/components/FileUpload';
 import EmptyState from '@/components/EmptyState';
 import Header from '@/components/Header';
 import SearchInput from '@/components/SearchInput';
-import InfoPanel from '@/components/InfoPanel';
+import InfoPanel from '@/components/info-panel/InfoPanel';
 import PersonInfoPanel from '@/components/PersonInfoPanel';
 import OrganizationVisualization from '@/components/OrganizationVisualization';
 import FooterSection from '@/components/FooterSection';
