@@ -49,16 +49,8 @@ const InfoPanel: React.FC<InfoPanelProps> = ({
     if (!peopleData || peopleData.length === 0) return [];
     
     if (isRoleCircle) {
-      // For roles, filter by role name and parent circle (if available)
-      if (selectedCircle.parent) {
-        return peopleData.filter(p => 
-          p.roleName === selectedCircle.name && 
-          p.circleName === selectedCircle.parent
-        );
-      } else {
-        // If no parent specified, get all people for this role across circles
-        return peopleData.filter(p => p.roleName === selectedCircle.name);
-      }
+      // For roles, get all people with this role name across all circles
+      return peopleData.filter(p => p.roleName === selectedCircle.name);
     } else {
       // For circles, get all people assigned to any role in this circle
       return peopleData.filter(p => p.circleName === selectedCircle.name);
@@ -100,7 +92,35 @@ const InfoPanel: React.FC<InfoPanelProps> = ({
     return [];
   };
 
+  // Get people grouped by circle (for role view)
+  const getPeopleByCircle = () => {
+    if (isRoleCircle && assignedPeople.length > 0) {
+      const circleMap = new Map<string, PeopleData[]>();
+      
+      assignedPeople.forEach(person => {
+        if (!circleMap.has(person.circleName)) {
+          circleMap.set(person.circleName, []);
+        }
+        circleMap.get(person.circleName)!.push(person);
+      });
+      
+      return Array.from(circleMap.entries())
+        .sort(([circleNameA], [circleNameB]) => circleNameA.localeCompare(circleNameB))
+        .map(([circleName, people]) => {
+          const sortedPeople = getAlphabeticallySortedPeople(people);
+          const totalCircleFTE = people.reduce((sum, p) => sum + p.fte, 0);
+          return {
+            circleName,
+            people: sortedPeople,
+            totalFTE: totalCircleFTE
+          };
+        });
+    }
+    return [];
+  };
+
   const peopleByRole = getPeopleByRole();
+  const peopleByCircle = getPeopleByCircle();
 
   const handleCircleClick = (circleName: string) => {
     if (onCircleClick) {
@@ -218,15 +238,49 @@ const InfoPanel: React.FC<InfoPanelProps> = ({
               </div>
               
               {isRoleCircle ? (
-                <div className="mt-2">
-                  <ol className="list-decimal pl-5 space-y-1">
-                    {sortedAssignedPeople.map((person, index) => (
-                      <li key={`${person.personName}-${index}`} className="flex justify-between items-baseline py-1">
-                        <span className="text-sm">{person.personName}</span>
-                        <span className="text-xs text-muted-foreground">{person.fte.toFixed(2)}</span>
-                      </li>
-                    ))}
-                  </ol>
+                <div className="space-y-4">
+                  {peopleByCircle.length > 0 ? (
+                    peopleByCircle.map((circleGroup, index) => (
+                      <div key={`${circleGroup.circleName}-${index}`}>
+                        <div className="flex items-baseline justify-between">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="p-0 h-auto text-sm hover:bg-transparent hover:underline text-left whitespace-normal flex-1 mr-2 justify-start"
+                            onClick={() => handleCircleClick(circleGroup.circleName)}
+                          >
+                            <span className="text-sm font-medium">{circleGroup.circleName}</span>
+                            <ExternalLink className="ml-1 w-3 h-3 opacity-0 hover:opacity-100 transition-opacity inline-flex shrink-0" />
+                          </Button>
+                          <span className="text-xs text-muted-foreground">
+                            {circleGroup.people.length} {circleGroup.people.length === 1 ? 'person' : 'people'} • {circleGroup.totalFTE.toFixed(2)} FTE
+                          </span>
+                        </div>
+                        
+                        <div className="mt-1 pl-2 border-l-2 border-muted space-y-1">
+                          <ol className="list-decimal pl-5 space-y-1">
+                            {circleGroup.people.map((person, pIndex) => (
+                              <li key={`${person.personName}-${pIndex}`} className="flex justify-between items-baseline py-1">
+                                <span className="text-sm">{person.personName}</span>
+                                <span className="text-xs text-muted-foreground">{person.fte.toFixed(2)}</span>
+                              </li>
+                            ))}
+                          </ol>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="mt-2">
+                      <ol className="list-decimal pl-5 space-y-1">
+                        {sortedAssignedPeople.map((person, index) => (
+                          <li key={`${person.personName}-${index}`} className="flex justify-between items-baseline py-1">
+                            <span className="text-sm">{person.personName}</span>
+                            <span className="text-xs text-muted-foreground">{person.fte.toFixed(2)}</span>
+                          </li>
+                        ))}
+                      </ol>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <div className="space-y-4">
