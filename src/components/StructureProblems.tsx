@@ -22,7 +22,8 @@ import {
   CircleAlert, 
   List, 
   Users,
-  Ban
+  Ban,
+  UserX
 } from 'lucide-react';
 
 interface StructureProblemsProps {
@@ -47,6 +48,7 @@ const StructureProblems: React.FC<StructureProblemsProps> = ({
       'circle-high-fte': 0,
       'circle-single-role': 0,
       'circle-zero-fte': 0,
+      'role-unassigned': 0,
       total: 0
     };
     
@@ -70,6 +72,8 @@ const StructureProblems: React.FC<StructureProblemsProps> = ({
         return <Briefcase className="h-4 w-4 text-blue-500" />;
       case 'circle-zero-fte':
         return <Ban className="h-4 w-4 text-red-600" />;
+      case 'role-unassigned':
+        return <UserX className="h-4 w-4 text-orange-500" />;
       default:
         return <List className="h-4 w-4" />;
     }
@@ -87,6 +91,8 @@ const StructureProblems: React.FC<StructureProblemsProps> = ({
         return 'Circle with only one role';
       case 'circle-zero-fte':
         return 'Circle with no assigned FTE';
+      case 'role-unassigned':
+        return 'Role with no person assigned';
       default:
         return 'Unknown issue';
     }
@@ -100,6 +106,12 @@ const StructureProblems: React.FC<StructureProblemsProps> = ({
       onCircleClick
     ) {
       onCircleClick(problem.name);
+    } else if (problem.type === 'role-unassigned' && onCircleClick) {
+      // For unassigned roles, extract the circle name from the details
+      const match = problem.details.match(/in\s+(.+)$/);
+      if (match && match[1]) {
+        onCircleClick(match[1]);
+      }
     }
   };
 
@@ -133,7 +145,7 @@ const StructureProblems: React.FC<StructureProblemsProps> = ({
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
+              <div className="grid grid-cols-1 md:grid-cols-6 gap-4 mb-6">
                 <StatCard 
                   title="Low FTE People" 
                   count={problemStats['person-low-fte']} 
@@ -163,6 +175,12 @@ const StructureProblems: React.FC<StructureProblemsProps> = ({
                   count={problemStats['circle-zero-fte']} 
                   icon={<Ban className="h-5 w-5 text-red-600" />}
                   description="Circles with no assigned FTE"
+                />
+                <StatCard 
+                  title="Unassigned Roles" 
+                  count={problemStats['role-unassigned']} 
+                  icon={<UserX className="h-5 w-5 text-orange-500" />}
+                  description="Roles without an assigned person"
                 />
               </div>
               <Table>

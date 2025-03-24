@@ -2,7 +2,7 @@
 import { HierarchyNode, PeopleData } from '@/types';
 
 export interface StructureProblem {
-  type: 'person-low-fte' | 'circle-low-fte' | 'circle-high-fte' | 'circle-single-role' | 'circle-zero-fte';
+  type: 'person-low-fte' | 'circle-low-fte' | 'circle-high-fte' | 'circle-single-role' | 'circle-zero-fte' | 'role-unassigned';
   name: string;
   details: string;
   severity: 'low' | 'medium' | 'high';
@@ -34,6 +34,12 @@ export const analyzeStructure = (
         severity: 'medium',
       });
     }
+  });
+
+  // Collect all roles that have a person assigned
+  const rolesWithPerson = new Set<string>();
+  peopleData.forEach(person => {
+    rolesWithPerson.add(person.roleName);
   });
 
   // Calculate assigned FTE per circle
@@ -87,6 +93,20 @@ export const analyzeStructure = (
         name: circleName,
         details: `Contains only 1 role`,
         severity: 'low',
+      });
+    }
+
+    // Check for roles without a person assigned
+    if (circle.children) {
+      circle.children.forEach(role => {
+        if (!rolesWithPerson.has(role.name)) {
+          problems.push({
+            type: 'role-unassigned',
+            name: role.name,
+            details: `No person assigned to this role in ${circleName}`,
+            severity: 'high',
+          });
+        }
       });
     }
   });
