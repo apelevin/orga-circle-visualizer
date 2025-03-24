@@ -29,7 +29,10 @@ const CircleNodes: React.FC<CircleNodesProps> = ({
     const svg = d3.select('svg');
     const g = svg.select('g');
     
-    const circles = g.selectAll('circle')
+    // Clear any existing circles to prevent duplication
+    g.selectAll('circle.circle-node').remove();
+    
+    const circles = g.selectAll('circle.circle-node')
       .data(root.descendants().slice(1))
       .enter()
       .append('circle')

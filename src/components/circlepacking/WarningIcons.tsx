@@ -12,7 +12,10 @@ const WarningIcons: React.FC<WarningIconsProps> = ({ root }) => {
     const svg = d3.select('svg');
     const g = svg.select('g');
     
-    g.selectAll('.warning-icon')
+    // Clear any existing warning icons to prevent duplication
+    g.selectAll('g.warning-icon').remove();
+    
+    g.selectAll('g.warning-icon')
       .data(root.descendants().filter(d => {
         if (d.depth === 1) {
           const actualFTE = d.children?.reduce((sum, child) => sum + (child.value || 0), 0) || 0;
@@ -30,6 +33,10 @@ const WarningIcons: React.FC<WarningIconsProps> = ({ root }) => {
       .attr('fill', '#FF9800')
       .style('opacity', 1);
       
+    return () => {
+      // Clean up on unmount
+      g.selectAll('g.warning-icon').remove();
+    };
   }, [root]);
   
   return null; // This is a rendering-only component with no visible JSX

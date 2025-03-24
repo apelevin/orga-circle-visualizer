@@ -12,7 +12,10 @@ const CircleLabels: React.FC<CircleLabelsProps> = ({ root }) => {
     const svg = d3.select('svg');
     const g = svg.select('g');
     
-    g.selectAll('.circle-label')
+    // Clear any existing labels to prevent duplication
+    g.selectAll('text.circle-label').remove();
+    
+    g.selectAll('text.circle-label')
       .data(root.descendants().filter(d => d.depth === 1))
       .enter()
       .append('text')
@@ -26,6 +29,10 @@ const CircleLabels: React.FC<CircleLabelsProps> = ({ root }) => {
       .attr('fill', 'rgba(0, 0, 0, 0.7)')
       .text(d => d.data.name || 'Unnamed');
       
+    return () => {
+      // Clean up on unmount
+      g.selectAll('text.circle-label').remove();
+    };
   }, [root]);
   
   return null; // This is a rendering-only component with no visible JSX

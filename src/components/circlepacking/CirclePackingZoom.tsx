@@ -31,6 +31,10 @@ const CirclePackingZoom: React.FC<CirclePackingZoomProps> = ({
           .attr('font-size', d => Math.min(d.r / 3, 14) / event.transform.k);
       });
     
+    // Remove any existing zoom behavior first
+    svg.on('.zoom', null);
+    
+    // Apply the zoom behavior
     svg.call(zoom);
     
     const initialTransform = d3.zoomIdentity.translate(

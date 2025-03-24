@@ -44,6 +44,7 @@ const CirclePackingRenderer: React.FC<CirclePackingRendererProps> = ({
     try {
       const svg = d3.select(svgRef.current);
       
+      // Clear svg content first
       svg.selectAll('*').remove();
       
       const root = hierarchyData;

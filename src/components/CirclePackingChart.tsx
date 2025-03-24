@@ -150,13 +150,15 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data, peopleDat
         dimensions={dimensions}
       />
       
-      <CirclePackingRenderer
-        svgRef={svgRef}
-        hierarchyData={hierarchyData}
-        dimensions={dimensions}
-        setTooltipData={setTooltipData}
-        handleNodeClick={handleNodeClick}
-      />
+      {hierarchyData && (
+        <CirclePackingRenderer
+          svgRef={svgRef}
+          hierarchyData={hierarchyData}
+          dimensions={dimensions}
+          setTooltipData={setTooltipData}
+          handleNodeClick={handleNodeClick}
+        />
+      )}
       
       <InfoPanel
         isOpen={isPanelOpen}
