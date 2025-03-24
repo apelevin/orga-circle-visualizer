@@ -9,6 +9,7 @@ import { useContainerDimensions } from '@/hooks/useContainerDimensions';
 import CirclePackingRenderer from './circlepacking/CirclePackingRenderer';
 import CircleTooltip from './circlepacking/CircleTooltip';
 import CirclePackingFooter from './circlepacking/CirclePackingFooter';
+import * as d3 from 'd3';
 
 interface CirclePackingChartProps {
   data: HierarchyNode;
