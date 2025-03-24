@@ -32,7 +32,7 @@ const CircleNodes: React.FC<CircleNodesProps> = ({
     console.log("CircleNodes useEffect running, rendering circles");
     
     try {
-      // Use the group element directly instead of searching for it
+      // Use the group element directly
       const g = d3.select(groupElement);
       
       if (!g || g.empty()) {
@@ -51,18 +51,24 @@ const CircleNodes: React.FC<CircleNodesProps> = ({
       // Clear existing circles first
       g.selectAll('circle.circle-node').remove();
       
+      // Log the descendants data for debugging
+      const descendants = root.descendants().slice(1);
+      console.log(`Rendering ${descendants.length} circles`);
+      
       // Create and append circles with data from the hierarchy
       const circles = g.selectAll('circle.circle-node')
-        .data(root.descendants().slice(1))
+        .data(descendants)
         .enter()
         .append('circle')
         .attr('class', 'circle-node')
         .attr('cx', d => d.x)
         .attr('cy', d => d.y)
-        .attr('r', d => d.r)
+        .attr('r', d => Math.max(d.r, 3)) // Ensure circles are visible even if small
         .style('fill', d => {
           try {
-            return getNodeColor(d, colorScale);
+            const color = getNodeColor(d, colorScale);
+            console.log(`Node ${d.data.name} (depth: ${d.depth}) gets color: ${color}`);
+            return color;
           } catch (error) {
             console.error("Error getting node color:", error);
             return d.depth === 1 ? '#E5DEFF' : '#D3E4FD';
@@ -73,7 +79,7 @@ const CircleNodes: React.FC<CircleNodesProps> = ({
         })
         .style('stroke-width', 1)
         .style('cursor', 'pointer')
-        .style('opacity', 1);
+        .style('opacity', 0.9); // Slightly transparent to help text readability
       
       circlesRef.current = circles;
       
@@ -88,7 +94,8 @@ const CircleNodes: React.FC<CircleNodesProps> = ({
           d3.select(this)
             .transition()
             .duration(300)
-            .attr('r', d.r * 1.05);
+            .attr('r', d.r * 1.05)
+            .style('opacity', 1);
 
           const name = d.data.name || 'Unnamed';
           const isRole = d.depth === 2;
@@ -115,7 +122,8 @@ const CircleNodes: React.FC<CircleNodesProps> = ({
           d3.select(this)
             .transition()
             .duration(300)
-            .attr('r', d => d.r);
+            .attr('r', d => d.r)
+            .style('opacity', 0.9);
           
           setTooltipData(null);
         });
