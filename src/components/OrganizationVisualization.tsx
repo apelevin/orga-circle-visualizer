@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import CirclePackingChart from '@/components/CirclePackingChart';
 import StructureProblems from '@/components/StructureProblems';
+import OrgDashboard from '@/components/OrgDashboard';
 
 interface OrganizationVisualizationProps {
   organizationData: HierarchyNode | null;
@@ -39,6 +40,12 @@ const OrganizationVisualization: React.FC<OrganizationVisualizationProps> = ({
 
   return (
     <div className="flex flex-col items-center">
+      {/* Dashboard */}
+      <OrgDashboard 
+        organizationData={organizationData} 
+        peopleData={peopleData} 
+      />
+      
       <Tabs 
         defaultValue="visualization" 
         value={activeTab}
