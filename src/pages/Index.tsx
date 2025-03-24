@@ -1,3 +1,4 @@
+
 import * as React from 'react';
 import FileUpload from '@/components/FileUpload';
 import CirclePackingChart from '@/components/CirclePackingChart';
@@ -132,8 +133,27 @@ const Index = () => {
               <p className="mt-4 text-muted-foreground">Processing your organization data...</p>
             </div>
           ) : organizationData ? (
-            <div className="h-[70vh] w-full transition-all duration-500 ease-in-out animate-scale-in">
-              <CirclePackingChart data={organizationData} peopleData={peopleData} />
+            <div className="flex flex-col items-center">
+              <div className="h-[70vh] w-full transition-all duration-500 ease-in-out animate-scale-in">
+                <CirclePackingChart data={organizationData} peopleData={peopleData} />
+              </div>
+              
+              {(organizationData || peopleData.length > 0) && (
+                <div className="mt-8 flex flex-col items-center">
+                  <Button 
+                    variant="outline"
+                    size="sm"
+                    onClick={handleReset}
+                    className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors px-8 py-6 rounded-full"
+                  >
+                    <RefreshCw className="h-5 w-5" />
+                    <span className="text-base">Reset Data</span>
+                  </Button>
+                  <p className="mt-3 text-muted-foreground text-sm">
+                    Reload the page to upload new data
+                  </p>
+                </div>
+              )}
             </div>
           ) : (
             <div className="max-w-3xl mx-auto mt-4 animate-slide-up">
@@ -141,20 +161,6 @@ const Index = () => {
             </div>
           )}
         </div>
-        
-        {(organizationData || peopleData.length > 0) && (
-          <div className="mt-12 flex justify-center">
-            <Button 
-              variant="outline"
-              size="sm"
-              onClick={handleReset}
-              className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <RefreshCw className="h-4 w-4" />
-              Reset Data
-            </Button>
-          </div>
-        )}
       </main>
       
       <InfoPanel
