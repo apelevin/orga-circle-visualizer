@@ -18,6 +18,7 @@ interface SearchInputProps {
 interface SearchResult {
   type: 'circle' | 'role' | 'person';
   name: string;
+  id: string; // Unique identifier for deduplication
 }
 
 const SearchInput: React.FC<SearchInputProps> = ({
@@ -30,6 +31,7 @@ const SearchInput: React.FC<SearchInputProps> = ({
   const [searchTerm, setSearchTerm] = React.useState('');
   const [searchResults, setSearchResults] = React.useState<SearchResult[]>([]);
   const [isOpen, setIsOpen] = React.useState(false);
+  const inputRef = React.useRef<HTMLInputElement>(null);
   const searchRef = React.useRef<HTMLDivElement>(null);
 
   React.useEffect(() => {
@@ -41,19 +43,34 @@ const SearchInput: React.FC<SearchInputProps> = ({
 
     const results: SearchResult[] = [];
     const normalizedSearchTerm = searchTerm.toLowerCase().trim();
+    
+    // Sets to track unique entries
+    const uniqueCircles = new Set<string>();
+    const uniqueRoles = new Set<string>();
+    const uniquePeople = new Set<string>();
 
     // Search circles
     if (organizationData?.children) {
       organizationData.children.forEach(circle => {
-        if (circle.name.toLowerCase().includes(normalizedSearchTerm)) {
-          results.push({ type: 'circle', name: circle.name });
+        if (circle.name.toLowerCase().includes(normalizedSearchTerm) && !uniqueCircles.has(circle.name)) {
+          uniqueCircles.add(circle.name);
+          results.push({ 
+            type: 'circle', 
+            name: circle.name, 
+            id: `circle-${circle.name}` 
+          });
         }
 
         // Search roles within circles
         if (circle.children) {
           circle.children.forEach(role => {
-            if (role.name.toLowerCase().includes(normalizedSearchTerm)) {
-              results.push({ type: 'role', name: role.name });
+            if (role.name.toLowerCase().includes(normalizedSearchTerm) && !uniqueRoles.has(role.name)) {
+              uniqueRoles.add(role.name);
+              results.push({ 
+                type: 'role', 
+                name: role.name, 
+                id: `role-${role.name}` 
+              });
             }
           });
         }
@@ -62,16 +79,17 @@ const SearchInput: React.FC<SearchInputProps> = ({
 
     // Search people
     if (peopleData?.length) {
-      // Create a Set to avoid duplicate people
-      const uniquePeople = new Set<string>();
-      
       peopleData.forEach(person => {
         if (
           person.personName.toLowerCase().includes(normalizedSearchTerm) &&
           !uniquePeople.has(person.personName)
         ) {
           uniquePeople.add(person.personName);
-          results.push({ type: 'person', name: person.personName });
+          results.push({ 
+            type: 'person', 
+            name: person.personName, 
+            id: `person-${person.personName}` 
+          });
         }
       });
     }
@@ -95,6 +113,8 @@ const SearchInput: React.FC<SearchInputProps> = ({
   const handleClearSearch = () => {
     setSearchTerm('');
     setSearchResults([]);
+    // Focus back on input after clearing
+    inputRef.current?.focus();
   };
 
   const getIconForType = (type: string) => {
@@ -119,6 +139,7 @@ const SearchInput: React.FC<SearchInputProps> = ({
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
+              ref={inputRef}
               placeholder="Search circles, roles, people..."
               className="pl-9 pr-10"
               value={searchTerm}
@@ -137,6 +158,7 @@ const SearchInput: React.FC<SearchInputProps> = ({
                 size="sm"
                 className="absolute right-1 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0"
                 onClick={handleClearSearch}
+                type="button"
               >
                 <X className="h-4 w-4" />
                 <span className="sr-only">Clear search</span>
@@ -147,14 +169,18 @@ const SearchInput: React.FC<SearchInputProps> = ({
         <PopoverContent
           className="p-0 w-[var(--radix-popover-trigger-width)] max-h-80"
           align="start"
+          onInteractOutside={(e) => {
+            // Prevent closing when interacting with popover content
+            e.preventDefault();
+          }}
         >
           <Command>
             <CommandList>
               <CommandEmpty>No results found</CommandEmpty>
               <CommandGroup heading="Search Results">
-                {searchResults.map((result, index) => (
+                {searchResults.map((result) => (
                   <CommandItem
-                    key={`${result.type}-${result.name}-${index}`}
+                    key={result.id}
                     onSelect={() => handleItemClick(result)}
                     className="flex items-center cursor-pointer"
                   >
