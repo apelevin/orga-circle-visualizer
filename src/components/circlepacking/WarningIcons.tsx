@@ -40,13 +40,16 @@ const WarningIcons: React.FC<WarningIconsProps> = ({ root, groupElement }) => {
         .enter()
         .append('g')
         .attr('class', 'warning-icon')
-        .attr('transform', d => `translate(${d.x + d.r * 0.6}, ${d.y - d.r * 0.6})`);
+        .attr('transform', d => `translate(${d.x + d.r * 0.6}, ${d.y - d.r * 0.6})`)
+        .attr('pointer-events', 'none');
         
+      // Add triangle warning icons
       icons.append('path')
-        .attr('d', 'M23.432 17.925L14.408 3.366c-.933-1.517-3.142-1.517-4.076 0L1.308 17.925c-.933 1.519.235 3.423 2.038 3.423h18.047c1.803 0 2.971-1.904 2.038-3.423zM12.37 16.615a1.219 1.219 0 0 1-1.225 1.224 1.22 1.22 0 0 1-1.225-1.224v-.028c0-.675.55-1.197 1.225-1.197s1.225.522 1.225 1.197v.028zm0-3.824c0 .675-.55 1.224-1.225 1.224a1.22 1.22 0 0 1-1.225-1.224v-4.13c0-.675.55-1.225 1.225-1.225s1.225.55 1.225 1.224v4.131z')
-        .attr('transform', 'scale(0.8)')
-        .attr('fill', '#FF9800')
-        .style('opacity', 1);
+        .attr('d', 'M-6,-10 L6,-10 L0,3 Z')
+        .attr('fill', '#F59E0B')
+        .attr('stroke', 'white')
+        .attr('stroke-width', '1px')
+        .style('opacity', 0.9);
       
       // Store the selection for cleanup
       iconsRef.current = icons;

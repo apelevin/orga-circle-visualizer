@@ -12,7 +12,7 @@ const CircleLabels: React.FC<CircleLabelsProps> = ({ root, groupElement }) => {
   const labelsRef = useRef<d3.Selection<SVGTextElement, d3.HierarchyCircularNode<HierarchyNode>, SVGGElement, unknown> | null>(null);
 
   useEffect(() => {
-    console.log("CircleLabels useEffect running - labels are hidden");
+    console.log("CircleLabels useEffect running");
     
     try {
       // Use the group element directly instead of searching for it
@@ -26,9 +26,78 @@ const CircleLabels: React.FC<CircleLabelsProps> = ({ root, groupElement }) => {
       // Clear any existing labels
       g.selectAll('text.circle-label').remove();
       
-      // We're not adding any new labels since we want to hide them
-      // This component is kept for future reference in case labels need to be restored
+      // Create labels for main circles (depth 1)
+      const labels = g.selectAll('text.circle-label')
+        .data(root.descendants().filter(d => d.depth === 1))
+        .enter()
+        .append('text')
+        .attr('class', 'circle-label')
+        .attr('text-anchor', 'middle')
+        .attr('x', d => d.x)
+        .attr('y', d => d.y)
+        .attr('dy', '.35em')
+        .attr('font-size', d => Math.min(d.r / 3, 14))
+        .attr('fill', '#333333')
+        .style('pointer-events', 'none')
+        .style('font-weight', '500')
+        .style('font-family', 'Inter, system-ui, sans-serif')
+        .text(d => d.data.name || '');
       
+      // Handle text wrapping for long labels
+      labels.each(function(d) {
+        const text = d3.select(this);
+        const words = (d.data.name || '').split(/\s+/);
+        const lineHeight = 1.2;
+        const y = d.y;
+        
+        text.text(null); // Clear text
+        
+        // If the circle is large enough, wrap text
+        if (d.r > 30) {
+          let line: string[] = [];
+          let lineNumber = 0;
+          const tspan = text.append('tspan')
+            .attr('x', d.x)
+            .attr('y', y)
+            .attr('dy', 0);
+            
+          // Create wrapped text
+          words.forEach((word, i) => {
+            line.push(word);
+            tspan.text(line.join(' '));
+            
+            // Check if line needs to be wrapped
+            if (tspan.node()?.getComputedTextLength() > d.r * 1.5 && i > 0) {
+              line.pop();
+              tspan.text(line.join(' '));
+              line = [word];
+              lineNumber++;
+              
+              text.append('tspan')
+                .attr('x', d.x)
+                .attr('y', y)
+                .attr('dy', `${lineNumber * lineHeight}em`)
+                .text(word);
+            }
+          });
+          
+          // Center text vertically
+          const totalLines = text.selectAll('tspan').size();
+          text.selectAll('tspan').attr('dy', (_, i) => 
+            `${(i - (totalLines - 1) / 2) * lineHeight}em`
+          );
+        } else if (d.r > 15) {
+          // For smaller circles, just show the first word
+          text.append('tspan')
+            .attr('x', d.x)
+            .attr('y', y)
+            .text(words[0]);
+        }
+      });
+      
+      labelsRef.current = labels;
+      
+      console.log(`Successfully rendered ${labels.size()} labels`);
     } catch (error) {
       console.error("Error in CircleLabels:", error);
     }

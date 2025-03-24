@@ -70,8 +70,8 @@ const CircleNodes: React.FC<CircleNodesProps> = ({
           const color = getNodeColor(d, colorScale);
           return color;
         })
-        .style('stroke', d => d.depth === 1 ? 'rgba(255,255,255,0.3)' : 'none')
-        .style('stroke-width', 1.5)
+        .style('stroke', d => d.depth === 1 ? 'rgba(255,255,255,0.7)' : 'none')
+        .style('stroke-width', d => d.depth === 1 ? 2 : 1)
         .style('cursor', 'pointer')
         .style('fill-opacity', 0.9);
       
@@ -120,8 +120,8 @@ const CircleNodes: React.FC<CircleNodesProps> = ({
             .duration(300)
             .attr('r', d => d.r)
             .style('fill-opacity', 0.9)
-            .style('stroke', d => d.depth === 1 ? 'rgba(255,255,255,0.3)' : 'none')
-            .style('stroke-width', d => d.depth === 1 ? 1.5 : 0);
+            .style('stroke', d => d.depth === 1 ? 'rgba(255,255,255,0.7)' : 'none')
+            .style('stroke-width', d => d.depth === 1 ? 2 : 1);
           
           setTooltipData(null);
         });
