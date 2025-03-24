@@ -1,17 +1,16 @@
 
 import React, { useEffect, useState } from "react";
-import { useParams, Link, useNavigate, useLocation } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { HierarchyNode, PeopleData } from "@/types";
 import { getSharedData, decodeSharedData } from "@/utils/shareUtils";
-import CirclePackingChart from "@/components/CirclePackingChart";
 import SearchInput from "@/components/SearchInput";
 import InfoPanel from "@/components/InfoPanel";
 import PersonInfoPanel from "@/components/PersonInfoPanel";
-import StructureProblems from "@/components/StructureProblems";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { CircleDot, CircleAlert, Home } from "lucide-react";
-import { toast } from "sonner";
+import SharedHeader from "@/components/SharedHeader";
+import SharedLoading from "@/components/SharedLoading";
+import SharedError from "@/components/SharedError";
+import VisualizationTabs from "@/components/VisualizationTabs";
+import FooterSection from "@/components/FooterSection";
 
 const SharedView = () => {
   const { id } = useParams<{ id: string }>();
@@ -180,44 +179,16 @@ const SharedView = () => {
   };
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-background">
-        <div className="w-12 h-12 rounded-full border-4 border-primary border-t-transparent animate-spin" />
-        <p className="mt-4 text-muted-foreground">Loading shared organization data...</p>
-      </div>
-    );
+    return <SharedLoading />;
   }
 
   if (error || !organizationData) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-background">
-        <p className="text-xl font-semibold mb-2">{error || "This shared link has expired or doesn't exist"}</p>
-        <p className="text-muted-foreground mb-6">The shared data could not be loaded.</p>
-        <Button asChild className="px-8 py-6 text-lg rounded-full">
-          <Link to="/" className="flex items-center gap-2">
-            <Home className="h-5 w-5" />
-            <span>Go to Home</span>
-          </Link>
-        </Button>
-      </div>
-    );
+    return <SharedError errorMessage={error} />;
   }
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
-      <header className="border-b">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight">{orgName}</h1>
-          </div>
-          <Button variant="outline" size="sm" asChild>
-            <Link to="/" className="flex items-center gap-2">
-              <Home className="h-4 w-4" />
-              <span>Back to Home</span>
-            </Link>
-          </Button>
-        </div>
-      </header>
+      <SharedHeader orgName={orgName} />
       
       <main className="flex-1 container mx-auto px-4 py-6">
         <div className="mb-4">
@@ -231,40 +202,14 @@ const SharedView = () => {
         </div>
         
         <div className="flex flex-col items-center">
-          <Tabs 
-            defaultValue="visualization" 
-            value={activeTab}
-            onValueChange={setActiveTab}
-            className="w-full mb-4"
-          >
-            <TabsList className="grid w-full max-w-md mx-auto grid-cols-2">
-              <TabsTrigger value="visualization" className="flex items-center gap-2">
-                <CircleDot className="h-4 w-4" />
-                <span>Visualization</span>
-              </TabsTrigger>
-              <TabsTrigger value="problems" className="flex items-center gap-2">
-                <CircleAlert className="h-4 w-4" />
-                <span>Structure Problems</span>
-              </TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="visualization" className="w-full">
-              <div className="h-[80vh] w-full transition-all duration-500 ease-in-out animate-scale-in">
-                <CirclePackingChart data={organizationData} peopleData={peopleData} />
-              </div>
-            </TabsContent>
-            
-            <TabsContent value="problems" className="w-full mt-4">
-              <div className="min-h-[70vh] w-full transition-all duration-500 ease-in-out animate-scale-in">
-                <StructureProblems 
-                  organizationData={organizationData} 
-                  peopleData={peopleData} 
-                  onCircleClick={handleCircleOrRoleClick}
-                  onPersonClick={handlePersonClick}
-                />
-              </div>
-            </TabsContent>
-          </Tabs>
+          <VisualizationTabs 
+            organizationData={organizationData}
+            peopleData={peopleData}
+            activeTab={activeTab}
+            setActiveTab={setActiveTab}
+            onCircleClick={handleCircleOrRoleClick}
+            onPersonClick={handlePersonClick}
+          />
         </div>
       </main>
       
@@ -286,13 +231,7 @@ const SharedView = () => {
         onRoleClick={handleCircleOrRoleClick}
       />
       
-      <footer className="py-4 border-t border-border/40 mt-auto">
-        <div className="container mx-auto px-4">
-          <p className="text-center text-sm text-muted-foreground">
-            Organization Circle Visualizer — View shared organization structure
-          </p>
-        </div>
-      </footer>
+      <FooterSection />
     </div>
   );
 };
