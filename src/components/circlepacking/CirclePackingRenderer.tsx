@@ -79,7 +79,14 @@ const CirclePackingRenderer: React.FC<CirclePackingRendererProps> = ({
       
       // Create a color scale
       const newColorScale = getColorScale(uniqueTypes);
-      console.log("Color scale created:", newColorScale ? "success" : "failed");
+      console.log("Color scale created, is function:", typeof newColorScale === 'function');
+      
+      // Test the color scale
+      if (uniqueTypes.length > 0) {
+        const testType = uniqueTypes[0];
+        const testColor = newColorScale(testType);
+        console.log(`Test color for "${testType}": ${testColor}`);
+      }
       
       // Wait a tick to ensure the group is in the DOM
       setTimeout(() => {

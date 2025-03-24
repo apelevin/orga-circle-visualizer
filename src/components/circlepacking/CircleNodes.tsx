@@ -43,9 +43,15 @@ const CircleNodes: React.FC<CircleNodesProps> = ({
       console.log("Found SVG group, rendering circles");
       console.log("ColorScale is valid:", typeof colorScale === 'function');
       
+      if (typeof colorScale !== 'function') {
+        console.error("ColorScale is not a function in CircleNodes, cannot proceed");
+        return;
+      }
+      
       // Clear existing circles first
       g.selectAll('circle.circle-node').remove();
       
+      // Create and append circles with data from the hierarchy
       const circles = g.selectAll('circle.circle-node')
         .data(root.descendants().slice(1))
         .enter()
@@ -71,8 +77,10 @@ const CircleNodes: React.FC<CircleNodesProps> = ({
       
       circlesRef.current = circles;
       
+      // Add event handlers to the circles
       circles
         .on('click', function(event, d) {
+          console.log("Circle clicked:", d.data.name);
           event.stopPropagation();
           handleNodeClick(event, d);
         })
