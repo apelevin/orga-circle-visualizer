@@ -1,5 +1,6 @@
 
 import * as d3 from 'd3';
+import { HierarchyNode } from '@/types';
 
 // Define color palette for different circle types
 export const circleColors: string[] = [
@@ -18,7 +19,7 @@ export const circleColors: string[] = [
 ];
 
 // Create a color scale based on circle types
-export const getColorScale = (uniqueTypes: string[]) => {
+export const getColorScale = (uniqueTypes: string[]): d3.ScaleOrdinal<string, string> => {
   return d3.scaleOrdinal<string>()
     .domain(uniqueTypes)
     .range(circleColors.slice(0, uniqueTypes.length));
@@ -26,9 +27,9 @@ export const getColorScale = (uniqueTypes: string[]) => {
 
 // Get color for a node based on its depth and type
 export const getNodeColor = (
-  d: d3.HierarchyCircularNode<any>, 
+  d: d3.HierarchyCircularNode<HierarchyNode>, 
   colorScale: d3.ScaleOrdinal<string, string>
-) => {
+): string => {
   if (d.depth === 1) {
     // Use the color based on the circle's type
     return colorScale(d.data.type || 'Undefined');

@@ -41,6 +41,7 @@ const CircleNodes: React.FC<CircleNodesProps> = ({
       }
       
       console.log("Found SVG group, rendering circles");
+      console.log("ColorScale is valid:", typeof colorScale === 'function');
       
       // Clear existing circles first
       g.selectAll('circle.circle-node').remove();
@@ -53,7 +54,14 @@ const CircleNodes: React.FC<CircleNodesProps> = ({
         .attr('cx', d => d.x)
         .attr('cy', d => d.y)
         .attr('r', d => d.r)
-        .style('fill', d => getNodeColor(d, colorScale))
+        .style('fill', d => {
+          try {
+            return getNodeColor(d, colorScale);
+          } catch (error) {
+            console.error("Error getting node color:", error);
+            return d.depth === 1 ? '#E5DEFF' : '#D3E4FD';
+          }
+        })
         .style('stroke', d => {
           return d.depth === 1 ? 'rgba(0,0,0,0.05)' : 'none';
         })

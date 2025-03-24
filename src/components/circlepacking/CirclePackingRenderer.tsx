@@ -31,7 +31,7 @@ const CirclePackingRenderer: React.FC<CirclePackingRendererProps> = ({
   handleNodeClick
 }) => {
   const renderCount = useRef(0);
-  const [colorScale, setColorScale] = React.useState<d3.ScaleOrdinal<string, string> | null>(null);
+  const [colorScale, setColorScale] = useState<d3.ScaleOrdinal<string, string> | null>(null);
   const [isGroupCreated, setIsGroupCreated] = useState(false);
   const [groupElement, setGroupElement] = useState<SVGGElement | null>(null);
   const groupRef = useRef<d3.Selection<SVGGElement, unknown, null, undefined> | null>(null);
@@ -51,6 +51,7 @@ const CirclePackingRenderer: React.FC<CirclePackingRendererProps> = ({
       const svg = d3.select(svgRef.current);
       svg.selectAll('*').remove();
       setIsGroupCreated(false);
+      setColorScale(null);
       
       // Create a container group for all visualization elements
       const g = svg.append('g');
@@ -64,16 +65,6 @@ const CirclePackingRenderer: React.FC<CirclePackingRendererProps> = ({
       
       console.log("SVG group created:", g.node() ? "success" : "failed");
       
-      // Wait a tick to ensure the group is in the DOM
-      setTimeout(() => {
-        if (g.node()) {
-          setIsGroupCreated(true);
-          console.log("Group creation confirmed after timeout");
-        } else {
-          console.error("Failed to create SVG group even after timeout");
-        }
-      }, 0);
-      
       // Get unique types for color mapping
       const types = new Set<string>();
       
@@ -84,10 +75,22 @@ const CirclePackingRenderer: React.FC<CirclePackingRendererProps> = ({
       
       // Create array from the set of unique types
       const uniqueTypes = Array.from(types);
+      console.log("Unique types for color scale:", uniqueTypes);
       
       // Create a color scale
       const newColorScale = getColorScale(uniqueTypes);
-      setColorScale(newColorScale);
+      console.log("Color scale created:", newColorScale ? "success" : "failed");
+      
+      // Wait a tick to ensure the group is in the DOM
+      setTimeout(() => {
+        if (g.node()) {
+          setIsGroupCreated(true);
+          setColorScale(newColorScale);
+          console.log("Group creation confirmed and color scale set after timeout");
+        } else {
+          console.error("Failed to create SVG group even after timeout");
+        }
+      }, 0);
     } catch (err) {
       console.error("Error rendering visualization:", err);
     }
@@ -99,42 +102,51 @@ const CirclePackingRenderer: React.FC<CirclePackingRendererProps> = ({
         groupRef.current = null;
         setIsGroupCreated(false);
         setGroupElement(null);
+        setColorScale(null);
       }
     };
   }, [hierarchyData, dimensions, svgRef]);
 
-  if (!hierarchyData || !colorScale) {
-    console.log("Waiting for hierarchyData or colorScale");
+  if (!hierarchyData) {
+    console.log("Waiting for hierarchyData");
     return null;
   }
 
+  if (!colorScale) {
+    console.log("Waiting for colorScale");
+    return null;
+  }
+
+  if (!isGroupCreated || !groupElement) {
+    console.log("Waiting for group element");
+    return null;
+  }
+
+  console.log("All dependencies ready, rendering child components");
+
   return (
     <>
-      {isGroupCreated && groupElement && (
-        <>
-          <CircleNodes 
-            root={hierarchyData} 
-            colorScale={colorScale} 
-            setTooltipData={setTooltipData}
-            handleNodeClick={handleNodeClick}
-            groupElement={groupElement}
-          />
-          <CircleLabels 
-            root={hierarchyData} 
-            groupElement={groupElement}
-          />
-          <WarningIcons 
-            root={hierarchyData} 
-            groupElement={groupElement}
-          />
-          <CirclePackingZoom 
-            svgRef={svgRef} 
-            hierarchyData={hierarchyData} 
-            dimensions={dimensions} 
-            groupElement={groupElement}
-          />
-        </>
-      )}
+      <CircleNodes 
+        root={hierarchyData} 
+        colorScale={colorScale} 
+        setTooltipData={setTooltipData}
+        handleNodeClick={handleNodeClick}
+        groupElement={groupElement}
+      />
+      <CircleLabels 
+        root={hierarchyData} 
+        groupElement={groupElement}
+      />
+      <WarningIcons 
+        root={hierarchyData} 
+        groupElement={groupElement}
+      />
+      <CirclePackingZoom 
+        svgRef={svgRef} 
+        hierarchyData={hierarchyData} 
+        dimensions={dimensions} 
+        groupElement={groupElement}
+      />
     </>
   );
 };
