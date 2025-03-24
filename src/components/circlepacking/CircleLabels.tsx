@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import * as d3 from 'd3';
 import { HierarchyNode } from '@/types';
 
@@ -8,34 +8,47 @@ interface CircleLabelsProps {
 }
 
 const CircleLabels: React.FC<CircleLabelsProps> = ({ root }) => {
-  React.useEffect(() => {
+  const labelsRef = useRef<d3.Selection<SVGTextElement, d3.HierarchyCircularNode<HierarchyNode>, SVGGElement, unknown> | null>(null);
+
+  useEffect(() => {
+    console.log("CircleLabels useEffect running");
     const svg = d3.select('svg');
     const g = svg.select('g');
     
-    // Clear any existing labels to prevent duplication
-    g.selectAll('text.circle-label').remove();
-    
-    g.selectAll('text.circle-label')
-      .data(root.descendants().filter(d => d.depth === 1))
-      .enter()
-      .append('text')
-      .attr('class', 'circle-label')
-      .attr('x', d => d.x)
-      .attr('y', d => d.y)
-      .attr('text-anchor', 'middle')
-      .attr('dominant-baseline', 'middle')
-      .attr('font-size', d => Math.min(d.r / 3, 14))
-      .attr('pointer-events', 'none')
-      .attr('fill', 'rgba(0, 0, 0, 0.7)')
-      .text(d => d.data.name || 'Unnamed');
+    if (!g.empty()) {
+      // Clear any existing labels to prevent duplication
+      g.selectAll('text.circle-label').remove();
+      
+      // Create new labels
+      const labels = g.selectAll('text.circle-label')
+        .data(root.descendants().filter(d => d.depth === 1))
+        .enter()
+        .append('text')
+        .attr('class', 'circle-label')
+        .attr('x', d => d.x)
+        .attr('y', d => d.y)
+        .attr('text-anchor', 'middle')
+        .attr('dominant-baseline', 'middle')
+        .attr('font-size', d => Math.min(d.r / 3, 14))
+        .attr('pointer-events', 'none')
+        .attr('fill', 'rgba(0, 0, 0, 0.7)')
+        .text(d => d.data.name || 'Unnamed');
+      
+      // Store the selection for cleanup
+      labelsRef.current = labels;
+    } else {
+      console.error("SVG group element not found for labels");
+    }
       
     return () => {
       // Clean up on unmount
-      g.selectAll('text.circle-label').remove();
+      if (labelsRef.current) {
+        labelsRef.current.remove();
+      }
     };
   }, [root]);
   
-  return null; // This is a rendering-only component with no visible JSX
+  return null;
 };
 
 export default CircleLabels;

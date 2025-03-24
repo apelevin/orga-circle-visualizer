@@ -35,6 +35,7 @@ const CirclePackingRenderer: React.FC<CirclePackingRendererProps> = ({
 
   useEffect(() => {
     if (!svgRef.current || !hierarchyData) {
+      console.error("Missing SVG ref or hierarchy data");
       return;
     }
 
@@ -48,6 +49,9 @@ const CirclePackingRenderer: React.FC<CirclePackingRendererProps> = ({
       svg.selectAll('*').remove();
       
       const root = hierarchyData;
+      
+      // Create a container group for all visualization elements
+      svg.append('g');
       
       // Get unique types for color mapping
       const types = new Set<string>();
@@ -64,15 +68,15 @@ const CirclePackingRenderer: React.FC<CirclePackingRendererProps> = ({
       const newColorScale = getColorScale(uniqueTypes);
       setColorScale(newColorScale);
       
-      // Create a group element to hold all visualization elements
-      svg.append('g');
-      
     } catch (err) {
       console.error("Error rendering visualization:", err);
     }
   }, [hierarchyData, dimensions, svgRef]);
 
-  if (!hierarchyData || !colorScale) return null;
+  if (!hierarchyData || !colorScale) {
+    console.log("Waiting for hierarchyData or colorScale");
+    return null;
+  }
 
   return (
     <>
