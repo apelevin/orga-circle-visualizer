@@ -13,9 +13,18 @@ const CircleLabels: React.FC<CircleLabelsProps> = ({ root }) => {
   useEffect(() => {
     console.log("CircleLabels useEffect running");
     const svg = d3.select('svg');
-    const g = svg.select('g');
     
-    if (!g.empty()) {
+    // Wait a small amount of time to ensure the SVG group is created
+    setTimeout(() => {
+      const g = svg.select('g');
+      
+      if (g.empty()) {
+        console.error("SVG group element not found for labels");
+        return;
+      }
+      
+      console.log("Found SVG group, rendering labels");
+      
       // Clear any existing labels to prevent duplication
       g.selectAll('text.circle-label').remove();
       
@@ -36,10 +45,8 @@ const CircleLabels: React.FC<CircleLabelsProps> = ({ root }) => {
       
       // Store the selection for cleanup
       labelsRef.current = labels;
-    } else {
-      console.error("SVG group element not found for labels");
-    }
-      
+    }, 150); // Slightly longer delay than CircleNodes
+    
     return () => {
       // Clean up on unmount
       if (labelsRef.current) {

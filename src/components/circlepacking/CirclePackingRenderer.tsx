@@ -32,6 +32,7 @@ const CirclePackingRenderer: React.FC<CirclePackingRendererProps> = ({
 }) => {
   const renderCount = useRef(0);
   const [colorScale, setColorScale] = React.useState<d3.ScaleOrdinal<string, string> | null>(null);
+  const groupRef = useRef<d3.Selection<SVGGElement, unknown, null, undefined> | null>(null);
 
   useEffect(() => {
     if (!svgRef.current || !hierarchyData) {
@@ -43,20 +44,20 @@ const CirclePackingRenderer: React.FC<CirclePackingRendererProps> = ({
     console.log(`Rendering CirclePacking (render #${renderCount.current})`);
     
     try {
+      // Select SVG and clear its content
       const svg = d3.select(svgRef.current);
-      
-      // Clear svg content first
       svg.selectAll('*').remove();
       
-      const root = hierarchyData;
-      
       // Create a container group for all visualization elements
-      svg.append('g');
+      const g = svg.append('g');
+      groupRef.current = g;
+      
+      console.log("SVG group created:", g.node() ? "success" : "failed");
       
       // Get unique types for color mapping
       const types = new Set<string>();
       
-      root.children?.forEach((d) => {
+      hierarchyData.children?.forEach((d) => {
         const type = d.data.type || 'Undefined';
         types.add(type);
       });
@@ -71,6 +72,14 @@ const CirclePackingRenderer: React.FC<CirclePackingRendererProps> = ({
     } catch (err) {
       console.error("Error rendering visualization:", err);
     }
+    
+    // Clean up function
+    return () => {
+      if (groupRef.current) {
+        groupRef.current.remove();
+        groupRef.current = null;
+      }
+    };
   }, [hierarchyData, dimensions, svgRef]);
 
   if (!hierarchyData || !colorScale) {

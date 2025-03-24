@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef } from 'react';
 import * as d3 from 'd3';
 import { HierarchyNode } from '@/types';
@@ -28,9 +29,19 @@ const CircleNodes: React.FC<CircleNodesProps> = ({
   useEffect(() => {
     console.log("CircleNodes useEffect running, rendering circles");
     const svg = d3.select('svg');
-    const g = svg.select('g');
     
-    if (!g.empty()) {
+    // Wait a small amount of time to ensure the SVG group is created
+    setTimeout(() => {
+      const g = svg.select('g');
+      
+      if (g.empty()) {
+        console.error("SVG group element not found for circles");
+        return;
+      }
+      
+      console.log("Found SVG group, rendering circles");
+      
+      // Clear existing circles first
       g.selectAll('circle.circle-node').remove();
       
       const circles = g.selectAll('circle.circle-node')
@@ -91,9 +102,7 @@ const CircleNodes: React.FC<CircleNodesProps> = ({
           
           setTooltipData(null);
         });
-    } else {
-      console.error("SVG group element not found");
-    }
+    }, 100); // Small delay to ensure SVG group exists
     
     return () => {
       if (circlesRef.current) {
