@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useState } from 'react';
 import { HierarchyNode, PeopleData } from '@/types';
 import InfoPanel from './info-panel/InfoPanel';
@@ -8,6 +7,8 @@ import { useCirclePanelData } from '@/hooks/useCirclePanelData';
 import ChartTooltip from './chart/ChartTooltip';
 import ChartError from './chart/ChartError';
 import ChartLegend from './chart/ChartLegend';
+import * as d3 from 'd3';
+import { SelectedCircle } from './info-panel/types';
 
 interface CirclePackingChartProps {
   data: HierarchyNode;
@@ -20,15 +21,7 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data, peopleDat
   const [dimensions, setDimensions] = useState({ width: 1000, height: 800 });
   
   const [isPanelOpen, setIsPanelOpen] = useState(false);
-  const [selectedCircle, setSelectedCircle] = useState<{
-    name: string;
-    value: number;
-    roles?: { name: string; value: number }[];
-    parent?: string;
-    parentCircles?: string[];
-    isRole?: boolean;
-    type?: string;
-  } | null>(null);
+  const [selectedCircle, setSelectedCircle] = useState<SelectedCircle | null>(null);
 
   const [isPersonPanelOpen, setIsPersonPanelOpen] = useState(false);
   const [selectedPerson, setSelectedPerson] = useState<string | null>(null);

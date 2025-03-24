@@ -31,7 +31,11 @@ export const useCirclePanelData = (data: HierarchyNode) => {
     setRoleToCirclesMap(newRoleToCirclesMap);
   }, [data]);
 
-  const handleCircleOrRoleClick = (nodeName: string, hierarchyData: d3.HierarchyCircularNode<HierarchyNode> | null, handleNodeClick: (event: React.MouseEvent | null, d: d3.HierarchyCircularNode<HierarchyNode>) => void) => {
+  const handleCircleOrRoleClick = (
+    nodeName: string, 
+    hierarchyData: d3.HierarchyCircularNode<HierarchyNode> | null, 
+    handleNodeClick: (event: React.MouseEvent | null, d: d3.HierarchyCircularNode<HierarchyNode>) => void
+  ) => {
     if (!hierarchyData) return;
     
     const foundCircle = hierarchyData
