@@ -1,11 +1,8 @@
-
 import React, { useCallback } from 'react';
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { FileSpreadsheet, Upload, Users } from 'lucide-react';
 import { HierarchyNode, PeopleData } from '@/types';
-import WebScraper from './WebScraper';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface FileUploadProps {
   onFileProcessed: (data: HierarchyNode) => void;
@@ -116,84 +113,67 @@ const FileUpload: React.FC<FileUploadProps> = ({
   }
 
   return (
-    <div className="flex flex-col items-center gap-4 w-full max-w-2xl mx-auto">
-      <Tabs defaultValue="upload" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 mb-4">
-          <TabsTrigger value="upload">Excel Upload</TabsTrigger>
-          <TabsTrigger value="parser">Web Page Parser</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="upload" className="w-full">
-          {!hasOrganizationData && (
-            <>
-              <div className="relative group">
-                <Button 
-                  className="relative overflow-hidden transition-all duration-300 px-6 w-full"
-                  size="lg"
-                  disabled={isLoading}
-                >
-                  <span className="flex items-center gap-2">
-                    {isLoading ? (
-                      <div className="w-4 h-4 rounded-full border-2 border-primary-foreground border-t-transparent animate-spin" />
-                    ) : (
-                      <Upload className="h-4 w-4" />
-                    )}
-                    Upload Organization Structure
-                  </span>
-                  <input
-                    type="file"
-                    accept=".xlsx,.xls"
-                    onChange={handleFileChange}
-                    className="absolute inset-0 opacity-0 cursor-pointer"
-                    disabled={isLoading}
-                  />
-                </Button>
-              </div>
-              <p className="text-sm text-muted-foreground mt-1 flex items-center gap-1.5">
-                <FileSpreadsheet className="h-3.5 w-3.5" />
-                <span>Excel files with circle, role, and FTE data (first 3 columns)</span>
-              </p>
-            </>
-          )}
+    <div className="flex flex-col items-center gap-4">
+      {!hasOrganizationData && (
+        <>
+          <div className="relative group">
+            <Button 
+              className="relative overflow-hidden transition-all duration-300 px-6"
+              size="lg"
+              disabled={isLoading}
+            >
+              <span className="flex items-center gap-2">
+                {isLoading ? (
+                  <div className="w-4 h-4 rounded-full border-2 border-primary-foreground border-t-transparent animate-spin" />
+                ) : (
+                  <Upload className="h-4 w-4" />
+                )}
+                Upload Organization Structure
+              </span>
+              <input
+                type="file"
+                accept=".xlsx,.xls"
+                onChange={handleFileChange}
+                className="absolute inset-0 opacity-0 cursor-pointer"
+                disabled={isLoading}
+              />
+            </Button>
+          </div>
+          <p className="text-sm text-muted-foreground mt-1 flex items-center gap-1.5">
+            <FileSpreadsheet className="h-3.5 w-3.5" />
+            <span>Excel files with circle, role, and FTE data (first 3 columns)</span>
+          </p>
+        </>
+      )}
 
-          {!hasPeopleData && (
-            <>
-              <div className="relative group mt-4">
-                <Button 
-                  className="relative overflow-hidden transition-all duration-300 px-6 w-full"
-                  size="lg"
-                  variant={hasOrganizationData ? "default" : "outline"}
-                  disabled={isLoading}
-                >
-                  <span className="flex items-center gap-2">
-                    <Users className="h-4 w-4" />
-                    Upload People Assignments
-                  </span>
-                  <input
-                    type="file"
-                    accept=".xlsx,.xls"
-                    onChange={handlePeopleFileChange}
-                    className="absolute inset-0 opacity-0 cursor-pointer"
-                    disabled={isLoading}
-                  />
-                </Button>
-              </div>
-              <p className="text-sm text-muted-foreground mt-1 flex items-center gap-1.5">
-                <FileSpreadsheet className="h-3.5 w-3.5" />
-                <span>Excel files with circle, role, person, and FTE data (first 4 columns)</span>
-              </p>
-            </>
-          )}
-        </TabsContent>
-        
-        <TabsContent value="parser" className="w-full">
-          <WebScraper 
-            onOrganizationDataParsed={onFileProcessed}
-            onPeopleDataParsed={onPeopleFileProcessed}
-            isLoading={isLoading}
-          />
-        </TabsContent>
-      </Tabs>
+      {!hasPeopleData && (
+        <>
+          <div className="relative group mt-2">
+            <Button 
+              className="relative overflow-hidden transition-all duration-300 px-6"
+              size="lg"
+              variant={hasOrganizationData ? "default" : "outline"}
+              disabled={isLoading}
+            >
+              <span className="flex items-center gap-2">
+                <Users className="h-4 w-4" />
+                Upload People Assignments
+              </span>
+              <input
+                type="file"
+                accept=".xlsx,.xls"
+                onChange={handlePeopleFileChange}
+                className="absolute inset-0 opacity-0 cursor-pointer"
+                disabled={isLoading}
+              />
+            </Button>
+          </div>
+          <p className="text-sm text-muted-foreground mt-1 flex items-center gap-1.5">
+            <FileSpreadsheet className="h-3.5 w-3.5" />
+            <span>Excel files with circle, role, person, and FTE data (first 4 columns)</span>
+          </p>
+        </>
+      )}
     </div>
   );
 };
