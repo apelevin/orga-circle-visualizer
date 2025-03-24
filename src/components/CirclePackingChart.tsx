@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef, useState } from 'react';
 import * as d3 from 'd3';
 import { HierarchyNode, CirclePackingNode, PeopleData } from '@/types';
@@ -25,6 +26,7 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data, peopleDat
   const [selectedCircle, setSelectedCircle] = useState<{
     name: string;
     value: number;
+    type?: string;
     roles?: { name: string; value: number }[];
     parent?: string;
     parentCircles?: string[];
@@ -40,6 +42,7 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data, peopleDat
     name: string;
     isRole: boolean;
     fte: number;
+    type?: string;
   } | null>(null);
 
   useEffect(() => {
@@ -122,6 +125,7 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data, peopleDat
     if (isMainCircle) {
       const circleName = d.data.name || 'Unnamed Circle';
       const totalFTE = d.value || 0;
+      const circleType = d.data.type || 'The Others';
       
       const roles = d.children?.map(role => ({
         name: role.data.name || 'Unnamed Role',
@@ -130,11 +134,12 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data, peopleDat
       
       const calculatedTotal = roles.reduce((sum, role) => sum + role.value, 0);
       
-      console.log(`Circle: ${circleName}, D3 Value: ${totalFTE}, Calculated Sum: ${calculatedTotal}`);
+      console.log(`Circle: ${circleName}, D3 Value: ${totalFTE}, Calculated Sum: ${calculatedTotal}, Type: ${circleType}`);
       
       setSelectedCircle({
         name: circleName,
         value: calculatedTotal,
+        type: circleType,
         roles: roles,
         isRole: false
       });
@@ -190,6 +195,7 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data, peopleDat
         children: hierarchy.children?.map(c => ({ 
           name: c.data.name, 
           value: c.value,
+          type: c.data.type,
           childrenSum: c.children?.reduce((sum, child) => sum + (child.value || 0), 0)
         }))
       });
@@ -209,16 +215,37 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data, peopleDat
         height: root.height
       });
       
+      // Get unique types for color mapping
+      const types = new Set<string>();
+      
+      root.children?.forEach((d) => {
+        const type = d.data.type || 'The Others';
+        types.add(type);
+      });
+      
+      // Create array from the set of unique types
+      const uniqueTypes = Array.from(types);
+      
+      // Define colors for different types
+      const colors: string[] = [
+        '#E5DEFF', // Soft Purple
+        '#D3E4FD', // Soft Blue
+        '#FDE1D3', // Soft Peach
+        '#FFDEE2', // Soft Pink
+        '#F2FCE2', // Soft Green
+        '#FEF7CD', // Soft Yellow
+        '#FEC6A1', // Soft Orange
+        '#F1F0FB', // Soft Gray
+        '#8B5CF6', // Vivid Purple
+        '#D946EF', // Magenta Pink
+        '#F97316', // Bright Orange
+        '#0EA5E9'  // Ocean Blue
+      ];
+      
+      // Create a color scale based on circle types
       const colorScale = d3.scaleOrdinal<string>()
-        .domain(root.children?.map(d => d.data.name || '') || [])
-        .range([
-          '#E5DEFF',
-          '#D3E4FD',
-          '#FDE1D3',
-          '#FFDEE2',
-          '#F2FCE2',
-          '#FEF7CD'
-        ]);
+        .domain(uniqueTypes)
+        .range(colors.slice(0, uniqueTypes.length));
       
       const g = svg.append('g');
       
@@ -232,9 +259,11 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data, peopleDat
         .attr('r', d => d.r)
         .style('fill', d => {
           if (d.depth === 1) {
-            return colorScale(d.data.name || '');
+            // Use the color based on the circle's type
+            return colorScale(d.data.type || 'The Others');
           } else if (d.depth === 2) {
-            const parentColor = d3.color(colorScale(d.parent?.data.name || '')) || d3.color('#E5DEFF')!;
+            // For roles, darken the parent circle's color
+            const parentColor = d3.color(colorScale(d.parent?.data.type || 'The Others')) || d3.color('#E5DEFF')!;
             return parentColor.darker(0.2).toString();
           }
           return '#FFFFFF';
@@ -244,7 +273,7 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data, peopleDat
         })
         .style('stroke-width', 1)
         .style('cursor', 'pointer')
-        .style('opacity', 0)
+        .style('opacity', 1)
         .on('click', function(event, d) {
           handleNodeClick(event, d);
         })
@@ -256,6 +285,7 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data, peopleDat
 
           const name = d.data.name || 'Unnamed';
           const isRole = d.depth === 2;
+          const type = d.data.type || (d.parent?.data.type || 'The Others');
           
           let fte = 0;
           if (isRole) {
@@ -270,7 +300,8 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data, peopleDat
             y: d.y,
             name,
             isRole,
-            fte
+            fte,
+            type: isRole ? undefined : type
           });
         })
         .on('mouseout', function() {
@@ -280,11 +311,7 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data, peopleDat
             .attr('r', d => d.r);
           
           setTooltipData(null);
-        })
-        .transition()
-        .duration(500)
-        .delay((d, i) => i * 10)
-        .style('opacity', 1);
+        });
       
       g.selectAll('.warning-icon')
         .data(root.descendants().filter(d => {
@@ -302,9 +329,6 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data, peopleDat
         .attr('d', 'M23.432 17.925L14.408 3.366c-.933-1.517-3.142-1.517-4.076 0L1.308 17.925c-.933 1.519.235 3.423 2.038 3.423h18.047c1.803 0 2.971-1.904 2.038-3.423zM12.37 16.615a1.219 1.219 0 0 1-1.225 1.224 1.22 1.22 0 0 1-1.225-1.224v-.028c0-.675.55-1.197 1.225-1.197s1.225.522 1.225 1.197v.028zm0-3.824c0 .675-.55 1.224-1.225 1.224a1.22 1.22 0 0 1-1.225-1.224v-4.13c0-.675.55-1.225 1.225-1.225s1.225.55 1.225 1.224v4.131z')
         .attr('transform', 'scale(0.8)')
         .attr('fill', '#FF9800')
-        .style('opacity', 0)
-        .transition()
-        .duration(700)
         .style('opacity', 1);
       
       const zoom = d3.zoom<SVGSVGElement, unknown>()
@@ -398,6 +422,9 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data, peopleDat
               <span className="ml-1 text-amber-500">⚠️</span>
             )}
           </span>
+          {tooltipData.type && (
+            <span className="block text-xs opacity-80 mt-0.5">Type: {tooltipData.type}</span>
+          )}
         </div>
       )}
     </div>

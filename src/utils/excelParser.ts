@@ -43,7 +43,8 @@ export const parseExcelFile = async (file: File, isPeopleData = false): Promise<
           const jsonData = nonEmptyRows.slice(1).map(row => ({
             circleName: row[0]?.toString().trim() || 'Unknown Circle',
             role: row[1]?.toString().trim() || 'Unknown Role',
-            fte: parseFloat(row[2]) || 0
+            fte: parseFloat(row[2]) || 0,
+            type: row[3]?.toString().trim() || 'The Others'
           }));
           resolve(jsonData);
         }
@@ -71,6 +72,7 @@ export const processExcelData = (data: any[]): Circle[] => {
   data.forEach((row) => {
     const circleName = row.circleName;
     const role = row.role;
+    const type = row.type || 'The Others';
     
     // Ensure FTE is a valid number
     let fte = 0;
@@ -85,7 +87,8 @@ export const processExcelData = (data: any[]): Circle[] => {
       circleMap.set(circleName, {
         name: circleName,
         roles: [],
-        totalFTE: 0
+        totalFTE: 0,
+        type: type
       });
     }
     
@@ -126,7 +129,8 @@ export const transformToHierarchy = (circles: Circle[]): HierarchyNode => {
     name: "Organization",
     children: circles.map(circle => ({
       name: circle.name,
-      value: circle.totalFTE, // This is the correct totalFTE from all roles
+      value: circle.totalFTE,
+      type: circle.type,
       children: circle.roles.map(role => ({
         name: role.name,
         value: role.fte
