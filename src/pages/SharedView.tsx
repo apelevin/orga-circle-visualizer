@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { HierarchyNode, PeopleData } from "@/types";
@@ -8,7 +7,7 @@ import SearchInput from "@/components/SearchInput";
 import InfoPanel from "@/components/InfoPanel";
 import PersonInfoPanel from "@/components/PersonInfoPanel";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, RefreshCw } from "lucide-react";
+import { RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 
 const SharedView = () => {
@@ -131,10 +130,6 @@ const SharedView = () => {
       <header className="border-b">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <div>
-            <Link to="/" className="inline-flex items-center text-muted-foreground hover:text-foreground mb-1">
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Return to Home
-            </Link>
             <h1 className="text-2xl font-bold tracking-tight">{orgName}</h1>
           </div>
         </div>
