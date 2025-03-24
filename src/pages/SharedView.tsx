@@ -6,8 +6,10 @@ import CirclePackingChart from "@/components/CirclePackingChart";
 import SearchInput from "@/components/SearchInput";
 import InfoPanel from "@/components/InfoPanel";
 import PersonInfoPanel from "@/components/PersonInfoPanel";
+import StructureProblems from "@/components/StructureProblems";
 import { Button } from "@/components/ui/button";
-import { RefreshCw } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { CircleDot, CircleAlert } from "lucide-react";
 import { toast } from "sonner";
 
 const SharedView = () => {
@@ -28,6 +30,7 @@ const SharedView = () => {
   } | null>(null);
   const [selectedPerson, setSelectedPerson] = useState<string | null>(null);
   const [isPersonPanelOpen, setIsPersonPanelOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState("visualization");
 
   useEffect(() => {
     if (!id) {
@@ -147,9 +150,35 @@ const SharedView = () => {
         </div>
         
         <div className="flex flex-col items-center">
-          <div className="h-[80vh] w-full transition-all duration-500 ease-in-out animate-scale-in">
-            <CirclePackingChart data={organizationData} peopleData={peopleData} />
-          </div>
+          <Tabs 
+            defaultValue="visualization" 
+            value={activeTab}
+            onValueChange={setActiveTab}
+            className="w-full mb-4"
+          >
+            <TabsList className="grid w-full max-w-md mx-auto grid-cols-2">
+              <TabsTrigger value="visualization" className="flex items-center gap-2">
+                <CircleDot className="h-4 w-4" />
+                <span>Visualization</span>
+              </TabsTrigger>
+              <TabsTrigger value="problems" className="flex items-center gap-2">
+                <CircleAlert className="h-4 w-4" />
+                <span>Structure Problems</span>
+              </TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="visualization" className="w-full">
+              <div className="h-[80vh] w-full transition-all duration-500 ease-in-out animate-scale-in">
+                <CirclePackingChart data={organizationData} peopleData={peopleData} />
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="problems" className="w-full mt-4">
+              <div className="min-h-[70vh] w-full transition-all duration-500 ease-in-out animate-scale-in">
+                <StructureProblems organizationData={organizationData} peopleData={peopleData} />
+              </div>
+            </TabsContent>
+          </Tabs>
         </div>
       </main>
       
