@@ -1,5 +1,6 @@
 
 import * as React from 'react';
+import { Link } from 'react-router-dom';
 import FileUpload from '@/components/FileUpload';
 import CirclePackingChart from '@/components/CirclePackingChart';
 import EmptyState from '@/components/EmptyState';
@@ -9,7 +10,7 @@ import InfoPanel from '@/components/InfoPanel';
 import PersonInfoPanel from '@/components/PersonInfoPanel';
 import { HierarchyNode, PeopleData } from '@/types';
 import { Button } from '@/components/ui/button';
-import { RefreshCw } from 'lucide-react';
+import { RefreshCw, Settings } from 'lucide-react';
 
 const Index = () => {
   const [organizationData, setOrganizationData] = React.useState<HierarchyNode | null>(null);
@@ -105,7 +106,7 @@ const Index = () => {
       
       <main className="flex-1 container mx-auto px-4 py-4">
         <div className="w-full mx-auto">
-          <div className="mb-4 flex justify-center">
+          <div className="mb-4 flex flex-col sm:flex-row justify-center items-center gap-4">
             <FileUpload 
               onFileProcessed={handleFileProcessed} 
               onPeopleFileProcessed={handlePeopleFileProcessed}
@@ -113,6 +114,13 @@ const Index = () => {
               hasOrganizationData={!!organizationData}
               hasPeopleData={peopleData.length > 0}
             />
+            
+            <Button variant="outline" size="sm" asChild>
+              <Link to="/admin" className="flex items-center gap-2">
+                <Settings className="h-4 w-4" />
+                <span>Admin Zone</span>
+              </Link>
+            </Button>
           </div>
           
           {(organizationData || peopleData.length > 0) && (
