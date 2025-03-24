@@ -1,18 +1,13 @@
 
 import * as React from 'react';
-import { Link } from 'react-router-dom';
-import FileUpload from '@/components/FileUpload';
-import CirclePackingChart from '@/components/CirclePackingChart';
-import EmptyState from '@/components/EmptyState';
+import AdminZone from '@/components/AdminZone';
 import Header from '@/components/Header';
-import SearchInput from '@/components/SearchInput';
+import CirclePackingChart from '@/components/CirclePackingChart';
 import InfoPanel from '@/components/InfoPanel';
 import PersonInfoPanel from '@/components/PersonInfoPanel';
 import { HierarchyNode, PeopleData } from '@/types';
-import { Button } from '@/components/ui/button';
-import { RefreshCw, Shield } from 'lucide-react';
 
-const Index = () => {
+const Admin = () => {
   const [organizationData, setOrganizationData] = React.useState<HierarchyNode | null>(null);
   const [peopleData, setPeopleData] = React.useState<PeopleData[]>([]);
   const [isLoading, setIsLoading] = React.useState(false);
@@ -96,46 +91,21 @@ const Index = () => {
     setIsPersonPanelOpen(true);
   };
 
-  const handleReset = () => {
-    window.location.reload();
-  };
-
   return (
     <div className="flex flex-col min-h-screen bg-background">
       <Header />
       
-      <main className="flex-1 container mx-auto px-4 py-4">
-        <div className="w-full mx-auto">
-          <div className="mb-4 flex flex-col sm:flex-row justify-center sm:justify-between items-center gap-4">
-            <div className="flex justify-center">
-              <FileUpload 
-                onFileProcessed={handleFileProcessed} 
-                onPeopleFileProcessed={handlePeopleFileProcessed}
-                isLoading={isLoading}
-                hasOrganizationData={!!organizationData}
-                hasPeopleData={peopleData.length > 0}
-              />
-            </div>
-            
-            <Link to="/admin">
-              <Button variant="outline" size="sm" className="flex items-center gap-2">
-                <Shield className="h-4 w-4" />
-                Admin Zone
-              </Button>
-            </Link>
-          </div>
-          
-          {(organizationData || peopleData.length > 0) && (
-            <div className="mb-4">
-              <SearchInput 
-                organizationData={organizationData}
-                peopleData={peopleData}
-                onCircleClick={handleCircleOrRoleClick}
-                onRoleClick={handleCircleOrRoleClick}
-                onPersonClick={handlePersonClick}
-              />
-            </div>
-          )}
+      <main className="flex-1 container mx-auto px-4 py-6">
+        <h1 className="text-3xl font-bold mb-6">Admin Dashboard</h1>
+        
+        <div className="grid grid-cols-1 gap-6">
+          <AdminZone 
+            onFileProcessed={handleFileProcessed}
+            onPeopleFileProcessed={handlePeopleFileProcessed}
+            organizationData={organizationData}
+            peopleData={peopleData}
+            isLoading={isLoading}
+          />
           
           {isLoading ? (
             <div className="flex flex-col items-center justify-center py-20">
@@ -143,33 +113,13 @@ const Index = () => {
               <p className="mt-4 text-muted-foreground">Processing your organization data...</p>
             </div>
           ) : organizationData ? (
-            <div className="flex flex-col items-center">
-              <div className="h-[80vh] w-full transition-all duration-500 ease-in-out animate-scale-in">
+            <div className="flex flex-col items-center p-6 bg-card rounded-lg border shadow-sm">
+              <h2 className="text-xl font-semibold mb-4">Organization Preview</h2>
+              <div className="h-[50vh] w-full transition-all duration-500 ease-in-out animate-scale-in">
                 <CirclePackingChart data={organizationData} peopleData={peopleData} />
               </div>
-              
-              {(organizationData || peopleData.length > 0) && (
-                <div className="mt-4 flex flex-col items-center">
-                  <Button 
-                    variant="outline"
-                    size="sm"
-                    onClick={handleReset}
-                    className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors px-8 py-6 rounded-full"
-                  >
-                    <RefreshCw className="h-5 w-5" />
-                    <span className="text-base">Reset Data</span>
-                  </Button>
-                  <p className="mt-3 text-muted-foreground text-sm">
-                    Reload the page to upload new data
-                  </p>
-                </div>
-              )}
             </div>
-          ) : (
-            <div className="max-w-3xl mx-auto mt-4 animate-slide-up">
-              <EmptyState />
-            </div>
-          )}
+          ) : null}
         </div>
       </main>
       
@@ -194,7 +144,7 @@ const Index = () => {
       <footer className="py-4 border-t border-border/40 mt-auto">
         <div className="container mx-auto px-4">
           <p className="text-center text-sm text-muted-foreground">
-            Organization Circle Visualizer — Upload an Excel file to visualize your organization structure
+            Organization Circle Visualizer — Admin Dashboard
           </p>
         </div>
       </footer>
@@ -202,4 +152,4 @@ const Index = () => {
   );
 };
 
-export default Index;
+export default Admin;

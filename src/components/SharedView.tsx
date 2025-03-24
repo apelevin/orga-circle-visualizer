@@ -1,23 +1,24 @@
 
-import * as React from 'react';
-import { Link } from 'react-router-dom';
-import FileUpload from '@/components/FileUpload';
+import React, { useEffect, useState } from 'react';
+import { useParams } from 'react-router-dom';
+import { HierarchyNode, PeopleData } from '@/types';
+import { getSharedData } from '@/utils/excelParser';
 import CirclePackingChart from '@/components/CirclePackingChart';
-import EmptyState from '@/components/EmptyState';
 import Header from '@/components/Header';
 import SearchInput from '@/components/SearchInput';
 import InfoPanel from '@/components/InfoPanel';
 import PersonInfoPanel from '@/components/PersonInfoPanel';
-import { HierarchyNode, PeopleData } from '@/types';
-import { Button } from '@/components/ui/button';
-import { RefreshCw, Shield } from 'lucide-react';
+import { AlertTriangle } from 'lucide-react';
 
-const Index = () => {
-  const [organizationData, setOrganizationData] = React.useState<HierarchyNode | null>(null);
-  const [peopleData, setPeopleData] = React.useState<PeopleData[]>([]);
-  const [isLoading, setIsLoading] = React.useState(false);
-  const [isPanelOpen, setIsPanelOpen] = React.useState(false);
-  const [selectedCircle, setSelectedCircle] = React.useState<{
+const SharedView: React.FC = () => {
+  const { shareId } = useParams<{ shareId: string }>();
+  const [organizationData, setOrganizationData] = useState<HierarchyNode | null>(null);
+  const [peopleData, setPeopleData] = useState<PeopleData[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  
+  const [isPanelOpen, setIsPanelOpen] = useState(false);
+  const [selectedCircle, setSelectedCircle] = useState<{
     name: string;
     value: number;
     roles?: { name: string; value: number }[];
@@ -25,22 +26,35 @@ const Index = () => {
     parentCircles?: string[];
     isRole?: boolean;
   } | null>(null);
-  const [selectedPerson, setSelectedPerson] = React.useState<string | null>(null);
-  const [isPersonPanelOpen, setIsPersonPanelOpen] = React.useState(false);
+  
+  const [isPersonPanelOpen, setIsPersonPanelOpen] = useState(false);
+  const [selectedPerson, setSelectedPerson] = useState<string | null>(null);
 
-  const handleFileProcessed = (data: HierarchyNode) => {
-    setIsLoading(true);
-    
-    // Simulate a slight delay to show loading state
-    setTimeout(() => {
-      setOrganizationData(data);
+  useEffect(() => {
+    if (!shareId) {
+      setError('Invalid share link');
       setIsLoading(false);
-    }, 800);
-  };
+      return;
+    }
 
-  const handlePeopleFileProcessed = (data: PeopleData[]) => {
-    setPeopleData(data);
-  };
+    try {
+      const sharedData = getSharedData(shareId);
+      
+      if (!sharedData) {
+        setError('This shared organization structure cannot be found or has expired');
+        setIsLoading(false);
+        return;
+      }
+      
+      setOrganizationData(sharedData.organizationData);
+      setPeopleData(sharedData.peopleData || []);
+      setIsLoading(false);
+    } catch (error) {
+      console.error('Error loading shared data:', error);
+      setError('Failed to load shared organization structure');
+      setIsLoading(false);
+    }
+  }, [shareId]);
 
   const handleCircleOrRoleClick = (nodeName: string) => {
     if (!organizationData) return;
@@ -81,7 +95,7 @@ const Index = () => {
     if (foundRole && parentCircles.length > 0) {
       setSelectedCircle({
         name: nodeName,
-        value: 0, // This will be calculated in the InfoPanel
+        value: 0,
         parent: parentCircles[0],
         parentCircles,
         isRole: true
@@ -96,9 +110,36 @@ const Index = () => {
     setIsPersonPanelOpen(true);
   };
 
-  const handleReset = () => {
-    window.location.reload();
-  };
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <main className="container mx-auto px-4 py-20">
+          <div className="flex flex-col items-center justify-center">
+            <div className="w-12 h-12 rounded-full border-4 border-primary border-t-transparent animate-spin" />
+            <p className="mt-4 text-muted-foreground">Loading shared organization data...</p>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <main className="container mx-auto px-4 py-20">
+          <div className="flex flex-col items-center justify-center">
+            <div className="flex items-center justify-center w-16 h-16 rounded-full bg-destructive/10 mb-4">
+              <AlertTriangle className="h-8 w-8 text-destructive" />
+            </div>
+            <h2 className="text-2xl font-semibold mb-2">Error</h2>
+            <p className="text-muted-foreground text-center">{error}</p>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
@@ -106,23 +147,9 @@ const Index = () => {
       
       <main className="flex-1 container mx-auto px-4 py-4">
         <div className="w-full mx-auto">
-          <div className="mb-4 flex flex-col sm:flex-row justify-center sm:justify-between items-center gap-4">
-            <div className="flex justify-center">
-              <FileUpload 
-                onFileProcessed={handleFileProcessed} 
-                onPeopleFileProcessed={handlePeopleFileProcessed}
-                isLoading={isLoading}
-                hasOrganizationData={!!organizationData}
-                hasPeopleData={peopleData.length > 0}
-              />
-            </div>
-            
-            <Link to="/admin">
-              <Button variant="outline" size="sm" className="flex items-center gap-2">
-                <Shield className="h-4 w-4" />
-                Admin Zone
-              </Button>
-            </Link>
+          <div className="mb-4 p-4 bg-card rounded-lg border shadow-sm">
+            <h2 className="text-2xl font-semibold mb-2">Shared Organization Structure</h2>
+            <p className="text-muted-foreground">This organization structure has been shared with you</p>
           </div>
           
           {(organizationData || peopleData.length > 0) && (
@@ -137,37 +164,19 @@ const Index = () => {
             </div>
           )}
           
-          {isLoading ? (
-            <div className="flex flex-col items-center justify-center py-20">
-              <div className="w-12 h-12 rounded-full border-4 border-primary border-t-transparent animate-spin" />
-              <p className="mt-4 text-muted-foreground">Processing your organization data...</p>
-            </div>
-          ) : organizationData ? (
+          {organizationData ? (
             <div className="flex flex-col items-center">
               <div className="h-[80vh] w-full transition-all duration-500 ease-in-out animate-scale-in">
                 <CirclePackingChart data={organizationData} peopleData={peopleData} />
               </div>
-              
-              {(organizationData || peopleData.length > 0) && (
-                <div className="mt-4 flex flex-col items-center">
-                  <Button 
-                    variant="outline"
-                    size="sm"
-                    onClick={handleReset}
-                    className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors px-8 py-6 rounded-full"
-                  >
-                    <RefreshCw className="h-5 w-5" />
-                    <span className="text-base">Reset Data</span>
-                  </Button>
-                  <p className="mt-3 text-muted-foreground text-sm">
-                    Reload the page to upload new data
-                  </p>
-                </div>
-              )}
             </div>
           ) : (
-            <div className="max-w-3xl mx-auto mt-4 animate-slide-up">
-              <EmptyState />
+            <div className="flex flex-col items-center justify-center py-20">
+              <div className="flex items-center justify-center w-16 h-16 rounded-full bg-destructive/10 mb-4">
+                <AlertTriangle className="h-8 w-8 text-destructive" />
+              </div>
+              <h2 className="text-2xl font-semibold mb-2">No Data Available</h2>
+              <p className="text-muted-foreground text-center">This shared organization structure doesn't contain any data</p>
             </div>
           )}
         </div>
@@ -194,7 +203,7 @@ const Index = () => {
       <footer className="py-4 border-t border-border/40 mt-auto">
         <div className="container mx-auto px-4">
           <p className="text-center text-sm text-muted-foreground">
-            Organization Circle Visualizer — Upload an Excel file to visualize your organization structure
+            Organization Circle Visualizer — Shared View
           </p>
         </div>
       </footer>
@@ -202,4 +211,4 @@ const Index = () => {
   );
 };
 
-export default Index;
+export default SharedView;
