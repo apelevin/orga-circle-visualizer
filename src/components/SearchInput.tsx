@@ -35,8 +35,8 @@ const SearchInput: React.FC<SearchInputProps> = ({
   const searchRef = React.useRef<HTMLDivElement>(null);
 
   React.useEffect(() => {
-    // Only search if we have a search term
-    if (!searchTerm.trim()) {
+    // Only search if we have a search term with at least 4 characters
+    if (!searchTerm.trim() || searchTerm.trim().length < 4) {
       setSearchResults([]);
       return;
     }
@@ -130,25 +130,29 @@ const SearchInput: React.FC<SearchInputProps> = ({
     }
   };
 
+  // Determine if we should show the suggestions popover
+  const shouldShowSuggestions = searchTerm.trim().length >= 4 && searchResults.length > 0;
+  
   const noDataAvailable = !organizationData || !peopleData.length;
 
   return (
     <div className="relative max-w-md w-full mx-auto" ref={searchRef}>
-      <Popover open={isOpen && searchResults.length > 0} onOpenChange={setIsOpen}>
+      <Popover open={isOpen && shouldShowSuggestions} onOpenChange={setIsOpen}>
         <PopoverTrigger asChild>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               ref={inputRef}
-              placeholder="Search circles, roles, people..."
+              placeholder="Search circles, roles, people... (type at least 4 characters)"
               className="pl-9 pr-10"
               value={searchTerm}
               onChange={(e) => {
                 setSearchTerm(e.target.value);
-                if (e.target.value.trim()) setIsOpen(true);
+                if (e.target.value.trim().length >= 4) setIsOpen(true);
+                else setIsOpen(false);
               }}
               onFocus={() => {
-                if (searchTerm.trim() && searchResults.length > 0) setIsOpen(true);
+                if (searchTerm.trim().length >= 4 && searchResults.length > 0) setIsOpen(true);
               }}
               disabled={noDataAvailable}
             />
@@ -176,22 +180,27 @@ const SearchInput: React.FC<SearchInputProps> = ({
         >
           <Command>
             <CommandList>
-              <CommandEmpty>No results found</CommandEmpty>
-              <CommandGroup heading="Search Results">
-                {searchResults.map((result) => (
-                  <CommandItem
-                    key={result.id}
-                    onSelect={() => handleItemClick(result)}
-                    className="flex items-center cursor-pointer"
-                  >
-                    {getIconForType(result.type)}
-                    <span>{result.name}</span>
-                    <span className="ml-auto text-xs text-muted-foreground capitalize">
-                      {result.type}
-                    </span>
-                  </CommandItem>
-                ))}
-              </CommandGroup>
+              {searchTerm.trim().length < 4 ? (
+                <CommandEmpty>Type at least 4 characters to search</CommandEmpty>
+              ) : searchResults.length === 0 ? (
+                <CommandEmpty>No results found</CommandEmpty>
+              ) : (
+                <CommandGroup heading="Search Results">
+                  {searchResults.map((result) => (
+                    <CommandItem
+                      key={result.id}
+                      onSelect={() => handleItemClick(result)}
+                      className="flex items-center cursor-pointer"
+                    >
+                      {getIconForType(result.type)}
+                      <span>{result.name}</span>
+                      <span className="ml-auto text-xs text-muted-foreground capitalize">
+                        {result.type}
+                      </span>
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              )}
             </CommandList>
           </Command>
         </PopoverContent>
