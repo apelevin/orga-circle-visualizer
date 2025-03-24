@@ -1,16 +1,16 @@
-
 import React, { useEffect, useRef, useState } from 'react';
 import * as d3 from 'd3';
-import { HierarchyNode, CirclePackingNode } from '@/types';
+import { HierarchyNode, CirclePackingNode, PeopleData } from '@/types';
 import { toast } from "sonner";
 import InfoPanel from './InfoPanel';
 import { AlertTriangle } from 'lucide-react';
 
 interface CirclePackingChartProps {
   data: HierarchyNode;
+  peopleData: PeopleData[];
 }
 
-const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data }) => {
+const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data, peopleData }) => {
   const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
@@ -18,7 +18,6 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data }) => {
   
   const [hierarchyData, setHierarchyData] = useState<d3.HierarchyCircularNode<HierarchyNode> | null>(null);
   
-  // Map to track which roles are in which circles
   const [roleToCirclesMap, setRoleToCirclesMap] = useState<Map<string, string[]>>(new Map());
   
   const [isPanelOpen, setIsPanelOpen] = useState(false);
@@ -58,22 +57,18 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data }) => {
     };
   }, []);
 
-  // Build a map of roles to their parent circles
   useEffect(() => {
     if (!data || !data.children) return;
     
     const newRoleToCirclesMap = new Map<string, string[]>();
     
-    // Iterate through all circles
     data.children.forEach(circle => {
       if (!circle.children) return;
       
-      // For each role in the circle
       circle.children.forEach(role => {
         const roleName = role.name;
         const circleName = circle.name;
         
-        // Add to the map
         if (newRoleToCirclesMap.has(roleName)) {
           newRoleToCirclesMap.get(roleName)!.push(circleName);
         } else {
@@ -119,20 +114,18 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data }) => {
       const circleName = d.data.name || 'Unnamed Circle';
       const totalFTE = d.value || 0;
       
-      // Get the actual roles for this circle
       const roles = d.children?.map(role => ({
         name: role.data.name || 'Unnamed Role',
         value: role.value || 0
       })) || [];
       
-      // Double-check that the total matches the sum of roles
       const calculatedTotal = roles.reduce((sum, role) => sum + role.value, 0);
       
       console.log(`Circle: ${circleName}, D3 Value: ${totalFTE}, Calculated Sum: ${calculatedTotal}`);
       
       setSelectedCircle({
         name: circleName,
-        value: calculatedTotal, // Use the calculated total to ensure accuracy
+        value: calculatedTotal,
         roles: roles,
         isRole: false
       });
@@ -143,7 +136,6 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data }) => {
       const fte = d.value || 0;
       const circleName = d.parent?.data.name || 'Unnamed Circle';
       
-      // Get all circles this role appears in
       const parentCircles = roleToCirclesMap.get(roleName) || [circleName];
       
       setSelectedCircle({
@@ -184,7 +176,6 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data }) => {
         .sum(d => d.value || 0)
         .sort((a, b) => (b.value || 0) - (a.value || 0));
       
-      // Log the hierarchy values to debug
       console.log("Hierarchy values:", {
         root: hierarchy.value,
         children: hierarchy.children?.map(c => ({ 
@@ -257,14 +248,12 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data }) => {
           const name = d.data.name || 'Unnamed';
           const isRole = d.depth === 2;
           
-          // Calculate correct FTE based on depth
           let fte = 0;
           if (isRole) {
-            // For roles, we can use the value directly
             fte = d.value || 0;
           } else if (d.depth === 1) {
-            // For circles, sum up the children's values to ensure accuracy
-            fte = d.children?.reduce((sum, child) => sum + (child.value || 0), 0) || 0;
+            const actualFTE = d.children?.reduce((sum, child) => sum + (child.value || 0), 0) || 0;
+            fte = actualFTE;
           }
           
           setTooltipData({
@@ -288,12 +277,9 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data }) => {
         .delay((d, i) => i * 10)
         .style('opacity', 1);
       
-      // FIX: Update the filter to only show warning icon for circles with more than 10 FTE
-      // We need to filter based on the calculated FTE from children, not just d.value
       g.selectAll('.warning-icon')
         .data(root.descendants().filter(d => {
           if (d.depth === 1) {
-            // Calculate the actual sum from child nodes for accuracy
             const actualFTE = d.children?.reduce((sum, child) => sum + (child.value || 0), 0) || 0;
             return actualFTE > 10;
           }
@@ -364,6 +350,7 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data }) => {
         isOpen={isPanelOpen}
         onClose={() => setIsPanelOpen(false)}
         selectedCircle={selectedCircle}
+        peopleData={peopleData || []}
         onCircleClick={handleCircleOrRoleClick}
       />
       

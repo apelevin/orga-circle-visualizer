@@ -27,7 +27,7 @@ const InfoPanel: React.FC<InfoPanelProps> = ({
   isOpen, 
   onClose, 
   selectedCircle,
-  peopleData,
+  peopleData = [],
   onCircleClick 
 }) => {
   if (!selectedCircle) return null;
@@ -46,7 +46,7 @@ const InfoPanel: React.FC<InfoPanelProps> = ({
 
   // Get people assigned to the selected role or circle
   const getAssignedPeople = () => {
-    if (!peopleData.length) return [];
+    if (!peopleData || peopleData.length === 0) return [];
     
     if (isRoleCircle) {
       // For roles, filter by role name and parent circle (if available)
@@ -125,7 +125,7 @@ const InfoPanel: React.FC<InfoPanelProps> = ({
                 <span className="text-sm font-medium">{totalAssignedFTE.toFixed(2)}</span>
                 
                 {calculatedTotal > 0 && (
-                  <Badge variant={totalAssignedFTE >= calculatedTotal ? "success" : "destructive"} className="ml-auto">
+                  <Badge variant={totalAssignedFTE >= calculatedTotal ? "secondary" : "destructive"} className="ml-auto">
                     {Math.round((totalAssignedFTE / calculatedTotal) * 100)}%
                   </Badge>
                 )}
