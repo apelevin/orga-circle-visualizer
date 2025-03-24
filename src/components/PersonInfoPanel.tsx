@@ -51,6 +51,22 @@ const PersonInfoPanel: React.FC<PersonInfoPanelProps> = ({
     );
   }
   
+  // Group assignments by role to avoid duplicate role entries
+  const roleAssignments = personAssignments.reduce((acc, curr) => {
+    const key = curr.roleName;
+    if (!acc[key]) {
+      acc[key] = {
+        roleName: curr.roleName,
+        circles: [{circleName: curr.circleName, fte: curr.fte}],
+        totalFte: curr.fte
+      };
+    } else {
+      acc[key].circles.push({circleName: curr.circleName, fte: curr.fte});
+      acc[key].totalFte += curr.fte;
+    }
+    return acc;
+  }, {} as Record<string, {roleName: string, circles: {circleName: string, fte: number}[], totalFte: number}>);
+  
   return (
     <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <SheetContent className="overflow-y-auto w-96 max-w-full">
@@ -74,7 +90,7 @@ const PersonInfoPanel: React.FC<PersonInfoPanelProps> = ({
             </p>
             
             <div className="text-sm text-muted-foreground mt-1">
-              <span>Assigned to {personAssignments.length} {personAssignments.length === 1 ? 'role' : 'roles'}</span>
+              <span>Assigned to {Object.keys(roleAssignments).length} {Object.keys(roleAssignments).length === 1 ? 'role' : 'roles'}</span>
             </div>
           </div>
           
@@ -87,32 +103,34 @@ const PersonInfoPanel: React.FC<PersonInfoPanelProps> = ({
             </div>
             
             <div className="space-y-4">
-              {personAssignments.map((assignment, index) => (
-                <div key={`${assignment.circleName}-${assignment.roleName}-${index}`} className="pb-4 border-b border-border last:border-0 last:pb-0">
+              {Object.values(roleAssignments).map((roleGroup, index) => (
+                <div key={`${roleGroup.roleName}-${index}`} className="pb-4 border-b border-border last:border-0 last:pb-0">
                   <div className="flex flex-col gap-2">
                     <div className="flex items-baseline justify-between">
                       <Button
                         variant="link"
                         size="sm"
                         className="p-0 h-auto text-sm hover:underline text-left whitespace-normal flex-1 mr-2 justify-start font-medium text-foreground"
-                        onClick={() => onRoleClick && onRoleClick(assignment.roleName)}
+                        onClick={() => onRoleClick && onRoleClick(roleGroup.roleName)}
                       >
-                        {assignment.roleName}
+                        {roleGroup.roleName}
                       </Button>
-                      <Badge variant="outline">{assignment.fte.toFixed(2)} FTE</Badge>
+                      <Badge variant="outline">{roleGroup.totalFte.toFixed(2)} FTE</Badge>
                     </div>
                     
-                    <div className="flex items-center gap-1.5">
-                      <CircleDot className="h-3.5 w-3.5 text-muted-foreground" />
-                      <Button
-                        variant="link"
-                        size="sm"
-                        className="p-0 h-auto text-xs hover:underline text-muted-foreground"
-                        onClick={() => onCircleClick && onCircleClick(assignment.circleName)}
-                      >
-                        {assignment.circleName}
-                      </Button>
-                    </div>
+                    {roleGroup.circles.map((circle, circleIndex) => (
+                      <div key={`${circle.circleName}-${circleIndex}`} className="flex items-center gap-1.5">
+                        <CircleDot className="h-3.5 w-3.5 text-muted-foreground" />
+                        <Button
+                          variant="link"
+                          size="sm"
+                          className="p-0 h-auto text-xs hover:underline text-muted-foreground"
+                          onClick={() => onCircleClick && onCircleClick(circle.circleName)}
+                        >
+                          {circle.circleName}
+                        </Button>
+                      </div>
+                    ))}
                   </div>
                 </div>
               ))}
