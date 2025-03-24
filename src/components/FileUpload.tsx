@@ -1,8 +1,7 @@
-
 import React, { useCallback } from 'react';
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { FileSpreadsheet, Upload, Users, RefreshCw } from 'lucide-react';
+import { FileSpreadsheet, Upload, Users } from 'lucide-react';
 import { HierarchyNode, PeopleData } from '@/types';
 
 interface FileUploadProps {
@@ -33,7 +32,6 @@ const FileUpload: React.FC<FileUploadProps> = ({
       }
 
       try {
-        // Dynamically import the Excel parser to reduce initial load time
         const { parseExcelFile, processExcelData, transformToHierarchy } = await import('@/utils/excelParser');
         
         const excelData = await parseExcelFile(file);
@@ -44,15 +42,12 @@ const FileUpload: React.FC<FileUploadProps> = ({
           return;
         }
         
-        // We no longer check for specific column names, as we'll use positional columns
-        
         const circles = processExcelData(excelData);
         console.log('Processed circles:', circles);
         
         const hierarchy = transformToHierarchy(circles);
         console.log('Hierarchy data:', hierarchy);
         
-        // Check if hierarchy has children
         if (!hierarchy.children || hierarchy.children.length === 0) {
           toast.error('No valid organizational data found in the Excel file');
           return;
@@ -64,7 +59,6 @@ const FileUpload: React.FC<FileUploadProps> = ({
         console.error('Error processing file:', error);
         toast.error('Error processing file. Please check the format and try again.');
       } finally {
-        // Reset the input value to allow uploading the same file again
         event.target.value = '';
       }
     },
@@ -84,10 +78,9 @@ const FileUpload: React.FC<FileUploadProps> = ({
       }
 
       try {
-        // Dynamically import the Excel parser to reduce initial load time
         const { parseExcelFile, processPeopleData } = await import('@/utils/excelParser');
         
-        const excelData = await parseExcelFile(file, true); // true to indicate this is people data
+        const excelData = await parseExcelFile(file, true);
         console.log('People Excel data parsed:', excelData);
         
         if (!excelData || excelData.length === 0) {
@@ -109,37 +102,14 @@ const FileUpload: React.FC<FileUploadProps> = ({
         console.error('Error processing people file:', error);
         toast.error('Error processing file. Please check the format and try again.');
       } finally {
-        // Reset the input value to allow uploading the same file again
         event.target.value = '';
       }
     },
     [onPeopleFileProcessed]
   );
 
-  const handleReset = () => {
-    window.location.reload();
-  };
-
-  // If both data types are loaded, show reset button instead
   if (hasOrganizationData && hasPeopleData) {
-    return (
-      <div className="flex flex-col items-center gap-2">
-        <Button 
-          className="relative overflow-hidden transition-all duration-300 px-6"
-          size="sm"
-          variant="outline"
-          onClick={handleReset}
-        >
-          <span className="flex items-center gap-2">
-            <RefreshCw className="h-4 w-4" />
-            Reset Data
-          </span>
-        </Button>
-        <p className="text-xs text-muted-foreground">
-          Reload the page to upload new data
-        </p>
-      </div>
-    );
+    return null;
   }
 
   return (
