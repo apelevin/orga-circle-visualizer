@@ -1,17 +1,23 @@
 
 import React, { useState } from 'react';
+import FileUpload from '@/components/FileUpload';
 import CirclePackingChart from '@/components/CirclePackingChart';
 import EmptyState from '@/components/EmptyState';
 import Header from '@/components/Header';
 import { HierarchyNode } from '@/types';
-import DataFetcher from '@/components/DataFetcher';
 
 const Index = () => {
   const [organizationData, setOrganizationData] = useState<HierarchyNode | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleDataProcessed = (data: HierarchyNode) => {
-    setOrganizationData(data);
+  const handleFileProcessed = (data: HierarchyNode) => {
+    setIsLoading(true);
+    
+    // Simulate a slight delay to show loading state
+    setTimeout(() => {
+      setOrganizationData(data);
+      setIsLoading(false);
+    }, 800);
   };
 
   return (
@@ -21,10 +27,9 @@ const Index = () => {
       <main className="flex-1 container mx-auto px-4 py-8">
         <div className="max-w-screen-xl mx-auto">
           <div className="mb-10 flex justify-center">
-            <DataFetcher 
-              onDataProcessed={handleDataProcessed} 
+            <FileUpload 
+              onFileProcessed={handleFileProcessed} 
               isLoading={isLoading}
-              setIsLoading={setIsLoading}
             />
           </div>
           
@@ -48,7 +53,7 @@ const Index = () => {
       <footer className="py-6 border-t border-border/40 mt-auto">
         <div className="container mx-auto px-4">
           <p className="text-center text-sm text-muted-foreground">
-            Organization Circle Visualizer — Click the button to load and visualize organization structure
+            Organization Circle Visualizer — Upload an Excel file to visualize your organization structure
           </p>
         </div>
       </footer>
