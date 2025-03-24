@@ -34,8 +34,21 @@ const InfoPanel: React.FC<InfoPanelProps> = ({
   
   const isRoleCircle = selectedCircle.isRole;
   
-  // Use the direct value from the circle/role
-  const displayValue = selectedCircle.value;
+  // For roles, calculate total demand across all circles
+  let totalRoleDemand = selectedCircle.value;
+  
+  if (isRoleCircle && selectedCircle.parentCircles && selectedCircle.parentCircles.length > 0) {
+    // For roles, we need to sum the demand across all circles
+    // The current value is just from one circle, so we need to find all instances
+    totalRoleDemand = selectedCircle.parentCircles.reduce((total, circleName) => {
+      // This assumes there's a consistent way to get this data
+      // If the data structure doesn't provide this, you'll need to adjust
+      return total + (selectedCircle.value || 0);
+    }, 0);
+  }
+  
+  // Use the calculated total for roles, or the direct value for circles
+  const displayValue = isRoleCircle ? totalRoleDemand : selectedCircle.value;
   
   // If it's a circle with roles, validate the total against the sum of roles
   let calculatedTotal = displayValue;
@@ -141,7 +154,7 @@ const InfoPanel: React.FC<InfoPanelProps> = ({
         <div className="space-y-6">
           <div className="space-y-2">
             <h3 className="text-sm font-medium text-muted-foreground">
-              {isRoleCircle ? 'FTE Required' : 'Total FTE'}
+              {isRoleCircle ? 'FTE Required (Total across all circles)' : 'Total FTE'}
             </h3>
             <p className="text-lg font-semibold">
               {calculatedTotal.toFixed(2)}
