@@ -92,9 +92,9 @@ const PersonInfoPanel: React.FC<PersonInfoPanelProps> = ({
                   <div className="flex flex-col gap-2">
                     <div className="flex items-baseline justify-between">
                       <Button
-                        variant="ghost"
+                        variant="link"
                         size="sm"
-                        className="p-0 h-auto text-sm hover:bg-transparent hover:underline text-left whitespace-normal flex-1 mr-2 justify-start font-medium"
+                        className="p-0 h-auto text-sm hover:underline text-left whitespace-normal flex-1 mr-2 justify-start font-medium text-foreground"
                         onClick={() => onRoleClick && onRoleClick(assignment.roleName)}
                       >
                         {assignment.roleName}
@@ -107,7 +107,7 @@ const PersonInfoPanel: React.FC<PersonInfoPanelProps> = ({
                       <Button
                         variant="link"
                         size="sm"
-                        className="p-0 h-auto text-xs hover:bg-transparent text-muted-foreground"
+                        className="p-0 h-auto text-xs hover:underline text-muted-foreground"
                         onClick={() => onCircleClick && onCircleClick(assignment.circleName)}
                       >
                         {assignment.circleName}
