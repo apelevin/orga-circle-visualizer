@@ -211,22 +211,14 @@ const InfoPanel: React.FC<InfoPanelProps> = ({
               
               {isRoleCircle ? (
                 <div className="mt-2">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Name</TableHead>
-                        <TableHead className="text-right">FTE</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {assignedPeople.map((person, index) => (
-                        <TableRow key={`${person.personName}-${index}`}>
-                          <TableCell>{person.personName}</TableCell>
-                          <TableCell className="text-right">{person.fte.toFixed(2)}</TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+                  <ol className="list-decimal pl-5 space-y-1">
+                    {assignedPeople.map((person, index) => (
+                      <li key={`${person.personName}-${index}`} className="flex justify-between items-baseline">
+                        <span className="text-sm">{person.personName}</span>
+                        <span className="text-xs text-muted-foreground">{person.fte.toFixed(2)}</span>
+                      </li>
+                    ))}
+                  </ol>
                 </div>
               ) : (
                 <div className="space-y-4">
@@ -248,12 +240,14 @@ const InfoPanel: React.FC<InfoPanelProps> = ({
                       </div>
                       
                       <div className="mt-1 pl-2 border-l-2 border-muted space-y-1">
-                        {roleGroup.people.map((person, pIndex) => (
-                          <div key={`${person.personName}-${pIndex}`} className="flex items-center justify-between">
-                            <span className="text-sm">{person.personName}</span>
-                            <span className="text-xs text-muted-foreground">{person.fte.toFixed(2)}</span>
-                          </div>
-                        ))}
+                        <ol className="list-decimal pl-5 space-y-1">
+                          {roleGroup.people.map((person, pIndex) => (
+                            <li key={`${person.personName}-${pIndex}`} className="flex justify-between items-baseline">
+                              <span className="text-sm">{person.personName}</span>
+                              <span className="text-xs text-muted-foreground">{person.fte.toFixed(2)}</span>
+                            </li>
+                          ))}
+                        </ol>
                       </div>
                     </div>
                   ))}
