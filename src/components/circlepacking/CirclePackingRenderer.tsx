@@ -1,5 +1,5 @@
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import * as d3 from 'd3';
 import { HierarchyNode } from '@/types';
 import { getColorScale } from '@/utils/circlePackingColors';
@@ -32,6 +32,7 @@ const CirclePackingRenderer: React.FC<CirclePackingRendererProps> = ({
 }) => {
   const renderCount = useRef(0);
   const [colorScale, setColorScale] = React.useState<d3.ScaleOrdinal<string, string> | null>(null);
+  const [isGroupCreated, setIsGroupCreated] = useState(false);
   const groupRef = useRef<d3.Selection<SVGGElement, unknown, null, undefined> | null>(null);
 
   useEffect(() => {
@@ -53,6 +54,11 @@ const CirclePackingRenderer: React.FC<CirclePackingRendererProps> = ({
       groupRef.current = g;
       
       console.log("SVG group created:", g.node() ? "success" : "failed");
+      
+      // Set state to indicate group is created
+      if (g.node()) {
+        setIsGroupCreated(true);
+      }
       
       // Get unique types for color mapping
       const types = new Set<string>();
@@ -78,6 +84,7 @@ const CirclePackingRenderer: React.FC<CirclePackingRendererProps> = ({
       if (groupRef.current) {
         groupRef.current.remove();
         groupRef.current = null;
+        setIsGroupCreated(false);
       }
     };
   }, [hierarchyData, dimensions, svgRef]);
@@ -89,19 +96,23 @@ const CirclePackingRenderer: React.FC<CirclePackingRendererProps> = ({
 
   return (
     <>
-      <CircleNodes 
-        root={hierarchyData} 
-        colorScale={colorScale} 
-        setTooltipData={setTooltipData}
-        handleNodeClick={handleNodeClick}
-      />
-      <CircleLabels root={hierarchyData} />
-      <WarningIcons root={hierarchyData} />
-      <CirclePackingZoom 
-        svgRef={svgRef} 
-        hierarchyData={hierarchyData} 
-        dimensions={dimensions} 
-      />
+      {isGroupCreated && (
+        <>
+          <CircleNodes 
+            root={hierarchyData} 
+            colorScale={colorScale} 
+            setTooltipData={setTooltipData}
+            handleNodeClick={handleNodeClick}
+          />
+          <CircleLabels root={hierarchyData} />
+          <WarningIcons root={hierarchyData} />
+          <CirclePackingZoom 
+            svgRef={svgRef} 
+            hierarchyData={hierarchyData} 
+            dimensions={dimensions} 
+          />
+        </>
+      )}
     </>
   );
 };

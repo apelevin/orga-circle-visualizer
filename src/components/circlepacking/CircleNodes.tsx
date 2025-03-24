@@ -28,13 +28,16 @@ const CircleNodes: React.FC<CircleNodesProps> = ({
   
   useEffect(() => {
     console.log("CircleNodes useEffect running, rendering circles");
-    const svg = d3.select('svg');
     
-    // Wait a small amount of time to ensure the SVG group is created
-    setTimeout(() => {
-      const g = svg.select('g');
+    try {
+      const svg = d3.select('svg');
+      if (!svg || svg.empty()) {
+        console.error("SVG element not found for circles");
+        return;
+      }
       
-      if (g.empty()) {
+      const g = svg.select('g');
+      if (!g || g.empty()) {
         console.error("SVG group element not found for circles");
         return;
       }
@@ -102,7 +105,9 @@ const CircleNodes: React.FC<CircleNodesProps> = ({
           
           setTooltipData(null);
         });
-    }, 100); // Small delay to ensure SVG group exists
+    } catch (error) {
+      console.error("Error rendering circles:", error);
+    }
     
     return () => {
       if (circlesRef.current) {

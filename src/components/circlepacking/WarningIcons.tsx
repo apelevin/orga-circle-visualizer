@@ -12,13 +12,16 @@ const WarningIcons: React.FC<WarningIconsProps> = ({ root }) => {
 
   useEffect(() => {
     console.log("WarningIcons useEffect running");
-    const svg = d3.select('svg');
     
-    // Wait a small amount of time to ensure the SVG group is created
-    setTimeout(() => {
-      const g = svg.select('g');
+    try {
+      const svg = d3.select('svg');
+      if (!svg || svg.empty()) {
+        console.error("SVG element not found for warning icons");
+        return;
+      }
       
-      if (g.empty()) {
+      const g = svg.select('g');
+      if (!g || g.empty()) {
         console.error("SVG group element not found for warning icons");
         return;
       }
@@ -50,7 +53,9 @@ const WarningIcons: React.FC<WarningIconsProps> = ({ root }) => {
       
       // Store the selection for cleanup
       iconsRef.current = icons;
-    }, 200); // Even longer delay than CircleLabels
+    } catch (error) {
+      console.error("Error rendering warning icons:", error);
+    }
     
     return () => {
       // Clean up on unmount
