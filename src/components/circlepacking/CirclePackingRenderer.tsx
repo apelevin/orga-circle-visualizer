@@ -102,6 +102,8 @@ const CirclePackingRenderer: React.FC<CirclePackingRendererProps> = ({
         .style('cursor', 'pointer')
         .style('opacity', 1)
         .on('click', function(event, d) {
+          // Stop event propagation to prevent conflicts with zoom
+          event.stopPropagation();
           handleNodeClick(event, d);
         })
         .on('mouseover', function(event, d) {
@@ -193,7 +195,7 @@ const CirclePackingRenderer: React.FC<CirclePackingRendererProps> = ({
       
       svg.call(zoom.transform, initialTransform);
       
-      // Double-click to reset zoom
+      // Handle double-click separately from regular clicks
       svg.on('dblclick.zoom', null);
       svg.on('dblclick', () => {
         svg.transition()

@@ -19,7 +19,10 @@ const CirclePackingNavigation: React.FC<CirclePackingNavigationProps> = ({
       <Button 
         variant="outline" 
         size="icon" 
-        onClick={zoomIn}
+        onClick={(e) => {
+          e.stopPropagation();
+          zoomIn();
+        }}
         className="h-8 w-8 rounded-full"
         title="Zoom In"
       >
@@ -29,7 +32,10 @@ const CirclePackingNavigation: React.FC<CirclePackingNavigationProps> = ({
       <Button 
         variant="outline" 
         size="icon" 
-        onClick={zoomOut}
+        onClick={(e) => {
+          e.stopPropagation();
+          zoomOut();
+        }}
         className="h-8 w-8 rounded-full"
         title="Zoom Out"
       >
@@ -39,7 +45,10 @@ const CirclePackingNavigation: React.FC<CirclePackingNavigationProps> = ({
       <Button 
         variant="outline" 
         size="icon" 
-        onClick={resetZoom}
+        onClick={(e) => {
+          e.stopPropagation();
+          resetZoom();
+        }}
         className="h-8 w-8 rounded-full"
         title="Reset View"
       >

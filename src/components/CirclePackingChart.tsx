@@ -184,6 +184,10 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data, peopleDat
         height={dimensions.height}
         className="mx-auto bg-white/50 rounded-lg"
         style={{ maxHeight: '85vh' }}
+        onClick={(e) => {
+          // This is for the SVG background clicks only, not for circles
+          e.stopPropagation();
+        }}
       />
       
       <CirclePackingRenderer
