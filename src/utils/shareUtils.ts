@@ -17,4 +17,3 @@ export const getAllSharedData = () => {
 export const deleteSharedData = () => {
   // Functionality removed
 };
-
