@@ -35,7 +35,6 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data, peopleDat
     type?: string;
   } | null>(null);
 
-  // Handle window resize
   useEffect(() => {
     const handleResize = () => {
       if (containerRef.current) {
@@ -66,7 +65,7 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data, peopleDat
     if (isMainCircle) {
       const circleName = d.data.name || 'Unnamed Circle';
       const totalFTE = d.value || 0;
-      const type = d.data.type || 'Default';
+      const type = d.data.type || 'The others';
       
       const roles = d.children?.map(role => ({
         name: role.data.name || 'Unnamed Role',

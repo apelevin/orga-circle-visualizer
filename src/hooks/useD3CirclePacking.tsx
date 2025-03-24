@@ -1,4 +1,3 @@
-
 import { useEffect, useState, RefObject } from 'react';
 import * as d3 from 'd3';
 import { HierarchyNode, CirclePackingNode } from '@/types';
@@ -83,7 +82,7 @@ export const useD3CirclePacking = ({
       });
 
       // Create a color scale based on unique types
-      const types = Array.from(new Set(root.children?.map(d => d.data.type || 'Default') || []));
+      const types = Array.from(new Set(root.children?.map(d => d.data.type || 'The others') || []));
       const colorScale = d3.scaleOrdinal<string>()
         .domain(types)
         .range([
@@ -107,9 +106,9 @@ export const useD3CirclePacking = ({
         .attr('r', d => d.r)
         .style('fill', d => {
           if (d.depth === 1) {
-            return colorScale(d.data.type || 'Default');
+            return colorScale(d.data.type || 'The others');
           } else if (d.depth === 2) {
-            const parentColor = d3.color(colorScale(d.parent?.data.type || 'Default')) || d3.color('#E5DEFF')!;
+            const parentColor = d3.color(colorScale(d.parent?.data.type || 'The others')) || d3.color('#E5DEFF')!;
             return parentColor.darker(0.2).toString();
           }
           return '#FFFFFF';
@@ -146,7 +145,7 @@ export const useD3CirclePacking = ({
             name,
             isRole,
             fte,
-            type: d.data.type
+            type: d.data.type || 'The others'
           });
         })
         .on('mouseout', function() {

@@ -44,7 +44,7 @@ export const parseExcelFile = async (file: File, isPeopleData = false): Promise<
             circleName: row[0]?.toString().trim() || 'Unknown Circle',
             role: row[1]?.toString().trim() || 'Unknown Role',
             fte: parseFloat(row[2]) || 0,
-            type: row[3]?.toString().trim() || 'Default' // Extract type from 4th column
+            type: row[3]?.toString().trim() || 'The others' // Default to "The others" if not specified
           }));
           resolve(jsonData);
         }
@@ -72,7 +72,7 @@ export const processExcelData = (data: any[]): Circle[] => {
   data.forEach((row) => {
     const circleName = row.circleName;
     const role = row.role;
-    const type = row.type; // Get the type from the row
+    const type = row.type || "The others"; // Ensure we have a default type
     
     // Ensure FTE is a valid number
     let fte = 0;
@@ -135,7 +135,7 @@ export const transformToHierarchy = (circles: Circle[]): HierarchyNode => {
     children: circles.map(circle => ({
       name: circle.name,
       value: circle.totalFTE, // This is the correct totalFTE from all roles
-      type: circle.type, // Pass the type to hierarchy nodes
+      type: circle.type || "The others", // Default to "The others" if type is null or undefined
       children: circle.roles.map(role => ({
         name: role.name,
         value: role.fte
