@@ -47,6 +47,15 @@ const CircleNodes: React.FC<CircleNodesProps> = ({
       const descendants = root.descendants().slice(1);
       console.log(`Rendering ${descendants.length} circles`);
       
+      // Log the types for debugging
+      const types = new Set<string>();
+      descendants
+        .filter(d => d.depth === 1)
+        .forEach(d => {
+          types.add(d.data.type || 'Undefined');
+        });
+      console.log("Circle types in data:", Array.from(types));
+      
       // Create circles for each node
       const circles = g.selectAll('circle.circle-node')
         .data(descendants)
@@ -59,7 +68,6 @@ const CircleNodes: React.FC<CircleNodesProps> = ({
         .style('fill', d => {
           // Get color based on node depth and type
           const color = getNodeColor(d, colorScale);
-          console.log(`Circle ${d.data.name}, type: ${d.data.type}, color: ${color}`);
           return color;
         })
         .style('stroke', d => d.depth === 1 ? 'rgba(255,255,255,0.3)' : 'none')

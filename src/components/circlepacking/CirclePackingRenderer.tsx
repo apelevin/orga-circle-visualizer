@@ -84,6 +84,12 @@ const CirclePackingRenderer: React.FC<CirclePackingRendererProps> = ({
         const testColor = newColorScale(testType);
         console.log(`Test color for "${testType}": ${testColor}`);
         
+        // Test each type
+        uniqueTypes.forEach(type => {
+          const color = newColorScale(type);
+          console.log(`Type "${type}" maps to color: ${color}`);
+        });
+        
         // If we got here, the color scale is valid
         setColorScale(newColorScale);
         setIsGroupCreated(true);

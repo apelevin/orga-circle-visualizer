@@ -37,6 +37,12 @@ export const getColorScale = (uniqueTypes: string[]): d3.ScaleOrdinal<string, st
     }
   }
   
+  // Log the mapping for debugging
+  console.log("Color mapping:");
+  uniqueTypes.forEach((type, i) => {
+    console.log(`${type} -> ${colorsToUse[i]}`);
+  });
+  
   // Create and return the scale
   return d3.scaleOrdinal<string>()
     .domain(uniqueTypes)
@@ -62,7 +68,9 @@ export const getNodeColor = (
     } else if (d.depth === 1) {
       // Use the color based on the circle's type
       const type = d.data.type || 'Undefined';
-      return colorScale(type);
+      const color = colorScale(type);
+      console.log(`Node ${d.data.name} (type: ${type}) -> color: ${color}`);
+      return color;
     } else if (d.depth === 2) {
       // For roles, slightly darker version of parent color
       const parentType = d.parent?.data.type || 'Undefined';
