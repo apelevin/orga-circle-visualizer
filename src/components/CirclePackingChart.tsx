@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useState } from 'react';
 import * as d3 from 'd3';
 import { HierarchyNode, CirclePackingNode, PeopleData } from '@/types';
@@ -15,7 +14,7 @@ interface CirclePackingChartProps {
 const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data, peopleData }) => {
   const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
+  const [dimensions, setDimensions] = useState({ width: 1000, height: 800 });
   const [error, setError] = useState<string | null>(null);
   
   const [hierarchyData, setHierarchyData] = useState<d3.HierarchyCircularNode<HierarchyNode> | null>(null);
@@ -48,8 +47,8 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data, peopleDat
       if (containerRef.current) {
         const { width, height } = containerRef.current.getBoundingClientRect();
         setDimensions({
-          width: Math.max(width, 300),
-          height: Math.max(height, 300)
+          width: Math.max(width, 400),
+          height: Math.max(height * 0.95, 600)
         });
       }
     };
@@ -309,7 +308,7 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data, peopleDat
         .style('opacity', 1);
       
       const zoom = d3.zoom<SVGSVGElement, unknown>()
-        .scaleExtent([0.5, 8])
+        .scaleExtent([0.4, 10])
         .on('zoom', (event) => {
           g.attr('transform', event.transform);
         });
@@ -319,7 +318,8 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data, peopleDat
       const initialTransform = d3.zoomIdentity.translate(
         dimensions.width / 2 - root.x,
         dimensions.height / 2 - root.y
-      );
+      ).scale(0.9);
+      
       svg.call(zoom.transform, initialTransform);
       
       svg.on('dblclick.zoom', () => {
@@ -354,6 +354,7 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data, peopleDat
         width={dimensions.width} 
         height={dimensions.height}
         className="mx-auto bg-white/50 rounded-lg"
+        style={{ maxHeight: '85vh' }}
       />
       
       <InfoPanel
@@ -374,7 +375,7 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data, peopleDat
         onRoleClick={handleCircleOrRoleClick}
       />
       
-      <div className="text-center mt-6 text-sm text-muted-foreground">
+      <div className="text-center mt-4 text-sm text-muted-foreground">
         <p>Hover over a circle to see its name. Click on a circle to see details.</p>
         <p className="text-xs mt-1 flex items-center justify-center gap-1">
           <AlertTriangle className="h-3 w-3 text-amber-500" /> 

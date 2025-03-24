@@ -103,9 +103,9 @@ const Index = () => {
     <div className="flex flex-col min-h-screen bg-background">
       <Header />
       
-      <main className="flex-1 container mx-auto px-4 py-8">
-        <div className="max-w-screen-xl mx-auto">
-          <div className="mb-6 flex justify-center">
+      <main className="flex-1 container mx-auto px-4 py-4">
+        <div className="w-full mx-auto">
+          <div className="mb-4 flex justify-center">
             <FileUpload 
               onFileProcessed={handleFileProcessed} 
               onPeopleFileProcessed={handlePeopleFileProcessed}
@@ -116,7 +116,7 @@ const Index = () => {
           </div>
           
           {(organizationData || peopleData.length > 0) && (
-            <div className="mb-6">
+            <div className="mb-4">
               <SearchInput 
                 organizationData={organizationData}
                 peopleData={peopleData}
@@ -134,12 +134,12 @@ const Index = () => {
             </div>
           ) : organizationData ? (
             <div className="flex flex-col items-center">
-              <div className="h-[70vh] w-full transition-all duration-500 ease-in-out animate-scale-in">
+              <div className="h-[80vh] w-full transition-all duration-500 ease-in-out animate-scale-in">
                 <CirclePackingChart data={organizationData} peopleData={peopleData} />
               </div>
               
               {(organizationData || peopleData.length > 0) && (
-                <div className="mt-8 flex flex-col items-center">
+                <div className="mt-4 flex flex-col items-center">
                   <Button 
                     variant="outline"
                     size="sm"
@@ -181,7 +181,7 @@ const Index = () => {
         onRoleClick={handleCircleOrRoleClick}
       />
       
-      <footer className="py-6 border-t border-border/40 mt-auto">
+      <footer className="py-4 border-t border-border/40 mt-auto">
         <div className="container mx-auto px-4">
           <p className="text-center text-sm text-muted-foreground">
             Organization Circle Visualizer — Upload an Excel file to visualize your organization structure
