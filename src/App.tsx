@@ -6,8 +6,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
-import Admin from "./pages/Admin";
-import SharedView from "./pages/SharedView";
 
 const queryClient = new QueryClient();
 
@@ -19,10 +17,6 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
-          <Route path="/admin" element={<Admin />} />
-          {/* Support both URL parameter sharing and ID-based sharing */}
-          <Route path="/shared" element={<SharedView />} />
-          <Route path="/shared/:id" element={<SharedView />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

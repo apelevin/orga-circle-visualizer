@@ -8,7 +8,6 @@ import Header from '@/components/Header';
 import SearchInput from '@/components/SearchInput';
 import InfoPanel from '@/components/InfoPanel';
 import PersonInfoPanel from '@/components/PersonInfoPanel';
-import ShareButton from '@/components/ShareButton';
 import OrganizationVisualization from '@/components/OrganizationVisualization';
 import FooterSection from '@/components/FooterSection';
 import { HierarchyNode, PeopleData } from '@/types';
@@ -116,15 +115,6 @@ const Index = () => {
               hasOrganizationData={!!organizationData}
               hasPeopleData={peopleData.length > 0}
             />
-            
-            <div className="flex gap-2">
-              {organizationData && (
-                <ShareButton 
-                  organizationData={organizationData}
-                  peopleData={peopleData}
-                />
-              )}
-            </div>
           </div>
           
           {(organizationData || peopleData.length > 0) && (
