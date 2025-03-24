@@ -21,7 +21,7 @@ export const parseExcelFile = async (file: File, isPeopleData = false): Promise<
           if (isPeopleData) {
             return row && row.length >= 4; // Need at least 4 columns for people data
           } else {
-            return row && row.length >= 4; // Need at least 4 columns for org data (includes type now)
+            return row && row.length >= 3; // Need at least 3 columns for org data
           }
         });
         
@@ -43,8 +43,7 @@ export const parseExcelFile = async (file: File, isPeopleData = false): Promise<
           const jsonData = nonEmptyRows.slice(1).map(row => ({
             circleName: row[0]?.toString().trim() || 'Unknown Circle',
             role: row[1]?.toString().trim() || 'Unknown Role',
-            fte: parseFloat(row[2]) || 0,
-            type: row[3]?.toString().trim() || 'The others' // Default to "The others" if not specified
+            fte: parseFloat(row[2]) || 0
           }));
           resolve(jsonData);
         }
@@ -72,7 +71,6 @@ export const processExcelData = (data: any[]): Circle[] => {
   data.forEach((row) => {
     const circleName = row.circleName;
     const role = row.role;
-    const type = row.type || "The others"; // Ensure we have a default type
     
     // Ensure FTE is a valid number
     let fte = 0;
@@ -87,19 +85,13 @@ export const processExcelData = (data: any[]): Circle[] => {
       circleMap.set(circleName, {
         name: circleName,
         roles: [],
-        totalFTE: 0,
-        type: type // Add the type to the circle
+        totalFTE: 0
       });
     }
     
     // Add the role to the circle
     const circle = circleMap.get(circleName)!;
     circle.roles.push({ name: role, fte });
-    
-    // Make sure all rows for the same circle use the same type
-    if (circle.type !== type && type) {
-      circle.type = type;
-    }
     
     // Track which circles a role appears in
     if (roleToCirclesMap.has(role)) {
@@ -135,7 +127,6 @@ export const transformToHierarchy = (circles: Circle[]): HierarchyNode => {
     children: circles.map(circle => ({
       name: circle.name,
       value: circle.totalFTE, // This is the correct totalFTE from all roles
-      type: circle.type || "The others", // Default to "The others" if type is null or undefined
       children: circle.roles.map(role => ({
         name: role.name,
         value: role.fte

@@ -15,14 +15,12 @@ export interface Circle {
   roles: Role[];
   totalFTE: number;
   children?: Circle[];
-  type?: string;
 }
 
 export interface HierarchyNode {
   name: string;
   value?: number;
   children?: HierarchyNode[];
-  type?: string;
 }
 
 export interface ExcelData {
@@ -40,7 +38,6 @@ export interface CirclePackingNode {
     value?: number;
     roles?: Role[];
     children?: any[];
-    type?: string;
   };
 }
 
