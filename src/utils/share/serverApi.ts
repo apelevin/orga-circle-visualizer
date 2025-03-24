@@ -5,8 +5,8 @@ import { toast } from "sonner";
 
 // API URL for server storage
 const API_BASE_URL = "https://api.jsonbin.io/v3/b";
-// API key for JSONBin.io - this is a public API key for demonstration
-const API_KEY = "$2b$10$eCJIftc1mYVBHCVgX8QMo.G0J5EWaEhkrt7afEMeTmL7Lak6g.Egi";
+// API key for JSONBin.io - this is a public API key for demo purposes
+const API_KEY = "$2b$10$Vc6E3GEPtUKG4elZ9.8YguRxPXLk.WJzAqZgcvz9XprDYF6KYTCkS";
 
 // Save organization data to server
 export const saveSharedDataToServer = async (
@@ -103,6 +103,12 @@ export const getSharedDataFromServer = async (id: string): Promise<{
       };
     }
     
+    // If direct access fails with a 401/403, it could be an auth issue
+    if (directResponse.status === 401 || directResponse.status === 403) {
+      console.error("Authentication error with the server:", await directResponse.text());
+      return null;
+    }
+    
     // If direct access fails, try finding the bin by query
     console.log("Direct access failed, trying to find the bin by query");
     
@@ -119,6 +125,13 @@ export const getSharedDataFromServer = async (id: string): Promise<{
     if (!searchResponse.ok) {
       const errorText = await searchResponse.text();
       console.error("Server search responded with status:", searchResponse.status, errorText);
+      
+      // If we get auth errors, return null early
+      if (searchResponse.status === 401 || searchResponse.status === 403) {
+        console.error("Authentication error with the server");
+        return null;
+      }
+      
       throw new Error(`Server search error: ${searchResponse.status} - ${errorText}`);
     }
     
@@ -144,7 +157,7 @@ export const getSharedDataFromServer = async (id: string): Promise<{
     if (!response.ok) {
       const errorText = await response.text();
       console.error("Server data fetch responded with status:", response.status, errorText);
-      throw new Error(`Server data fetch error: ${searchResponse.status} - ${errorText}`);
+      throw new Error(`Server data fetch error: ${response.status} - ${errorText}`);
     }
     
     const result = await response.json();

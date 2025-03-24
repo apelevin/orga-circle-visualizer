@@ -77,8 +77,8 @@ const ShareButton: React.FC<ShareButtonProps> = ({ organizationData, peopleData 
         }
       } catch (serverError) {
         console.error("Error saving to server:", serverError);
-        toast.error("Could not save share data to server", {
-          description: "Falling back to local storage only, which may not be accessible across different browsers."
+        toast.error("Server storage currently unavailable", {
+          description: "Your data has been saved locally in your browser. Shared links may not be accessible from other devices."
         });
         
         // Try local storage as fallback

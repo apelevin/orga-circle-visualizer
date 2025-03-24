@@ -3,7 +3,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Home, AlertTriangle, ExternalLink } from "lucide-react";
+import { Home, AlertTriangle, ExternalLink, HardDrive } from "lucide-react";
 
 interface SharedErrorProps {
   errorMessage: string | null;
@@ -34,7 +34,8 @@ const SharedError = ({ errorMessage, shareId }: SharedErrorProps) => {
             We couldn't find this shared data on our server. The share may have expired or been deleted.
           </p>
           <p className="text-sm">
-            If you believe this is an error, please contact the person who shared this link with you to create a new share.
+            If you received this link from someone else, ask them to create a new share. If you created this link yourself, 
+            it may only be available on the device where it was created if server storage wasn't available.
           </p>
         </div>
       </div>
@@ -51,15 +52,10 @@ const SharedError = ({ errorMessage, shareId }: SharedErrorProps) => {
           asChild 
           className="px-8 py-6 text-lg rounded-full"
         >
-          <a 
-            href="https://docs.lovable.dev/user-guides/organization-visualizer" 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="flex items-center gap-2"
-          >
-            <ExternalLink className="h-5 w-5" />
-            <span>Learn about sharing</span>
-          </a>
+          <Link to="/" className="flex items-center gap-2">
+            <HardDrive className="h-5 w-5" />
+            <span>Create New Organization</span>
+          </Link>
         </Button>
         <p className="text-sm text-muted-foreground mt-2 text-center">
           You'll need to upload your data again or request a new share link.
