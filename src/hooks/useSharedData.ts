@@ -35,6 +35,7 @@ export const useSharedData = (): UseSharedDataReturn => {
         // Log what we're working with
         console.log("URL params check:", { 
           hasEncodedData: !!encodedData, 
+          encodedDataLength: encodedData?.length || 0,
           idFromParams: id,
           currentPath: location.pathname
         });
@@ -42,6 +43,15 @@ export const useSharedData = (): UseSharedDataReturn => {
         if (encodedData) {
           try {
             console.log("Found encoded data in URL, attempting to decode");
+            
+            // Check if encoded data is too large and redirect to error if needed
+            if (encodedData.length > 8000) {
+              console.error("Encoded data exceeds safe URL parameter limits:", encodedData.length);
+              setError("The shared data is too large for URL parameters. Please use the ID-based share link instead.");
+              setIsLoading(false);
+              return;
+            }
+            
             // Try to decode the data from URL
             const { organizationData: decodedOrgData, peopleData: decodedPeopleData, name } = decodeSharedData(encodedData);
             
