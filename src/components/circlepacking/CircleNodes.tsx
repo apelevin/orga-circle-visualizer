@@ -71,8 +71,8 @@ const CircleNodes: React.FC<CircleNodesProps> = ({
         }
         
         setTooltipData({
-          x: d.x,
-          y: d.y,
+          x: event.pageX,
+          y: event.pageY,
           name,
           isRole,
           fte,

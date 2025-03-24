@@ -15,13 +15,17 @@ interface CircleTooltipProps {
 
 const CircleTooltip: React.FC<CircleTooltipProps> = ({ tooltipData, containerRef }) => {
   if (!tooltipData) return null;
+
+  // Calculate position based on mouse coordinates
+  const x = tooltipData.x;
+  const y = tooltipData.y;
   
   return (
     <div 
       className="fixed z-50 pointer-events-none bg-popover text-popover-foreground rounded-md px-3 py-1.5 text-xs font-medium shadow-md transform -translate-x-1/2 -translate-y-full animate-fade-in"
       style={{ 
-        left: `${tooltipData.x + (containerRef.current?.getBoundingClientRect().left || 0)}px`, 
-        top: `${tooltipData.y + (containerRef.current?.getBoundingClientRect().top || 0) - 10}px` 
+        left: `${x}px`, 
+        top: `${y - 20}px` 
       }}
     >
       {tooltipData.name} 
