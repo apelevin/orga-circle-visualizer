@@ -2,16 +2,24 @@
 import React, { useCallback } from 'react';
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { FileSpreadsheet, Upload, Users } from 'lucide-react';
+import { FileSpreadsheet, Upload, Users, RefreshCw } from 'lucide-react';
 import { HierarchyNode, PeopleData } from '@/types';
 
 interface FileUploadProps {
   onFileProcessed: (data: HierarchyNode) => void;
   onPeopleFileProcessed: (data: PeopleData[]) => void;
   isLoading: boolean;
+  hasOrganizationData: boolean;
+  hasPeopleData: boolean;
 }
 
-const FileUpload: React.FC<FileUploadProps> = ({ onFileProcessed, onPeopleFileProcessed, isLoading }) => {
+const FileUpload: React.FC<FileUploadProps> = ({ 
+  onFileProcessed, 
+  onPeopleFileProcessed, 
+  isLoading,
+  hasOrganizationData,
+  hasPeopleData
+}) => {
   const handleFileChange = useCallback(
     async (event: React.ChangeEvent<HTMLInputElement>) => {
       const file = event.target.files?.[0];
@@ -108,60 +116,94 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileProcessed, onPeopleFilePr
     [onPeopleFileProcessed]
   );
 
+  const handleReset = () => {
+    window.location.reload();
+  };
+
+  // If both data types are loaded, show reset button instead
+  if (hasOrganizationData && hasPeopleData) {
+    return (
+      <div className="flex flex-col items-center gap-2">
+        <Button 
+          className="relative overflow-hidden transition-all duration-300 px-6"
+          size="sm"
+          variant="outline"
+          onClick={handleReset}
+        >
+          <span className="flex items-center gap-2">
+            <RefreshCw className="h-4 w-4" />
+            Reset Data
+          </span>
+        </Button>
+        <p className="text-xs text-muted-foreground">
+          Reload the page to upload new data
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col items-center gap-4">
-      <div className="relative group">
-        <Button 
-          className="relative overflow-hidden transition-all duration-300 px-6"
-          size="lg"
-          disabled={isLoading}
-        >
-          <span className="flex items-center gap-2">
-            {isLoading ? (
-              <div className="w-4 h-4 rounded-full border-2 border-primary-foreground border-t-transparent animate-spin" />
-            ) : (
-              <Upload className="h-4 w-4" />
-            )}
-            Upload Organization Structure
-          </span>
-          <input
-            type="file"
-            accept=".xlsx,.xls"
-            onChange={handleFileChange}
-            className="absolute inset-0 opacity-0 cursor-pointer"
-            disabled={isLoading}
-          />
-        </Button>
-      </div>
-      <p className="text-sm text-muted-foreground mt-1 flex items-center gap-1.5">
-        <FileSpreadsheet className="h-3.5 w-3.5" />
-        <span>Excel files with circle, role, and FTE data (first 3 columns)</span>
-      </p>
+      {!hasOrganizationData && (
+        <>
+          <div className="relative group">
+            <Button 
+              className="relative overflow-hidden transition-all duration-300 px-6"
+              size="lg"
+              disabled={isLoading}
+            >
+              <span className="flex items-center gap-2">
+                {isLoading ? (
+                  <div className="w-4 h-4 rounded-full border-2 border-primary-foreground border-t-transparent animate-spin" />
+                ) : (
+                  <Upload className="h-4 w-4" />
+                )}
+                Upload Organization Structure
+              </span>
+              <input
+                type="file"
+                accept=".xlsx,.xls"
+                onChange={handleFileChange}
+                className="absolute inset-0 opacity-0 cursor-pointer"
+                disabled={isLoading}
+              />
+            </Button>
+          </div>
+          <p className="text-sm text-muted-foreground mt-1 flex items-center gap-1.5">
+            <FileSpreadsheet className="h-3.5 w-3.5" />
+            <span>Excel files with circle, role, and FTE data (first 3 columns)</span>
+          </p>
+        </>
+      )}
 
-      <div className="relative group mt-2">
-        <Button 
-          className="relative overflow-hidden transition-all duration-300 px-6"
-          size="lg"
-          variant="outline"
-          disabled={isLoading}
-        >
-          <span className="flex items-center gap-2">
-            <Users className="h-4 w-4" />
-            Upload People Assignments
-          </span>
-          <input
-            type="file"
-            accept=".xlsx,.xls"
-            onChange={handlePeopleFileChange}
-            className="absolute inset-0 opacity-0 cursor-pointer"
-            disabled={isLoading}
-          />
-        </Button>
-      </div>
-      <p className="text-sm text-muted-foreground mt-1 flex items-center gap-1.5">
-        <FileSpreadsheet className="h-3.5 w-3.5" />
-        <span>Excel files with circle, role, person, and FTE data (first 4 columns)</span>
-      </p>
+      {!hasPeopleData && (
+        <>
+          <div className="relative group mt-2">
+            <Button 
+              className="relative overflow-hidden transition-all duration-300 px-6"
+              size="lg"
+              variant={hasOrganizationData ? "default" : "outline"}
+              disabled={isLoading}
+            >
+              <span className="flex items-center gap-2">
+                <Users className="h-4 w-4" />
+                Upload People Assignments
+              </span>
+              <input
+                type="file"
+                accept=".xlsx,.xls"
+                onChange={handlePeopleFileChange}
+                className="absolute inset-0 opacity-0 cursor-pointer"
+                disabled={isLoading}
+              />
+            </Button>
+          </div>
+          <p className="text-sm text-muted-foreground mt-1 flex items-center gap-1.5">
+            <FileSpreadsheet className="h-3.5 w-3.5" />
+            <span>Excel files with circle, role, person, and FTE data (first 4 columns)</span>
+          </p>
+        </>
+      )}
     </div>
   );
 };

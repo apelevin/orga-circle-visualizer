@@ -104,6 +104,8 @@ const Index = () => {
               onFileProcessed={handleFileProcessed} 
               onPeopleFileProcessed={handlePeopleFileProcessed}
               isLoading={isLoading}
+              hasOrganizationData={!!organizationData}
+              hasPeopleData={peopleData.length > 0}
             />
           </div>
           
