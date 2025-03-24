@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useRef } from 'react';
+import * as React from 'react';
 import { Search, X, Users, CircleDot, Briefcase } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -27,12 +27,12 @@ const SearchInput: React.FC<SearchInputProps> = ({
   onRoleClick,
   onPersonClick
 }) => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
-  const [isOpen, setIsOpen] = useState(false);
-  const searchRef = useRef<HTMLDivElement>(null);
+  const [searchTerm, setSearchTerm] = React.useState('');
+  const [searchResults, setSearchResults] = React.useState<SearchResult[]>([]);
+  const [isOpen, setIsOpen] = React.useState(false);
+  const searchRef = React.useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
+  React.useEffect(() => {
     // Only search if we have a search term
     if (!searchTerm.trim()) {
       setSearchResults([]);

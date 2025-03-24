@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import * as React from 'react';
 import FileUpload from '@/components/FileUpload';
 import CirclePackingChart from '@/components/CirclePackingChart';
 import EmptyState from '@/components/EmptyState';
@@ -10,11 +10,11 @@ import PersonInfoPanel from '@/components/PersonInfoPanel';
 import { HierarchyNode, PeopleData } from '@/types';
 
 const Index = () => {
-  const [organizationData, setOrganizationData] = useState<HierarchyNode | null>(null);
-  const [peopleData, setPeopleData] = useState<PeopleData[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isPanelOpen, setIsPanelOpen] = useState(false);
-  const [selectedCircle, setSelectedCircle] = useState<{
+  const [organizationData, setOrganizationData] = React.useState<HierarchyNode | null>(null);
+  const [peopleData, setPeopleData] = React.useState<PeopleData[]>([]);
+  const [isLoading, setIsLoading] = React.useState(false);
+  const [isPanelOpen, setIsPanelOpen] = React.useState(false);
+  const [selectedCircle, setSelectedCircle] = React.useState<{
     name: string;
     value: number;
     roles?: { name: string; value: number }[];
@@ -22,8 +22,8 @@ const Index = () => {
     parentCircles?: string[];
     isRole?: boolean;
   } | null>(null);
-  const [selectedPerson, setSelectedPerson] = useState<string | null>(null);
-  const [isPersonPanelOpen, setIsPersonPanelOpen] = useState(false);
+  const [selectedPerson, setSelectedPerson] = React.useState<string | null>(null);
+  const [isPersonPanelOpen, setIsPersonPanelOpen] = React.useState(false);
 
   const handleFileProcessed = (data: HierarchyNode) => {
     setIsLoading(true);

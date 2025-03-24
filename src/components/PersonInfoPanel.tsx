@@ -1,5 +1,5 @@
 
-import React from 'react';
+import * as React from 'react';
 import { PeopleData } from '@/types';
 import { X, User, Briefcase, CircleDot } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
