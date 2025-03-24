@@ -55,10 +55,13 @@ const ShareButton: React.FC<ShareButtonProps> = ({ organizationData, peopleData 
       const shareId = generateShareId();
       setShareId(shareId);
       
+      let serverSaveSuccessful = false;
+      
       // Save to server first
       try {
         await saveSharedDataToServer(shareId, organizationData, peopleData, shareName);
         console.log("Data saved successfully to server with ID:", shareId);
+        serverSaveSuccessful = true;
       } catch (serverError) {
         console.error("Error saving to server:", serverError);
         toast.error("Could not save share data to server", {
@@ -90,7 +93,11 @@ const ShareButton: React.FC<ShareButtonProps> = ({ organizationData, peopleData 
         toast.success("Share link copied to clipboard!", {
           description: (
             <div className="space-y-2">
-              <p>Your link is now saved on our server and can be accessed from any browser.</p>
+              <p>
+                {serverSaveSuccessful 
+                  ? "Your link is now saved on our server and can be accessed from any browser." 
+                  : "Your link is saved in your browser's local storage. It may not be accessible from other browsers."}
+              </p>
               <p className="text-xs text-muted-foreground">Share ID: {shareId}</p>
               <div className="flex gap-2 mt-1">
                 <Button size="sm" variant="outline" onClick={() => window.open(shareUrl, "_blank")} className="h-7 text-xs">
@@ -112,6 +119,11 @@ const ShareButton: React.FC<ShareButtonProps> = ({ organizationData, peopleData 
               <p>Copy this link manually to share with others:</p>
               <code className="block p-2 bg-muted rounded text-xs overflow-x-auto">{shareUrl}</code>
               <p className="text-xs text-muted-foreground">Share ID: {shareId}</p>
+              <p className="text-xs text-muted-foreground">
+                {serverSaveSuccessful 
+                  ? "Your link is saved on our server and can be accessed from any browser." 
+                  : "Your link is saved in your browser's local storage and may not be accessible from other browsers."}
+              </p>
             </div>
           ),
         });

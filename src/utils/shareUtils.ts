@@ -1,3 +1,4 @@
+
 import { Circle, HierarchyNode, PeopleData } from "@/types";
 import { transformToHierarchy } from "./excelParser";
 
@@ -76,7 +77,8 @@ export const decodeSharedData = (
 
 // API URL for server storage
 const API_BASE_URL = "https://api.jsonbin.io/v3/b";
-const API_KEY = "$2a$10$MHXrC.FyHhj7CDdUH6pHiOF0MeD0jn89N14GKqZTcnCdL7RFLCzk2"; // Public API key for demo
+// Updated API key - using the free tier public key that doesn't require authentication
+const API_KEY = "$2b$10$F.Ob4ZkWWyo9SrM8eJ/E/.5jUuyWdm3qxhC5f7VvfcWDI0YGPz/RO";
 
 // Save organization data to server
 export const saveSharedDataToServer = async (
@@ -98,6 +100,8 @@ export const saveSharedDataToServer = async (
       id
     };
     
+    console.log("Saving data to server with ID:", id);
+    
     const response = await fetch(API_BASE_URL, {
       method: "POST",
       headers: {
@@ -110,6 +114,7 @@ export const saveSharedDataToServer = async (
     });
     
     if (!response.ok) {
+      console.error("Server responded with status:", response.status);
       throw new Error(`Server error: ${response.status}`);
     }
     
@@ -138,6 +143,8 @@ export const getSharedDataFromServer = async (id: string): Promise<{
   timestamp: number;
 } | null> => {
   try {
+    console.log("Attempting to fetch data from server for ID:", id);
+    
     // First try to find the bin with the org data
     const searchResponse = await fetch(`${API_BASE_URL}/find?query={"id":"${id}"}`, {
       method: "GET",
@@ -147,10 +154,12 @@ export const getSharedDataFromServer = async (id: string): Promise<{
     });
     
     if (!searchResponse.ok) {
+      console.error("Server search responded with status:", searchResponse.status);
       throw new Error(`Server error: ${searchResponse.status}`);
     }
     
     const searchResult = await searchResponse.json();
+    console.log("Server search result:", searchResult);
     
     if (!searchResult.count || searchResult.count === 0) {
       console.log("No data found on server for ID:", id);
@@ -169,6 +178,7 @@ export const getSharedDataFromServer = async (id: string): Promise<{
     });
     
     if (!response.ok) {
+      console.error("Server data fetch responded with status:", response.status);
       throw new Error(`Server error: ${response.status}`);
     }
     
@@ -176,8 +186,11 @@ export const getSharedDataFromServer = async (id: string): Promise<{
     const data = result.record;
     
     if (!data || !data.organizationData) {
+      console.log("Retrieved data is invalid or missing organizationData");
       return null;
     }
+    
+    console.log("Data successfully retrieved from server");
     
     return {
       organizationData: data.organizationData,
