@@ -2,6 +2,66 @@
 import { Circle, HierarchyNode, PeopleData } from "@/types";
 import { transformToHierarchy } from "./excelParser";
 
+// Generate a unique ID for the shared link
+export const generateShareId = (): string => {
+  const timestamp = Date.now();
+  const random = Math.floor(Math.random() * 10000);
+  return `${timestamp}-${random}`;
+};
+
+// Compress and encode data for URL sharing
+export const encodeDataForSharing = (
+  organizationData: HierarchyNode | null,
+  peopleData: PeopleData[],
+  name: string
+): string => {
+  try {
+    if (!organizationData) {
+      throw new Error("No organization data to share");
+    }
+    
+    // Create a sharing object
+    const sharingObject = {
+      org: organizationData,
+      people: peopleData,
+      name: name || "Organization"
+    };
+    
+    // Stringify and compress
+    const jsonString = JSON.stringify(sharingObject);
+    
+    // Base64 encode
+    const encodedData = btoa(encodeURIComponent(jsonString));
+    return encodedData;
+  } catch (error) {
+    console.error("Error encoding data for sharing:", error);
+    throw new Error("Failed to encode data for sharing");
+  }
+};
+
+// Decode data from URL
+export const decodeSharedData = (
+  encodedData: string
+): { organizationData: HierarchyNode | null; peopleData: PeopleData[]; name: string } => {
+  try {
+    // Decode from base64
+    const jsonString = decodeURIComponent(atob(encodedData));
+    
+    // Parse JSON
+    const data = JSON.parse(jsonString);
+    
+    return {
+      organizationData: data.org || null,
+      peopleData: data.people || [],
+      name: data.name || "Organization"
+    };
+  } catch (error) {
+    console.error("Error decoding shared data:", error);
+    throw new Error("Failed to decode shared data");
+  }
+};
+
+// These functions are kept for backward compatibility but are no longer the primary sharing mechanism
 // Store to save shared data
 interface SharedData {
   organizationData: HierarchyNode | null;
@@ -11,13 +71,6 @@ interface SharedData {
 }
 
 const STORAGE_KEY = "org-visualizer-shared-data";
-
-// Generate a unique ID for the shared link
-export const generateShareId = (): string => {
-  const timestamp = Date.now();
-  const random = Math.floor(Math.random() * 10000);
-  return `${timestamp}-${random}`;
-};
 
 // Save organization data to localStorage with the given ID
 export const saveSharedData = (

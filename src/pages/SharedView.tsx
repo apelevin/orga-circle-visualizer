@@ -1,8 +1,7 @@
-
 import React, { useEffect, useState } from "react";
-import { useParams, Link, useNavigate } from "react-router-dom";
+import { useParams, Link, useNavigate, useLocation } from "react-router-dom";
 import { HierarchyNode, PeopleData } from "@/types";
-import { getSharedData } from "@/utils/shareUtils";
+import { getSharedData, decodeSharedData } from "@/utils/shareUtils";
 import CirclePackingChart from "@/components/CirclePackingChart";
 import SearchInput from "@/components/SearchInput";
 import InfoPanel from "@/components/InfoPanel";
@@ -15,6 +14,7 @@ import { toast } from "sonner";
 
 const SharedView = () => {
   const { id } = useParams<{ id: string }>();
+  const location = useLocation();
   const navigate = useNavigate();
   const [organizationData, setOrganizationData] = useState<HierarchyNode | null>(null);
   const [peopleData, setPeopleData] = useState<PeopleData[]>([]);
@@ -35,39 +35,70 @@ const SharedView = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!id) {
-      setError("Invalid share link");
-      setIsLoading(false);
-      return;
-    }
+    const loadSharedData = async () => {
+      try {
+        setIsLoading(true);
+        
+        // First, check URL parameters for encoded data
+        const urlParams = new URLSearchParams(location.search);
+        const encodedData = urlParams.get('data');
+        
+        if (encodedData) {
+          try {
+            // Try to decode the data from URL
+            const { organizationData: decodedOrgData, peopleData: decodedPeopleData, name } = decodeSharedData(encodedData);
+            
+            if (!decodedOrgData) {
+              throw new Error("Invalid organization data in URL");
+            }
+            
+            setOrganizationData(decodedOrgData);
+            setPeopleData(decodedPeopleData || []);
+            setOrgName(name || "Organization");
+            setIsLoading(false);
+            return;
+          } catch (decodeError) {
+            console.error("Error decoding shared data from URL:", decodeError);
+            // Fall back to localStorage if URL decoding fails
+          }
+        }
+        
+        // If URL parameter not found or invalid, try localStorage (for backward compatibility)
+        if (!id) {
+          setError("Invalid share link");
+          setIsLoading(false);
+          return;
+        }
 
-    try {
-      console.log("Fetching shared data with ID:", id);
-      const sharedData = getSharedData(id);
-      
-      if (!sharedData) {
-        setError("This shared link has expired or doesn't exist");
+        console.log("Fetching shared data with ID:", id);
+        const sharedData = getSharedData(id);
+        
+        if (!sharedData) {
+          setError("This shared link has expired or doesn't exist");
+          setIsLoading(false);
+          return;
+        }
+
+        if (!sharedData.organizationData) {
+          setError("The shared organization data is invalid");
+          setIsLoading(false);
+          return;
+        }
+
+        console.log("Shared data found:", sharedData);
+        setOrganizationData(sharedData.organizationData);
+        setPeopleData(sharedData.peopleData || []);
+        setOrgName(sharedData.name || "Organization");
         setIsLoading(false);
-        return;
-      }
-
-      if (!sharedData.organizationData) {
-        setError("The shared organization data is invalid");
+      } catch (error) {
+        console.error("Error loading shared data:", error);
+        setError("An error occurred while loading the shared data");
         setIsLoading(false);
-        return;
       }
+    };
 
-      console.log("Shared data found:", sharedData);
-      setOrganizationData(sharedData.organizationData);
-      setPeopleData(sharedData.peopleData || []);
-      setOrgName(sharedData.name || "Organization");
-      setIsLoading(false);
-    } catch (error) {
-      console.error("Error loading shared data:", error);
-      setError("An error occurred while loading the shared data");
-      setIsLoading(false);
-    }
-  }, [id, navigate]);
+    loadSharedData();
+  }, [id, location.search, navigate]);
 
   const handleCircleOrRoleClick = (nodeName: string) => {
     if (!organizationData) return;
