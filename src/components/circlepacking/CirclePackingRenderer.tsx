@@ -140,6 +140,21 @@ const CirclePackingRenderer: React.FC<CirclePackingRendererProps> = ({
           setTooltipData(null);
         });
       
+      // Add circle labels for better navigation
+      g.selectAll('.circle-label')
+        .data(root.descendants().filter(d => d.depth === 1))
+        .enter()
+        .append('text')
+        .attr('class', 'circle-label')
+        .attr('x', d => d.x)
+        .attr('y', d => d.y)
+        .attr('text-anchor', 'middle')
+        .attr('dominant-baseline', 'middle')
+        .attr('font-size', d => Math.min(d.r / 3, 14))
+        .attr('pointer-events', 'none')
+        .attr('fill', 'rgba(0, 0, 0, 0.7)')
+        .text(d => d.data.name || 'Unnamed');
+      
       g.selectAll('.warning-icon')
         .data(root.descendants().filter(d => {
           if (d.depth === 1) {
@@ -158,10 +173,15 @@ const CirclePackingRenderer: React.FC<CirclePackingRendererProps> = ({
         .attr('fill', '#FF9800')
         .style('opacity', 1);
       
+      // Create and configure zoom behavior
       const zoom = d3.zoom<SVGSVGElement, unknown>()
-        .scaleExtent([0.4, 10])
+        .scaleExtent([0.1, 10])
         .on('zoom', (event) => {
           g.attr('transform', event.transform);
+          
+          // Scale text appropriately on zoom
+          g.selectAll('.circle-label')
+            .attr('font-size', d => Math.min(d.r / 3, 14) / event.transform.k);
         });
       
       svg.call(zoom);
@@ -173,7 +193,9 @@ const CirclePackingRenderer: React.FC<CirclePackingRendererProps> = ({
       
       svg.call(zoom.transform, initialTransform);
       
-      svg.on('dblclick.zoom', () => {
+      // Double-click to reset zoom
+      svg.on('dblclick.zoom', null);
+      svg.on('dblclick', () => {
         svg.transition()
           .duration(750)
           .call(zoom.transform, initialTransform);

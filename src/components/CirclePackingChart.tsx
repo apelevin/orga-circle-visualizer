@@ -9,6 +9,7 @@ import { useContainerDimensions } from '@/hooks/useContainerDimensions';
 import CirclePackingRenderer from './circlepacking/CirclePackingRenderer';
 import CircleTooltip from './circlepacking/CircleTooltip';
 import CirclePackingFooter from './circlepacking/CirclePackingFooter';
+import CirclePackingNavigation from './circlepacking/CirclePackingNavigation';
 import * as d3 from 'd3';
 
 interface CirclePackingChartProps {
@@ -21,7 +22,7 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data, peopleDat
   const containerRef = useRef<HTMLDivElement>(null);
   const dimensions = useContainerDimensions(containerRef);
   
-  const { hierarchyData, roleToCirclesMap, error } = useCirclePacking({
+  const { hierarchyData, roleToCirclesMap, error, zoomToNode, resetZoom } = useCirclePacking({
     data,
     dimensions
   });
@@ -67,6 +68,7 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data, peopleDat
       
       if (targetNode) {
         handleNodeClick(null, targetNode);
+        zoomToNode(nodeName);
       }
     } else {
       toast.error(`Could not find "${nodeName}" in the visualization`);
@@ -140,6 +142,42 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data, peopleDat
 
   return (
     <div className="w-full h-full flex-1 relative animate-fade-in" ref={containerRef}>
+      <CirclePackingNavigation 
+        zoomIn={() => {
+          const svgElement = document.querySelector('svg');
+          if (svgElement) {
+            const zoomBehavior = d3.select(svgElement).property("__zoom");
+            if (zoomBehavior) {
+              const transform = d3.zoomIdentity
+                .translate(zoomBehavior.translate()[0], zoomBehavior.translate()[1])
+                .scale(zoomBehavior.scale() * 1.2);
+              
+              d3.select(svgElement)
+                .transition()
+                .duration(300)
+                .call(zoomBehavior.transform, transform);
+            }
+          }
+        }}
+        zoomOut={() => {
+          const svgElement = document.querySelector('svg');
+          if (svgElement) {
+            const zoomBehavior = d3.select(svgElement).property("__zoom");
+            if (zoomBehavior) {
+              const transform = d3.zoomIdentity
+                .translate(zoomBehavior.translate()[0], zoomBehavior.translate()[1])
+                .scale(zoomBehavior.scale() / 1.2);
+              
+              d3.select(svgElement)
+                .transition()
+                .duration(300)
+                .call(zoomBehavior.transform, transform);
+            }
+          }
+        }}
+        resetZoom={resetZoom}
+      />
+      
       <svg 
         ref={svgRef} 
         width={dimensions.width} 

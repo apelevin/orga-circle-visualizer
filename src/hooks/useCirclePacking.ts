@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import * as d3 from 'd3';
 import { HierarchyNode, CirclePackingNode, PeopleData } from '@/types';
 
@@ -12,13 +12,15 @@ interface UseCirclePackingReturn {
   hierarchyData: d3.HierarchyCircularNode<HierarchyNode> | null;
   roleToCirclesMap: Map<string, string[]>;
   error: string | null;
+  zoomToNode: (nodeName: string) => void;
+  resetZoom: () => void;
 }
 
 export const useCirclePacking = ({ data, dimensions }: UseCirclePackingProps): UseCirclePackingReturn => {
   const [hierarchyData, setHierarchyData] = useState<d3.HierarchyCircularNode<HierarchyNode> | null>(null);
   const [roleToCirclesMap, setRoleToCirclesMap] = useState<Map<string, string[]>>(new Map());
   const [error, setError] = useState<string | null>(null);
-
+  
   // Build role to circles mapping
   useEffect(() => {
     if (!data || !data.children) return;
@@ -92,5 +94,64 @@ export const useCirclePacking = ({ data, dimensions }: UseCirclePackingProps): U
     }
   }, [data, dimensions]);
 
-  return { hierarchyData, roleToCirclesMap, error };
+  // Function to zoom to a specific node
+  const zoomToNode = useCallback((nodeName: string) => {
+    if (!hierarchyData) return;
+    
+    // Find the node by name
+    const targetNode = hierarchyData
+      .descendants()
+      .find(node => node.data.name === nodeName);
+    
+    if (!targetNode) {
+      console.warn(`Node with name ${nodeName} not found`);
+      return;
+    }
+    
+    // We'll use this information in the CirclePackingRenderer
+    // to implement the actual zoom effect
+    const svgElement = document.querySelector('svg');
+    if (svgElement) {
+      const zoomBehavior = d3.select(svgElement).property("__zoom");
+      if (zoomBehavior) {
+        const k = Math.min(
+          dimensions.width / (targetNode.r * 2.2),
+          dimensions.height / (targetNode.r * 2.2)
+        );
+        
+        const transform = d3.zoomIdentity
+          .translate(
+            dimensions.width / 2 - targetNode.x * k,
+            dimensions.height / 2 - targetNode.y * k
+          )
+          .scale(k);
+        
+        d3.select(svgElement)
+          .transition()
+          .duration(750)
+          .call(zoomBehavior.transform, transform);
+      }
+    }
+  }, [hierarchyData, dimensions]);
+
+  // Function to reset zoom to default view
+  const resetZoom = useCallback(() => {
+    const svgElement = document.querySelector('svg');
+    if (svgElement && hierarchyData) {
+      const zoomBehavior = d3.select(svgElement).property("__zoom");
+      if (zoomBehavior) {
+        const initialTransform = d3.zoomIdentity.translate(
+          dimensions.width / 2 - hierarchyData.x,
+          dimensions.height / 2 - hierarchyData.y
+        ).scale(0.9);
+        
+        d3.select(svgElement)
+          .transition()
+          .duration(750)
+          .call(zoomBehavior.transform, initialTransform);
+      }
+    }
+  }, [hierarchyData, dimensions]);
+
+  return { hierarchyData, roleToCirclesMap, error, zoomToNode, resetZoom };
 };
