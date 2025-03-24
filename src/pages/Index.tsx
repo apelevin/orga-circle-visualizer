@@ -1,3 +1,4 @@
+
 import * as React from 'react';
 import { Link } from 'react-router-dom';
 import { toast } from "sonner";
@@ -12,8 +13,7 @@ import StructureProblems from '@/components/StructureProblems';
 import { HierarchyNode, PeopleData } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { CircleDot, RefreshCw, Settings, Share, CircleAlert } from 'lucide-react';
-import { generateShareId, saveSharedData } from '@/utils/shareUtils';
+import { CircleDot, RefreshCw, Settings, CircleAlert } from 'lucide-react';
 
 const Index = () => {
   const [organizationData, setOrganizationData] = React.useState<HierarchyNode | null>(null);
@@ -104,36 +104,6 @@ const Index = () => {
     window.location.reload();
   };
 
-  const handleShareOrganization = () => {
-    if (!organizationData) {
-      toast.error("No organization data to share");
-      return;
-    }
-    
-    const shareId = generateShareId();
-    const shareName = `Organization Structure ${new Date().toLocaleDateString()}`;
-    
-    saveSharedData(shareId, organizationData, peopleData, shareName);
-    
-    const shareUrl = `${window.location.origin}/shared/${shareId}`;
-    
-    // Copy to clipboard
-    navigator.clipboard.writeText(shareUrl).then(() => {
-      toast.success("Share link copied to clipboard!", {
-        description: "You can now share this link with others.",
-        action: {
-          label: "View Link",
-          onClick: () => window.open(shareUrl, "_blank"),
-        },
-      });
-    }).catch(err => {
-      console.error("Failed to copy link: ", err);
-      toast.info("Share link created but couldn't copy to clipboard", {
-        description: shareUrl,
-      });
-    });
-  };
-
   return (
     <div className="flex flex-col min-h-screen bg-background">
       <Header />
@@ -150,13 +120,6 @@ const Index = () => {
             />
             
             <div className="flex gap-2">
-              {organizationData && (
-                <Button variant="default" size="sm" onClick={handleShareOrganization} className="flex items-center gap-2">
-                  <Share className="h-4 w-4" />
-                  <span>Share Organization</span>
-                </Button>
-              )}
-              
               <Button variant="outline" size="sm" asChild>
                 <Link to="/admin" className="flex items-center gap-2">
                   <Settings className="h-4 w-4" />
