@@ -28,13 +28,36 @@ export const useSharedData = (): UseSharedDataReturn => {
         setIsLoading(true);
         console.log("Loading shared data...");
         
-        // Check URL parameters for encoded data first
+        // If we have an ID, prioritize using that method (more reliable)
+        if (id) {
+          console.log("Found ID in URL path, attempting to load data by ID:", id);
+          const sharedData = getSharedData(id);
+          
+          if (sharedData && sharedData.organizationData) {
+            console.log("Successfully loaded data by ID:", {
+              hasOrgData: !!sharedData.organizationData,
+              peopleCount: sharedData.peopleData?.length || 0,
+              name: sharedData.name
+            });
+            
+            setOrganizationData(sharedData.organizationData);
+            setPeopleData(sharedData.peopleData || []);
+            setOrgName(sharedData.name || "Organization");
+            setIsLoading(false);
+            return;
+          } else {
+            console.error("No valid shared data found for ID:", id);
+            // We'll try URL param method next, don't set error yet
+          }
+        }
+        
+        // Check URL parameters for encoded data
         const urlParams = new URLSearchParams(location.search);
         const encodedData = urlParams.get('data');
         
         // Log what we're working with
-        console.log("URL params check:", { 
-          hasEncodedData: !!encodedData, 
+        console.log("URL params check:", {
+          hasEncodedData: !!encodedData,
           encodedDataLength: encodedData?.length || 0,
           idFromParams: id,
           currentPath: location.pathname
@@ -45,7 +68,7 @@ export const useSharedData = (): UseSharedDataReturn => {
             console.log("Found encoded data in URL, attempting to decode");
             
             // Check if encoded data is too large and redirect to error if needed
-            if (encodedData.length > 8000) {
+            if (encodedData.length > 4000) {
               console.error("Encoded data exceeds safe URL parameter limits:", encodedData.length);
               setError("The shared data is too large for URL parameters. Please use the ID-based share link instead.");
               setIsLoading(false);
@@ -60,7 +83,7 @@ export const useSharedData = (): UseSharedDataReturn => {
               throw new Error("Invalid organization data in URL");
             }
             
-            console.log("Successfully decoded data from URL", { 
+            console.log("Successfully decoded data from URL", {
               hasOrgData: !!decodedOrgData,
               peopleCount: decodedPeopleData?.length || 0,
               name
@@ -73,48 +96,24 @@ export const useSharedData = (): UseSharedDataReturn => {
             return;
           } catch (decodeError) {
             console.error("Error decoding shared data from URL:", decodeError);
-            // We'll fall back to localStorage if URL decoding fails
+            setError("Could not decode the shared data from the URL. The link might be corrupted or invalid.");
+            setIsLoading(false);
+            return;
           }
         }
         
-        // If URL parameter not found or invalid, try localStorage (for backward compatibility)
-        if (!id) {
-          console.error("No ID parameter found in URL path");
-          setError("Invalid share link - no ID parameter found");
-          setIsLoading(false);
-          return;
+        // If we reach here, we couldn't load data from either method
+        if (id) {
+          setError(`This shared link with ID "${id}" has expired or doesn't exist. The shared data could not be found in your browser.`);
+        } else {
+          setError("Invalid share link - missing required data. Please ask for a new share link.");
         }
-
-        console.log("Fetching shared data with ID:", id);
-        const sharedData = getSharedData(id);
         
-        if (!sharedData) {
-          console.error("No shared data found for ID:", id);
-          setError("This shared link has expired or doesn't exist");
-          setIsLoading(false);
-          return;
-        }
-
-        if (!sharedData.organizationData) {
-          console.error("Shared data exists but organization data is invalid");
-          setError("The shared organization data is invalid");
-          setIsLoading(false);
-          return;
-        }
-
-        console.log("Shared data found:", { 
-          hasOrgData: !!sharedData.organizationData,
-          peopleCount: sharedData.peopleData?.length || 0,
-          name: sharedData.name
-        });
-        
-        setOrganizationData(sharedData.organizationData);
-        setPeopleData(sharedData.peopleData || []);
-        setOrgName(sharedData.name || "Organization");
         setIsLoading(false);
+        
       } catch (error) {
-        console.error("Error loading shared data:", error);
-        setError("An error occurred while loading the shared data");
+        console.error("Unexpected error loading shared data:", error);
+        setError("An unexpected error occurred while loading the shared data. Please try again.");
         setIsLoading(false);
       }
     };
