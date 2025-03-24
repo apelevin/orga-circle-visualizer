@@ -2,7 +2,7 @@
 import { HierarchyNode, PeopleData } from '@/types';
 
 export interface StructureProblem {
-  type: 'person-low-fte' | 'circle-low-fte' | 'circle-high-fte' | 'circle-single-role';
+  type: 'person-low-fte' | 'circle-low-fte' | 'circle-high-fte' | 'circle-single-role' | 'circle-zero-fte';
   name: string;
   details: string;
   severity: 'low' | 'medium' | 'high';
@@ -49,6 +49,16 @@ export const analyzeStructure = (
     const totalFte = circle.value || 0;
     const assignedFte = circleAssignedFte.get(circleName) || 0;
     const roleCount = circle.children?.length || 0;
+
+    // Check for circles with Total FTE = 0
+    if (totalFte === 0) {
+      problems.push({
+        type: 'circle-zero-fte',
+        name: circleName,
+        details: `Total FTE: 0`,
+        severity: 'medium',
+      });
+    }
 
     // Check for circles with Assigned FTE < Total FTE
     if (assignedFte < totalFte && totalFte > 0) {

@@ -19,7 +19,8 @@ import {
 } from '@/components/ui/table';
 import { 
   Briefcase, 
-  CircleAlert, 
+  CircleAlert,
+  Circle, 
   List, 
   Users 
 } from 'lucide-react';
@@ -49,6 +50,8 @@ const StructureProblems: React.FC<StructureProblemsProps> = ({
         return <CircleAlert className="h-4 w-4 text-red-500" />;
       case 'circle-single-role':
         return <Briefcase className="h-4 w-4 text-blue-500" />;
+      case 'circle-zero-fte':
+        return <Circle className="h-4 w-4 text-gray-500" />;
       default:
         return <List className="h-4 w-4" />;
     }
@@ -64,6 +67,8 @@ const StructureProblems: React.FC<StructureProblemsProps> = ({
         return 'Circle exceeding 12 FTE (too large)';
       case 'circle-single-role':
         return 'Circle with only one role';
+      case 'circle-zero-fte':
+        return 'Circle with 0 FTE';
       default:
         return 'Unknown issue';
     }
@@ -73,7 +78,7 @@ const StructureProblems: React.FC<StructureProblemsProps> = ({
     if (problem.type === 'person-low-fte' && onPersonClick) {
       onPersonClick(problem.name);
     } else if (
-      ['circle-low-fte', 'circle-high-fte', 'circle-single-role'].includes(problem.type) && 
+      ['circle-low-fte', 'circle-high-fte', 'circle-single-role', 'circle-zero-fte'].includes(problem.type) && 
       onCircleClick
     ) {
       onCircleClick(problem.name);
