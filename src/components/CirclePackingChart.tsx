@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef, useState } from 'react';
 import * as d3 from 'd3';
 import { HierarchyNode, CirclePackingNode, PeopleData } from '@/types';
@@ -29,6 +30,7 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data, peopleDat
     parent?: string;
     parentCircles?: string[];
     isRole?: boolean;
+    type?: string;
   } | null>(null);
 
   const [isPersonPanelOpen, setIsPersonPanelOpen] = useState(false);
@@ -40,6 +42,7 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data, peopleDat
     name: string;
     isRole: boolean;
     fte: number;
+    type?: string;
   } | null>(null);
 
   useEffect(() => {
@@ -122,6 +125,7 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data, peopleDat
     if (isMainCircle) {
       const circleName = d.data.name || 'Unnamed Circle';
       const totalFTE = d.value || 0;
+      const type = d.data.type || 'Default';
       
       const roles = d.children?.map(role => ({
         name: role.data.name || 'Unnamed Role',
@@ -136,6 +140,7 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data, peopleDat
         name: circleName,
         value: calculatedTotal,
         roles: roles,
+        type: type,
         isRole: false
       });
       
@@ -190,6 +195,7 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data, peopleDat
         children: hierarchy.children?.map(c => ({ 
           name: c.data.name, 
           value: c.value,
+          type: c.data.type,
           childrenSum: c.children?.reduce((sum, child) => sum + (child.value || 0), 0)
         }))
       });
@@ -208,9 +214,11 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data, peopleDat
         depth: root.depth,
         height: root.height
       });
-      
+
+      // Create a color scale based on unique types
+      const types = Array.from(new Set(root.children?.map(d => d.data.type || 'Default') || []));
       const colorScale = d3.scaleOrdinal<string>()
-        .domain(root.children?.map(d => d.data.name || '') || [])
+        .domain(types)
         .range([
           '#E5DEFF',
           '#D3E4FD',
@@ -232,9 +240,9 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data, peopleDat
         .attr('r', d => d.r)
         .style('fill', d => {
           if (d.depth === 1) {
-            return colorScale(d.data.name || '');
+            return colorScale(d.data.type || 'Default');
           } else if (d.depth === 2) {
-            const parentColor = d3.color(colorScale(d.parent?.data.name || '')) || d3.color('#E5DEFF')!;
+            const parentColor = d3.color(colorScale(d.parent?.data.type || 'Default')) || d3.color('#E5DEFF')!;
             return parentColor.darker(0.2).toString();
           }
           return '#FFFFFF';
@@ -270,7 +278,8 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data, peopleDat
             y: d.y,
             name,
             isRole,
-            fte
+            fte,
+            type: d.data.type
           });
         })
         .on('mouseout', function() {
@@ -393,7 +402,7 @@ const CirclePackingChart: React.FC<CirclePackingChartProps> = ({ data, peopleDat
         >
           {tooltipData.name} 
           <span className="text-muted-foreground ml-1">
-            ({tooltipData.isRole ? 'Role' : 'Circle'}) - {tooltipData.fte.toFixed(1)} FTE
+            ({tooltipData.isRole ? 'Role' : `Circle - ${tooltipData.type}`}) - {tooltipData.fte.toFixed(1)} FTE
             {!tooltipData.isRole && tooltipData.fte > 10 && (
               <span className="ml-1 text-amber-500">⚠️</span>
             )}
