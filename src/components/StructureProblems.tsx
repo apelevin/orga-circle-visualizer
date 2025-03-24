@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { HierarchyNode, PeopleData } from '@/types';
 import { analyzeStructure, StructureProblem } from '@/utils/structureAnalysis';
 import { 
@@ -39,6 +39,25 @@ const StructureProblems: React.FC<StructureProblemsProps> = ({
   onPersonClick
 }) => {
   const problems = analyzeStructure(organizationData, peopleData);
+  
+  // Count problems by type for dashboard display
+  const problemCounts = useMemo(() => {
+    const counts = {
+      'person-low-fte': 0,
+      'circle-low-fte': 0,
+      'circle-high-fte': 0, 
+      'circle-single-role': 0,
+      'circle-zero-fte': 0
+    };
+    
+    problems.forEach(problem => {
+      if (counts.hasOwnProperty(problem.type)) {
+        counts[problem.type as keyof typeof counts]++;
+      }
+    });
+    
+    return counts;
+  }, [problems]);
   
   const getProblemIcon = (type: StructureProblem['type']) => {
     switch (type) {
@@ -114,36 +133,81 @@ const StructureProblems: React.FC<StructureProblemsProps> = ({
               </p>
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Details</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {problems.map((problem, index) => (
-                  <TableRow key={`${problem.type}-${problem.name}-${index}`}>
-                    <TableCell className="flex items-center gap-2">
-                      {getProblemIcon(problem.type)}
-                      <span className="text-xs sm:text-sm">
-                        {getProblemDescription(problem.type)}
-                      </span>
-                    </TableCell>
-                    <TableCell className="font-medium">
-                      <button 
-                        onClick={() => handleItemClick(problem)}
-                        className="hover:text-primary hover:underline focus:outline-none focus:text-primary transition-colors"
-                      >
-                        {problem.name}
-                      </button>
-                    </TableCell>
-                    <TableCell>{problem.details}</TableCell>
+            <>
+              {/* Dashboard Summary */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 mb-6">
+                <div className="rounded-md border bg-card p-3 shadow-sm">
+                  <div className="flex items-center gap-2">
+                    <Users className="h-4 w-4 text-amber-500" />
+                    <span className="text-xs font-medium">People with Low FTE</span>
+                  </div>
+                  <p className="text-2xl font-bold mt-1">{problemCounts['person-low-fte']}</p>
+                </div>
+                
+                <div className="rounded-md border bg-card p-3 shadow-sm">
+                  <div className="flex items-center gap-2">
+                    <CircleAlert className="h-4 w-4 text-red-500" />
+                    <span className="text-xs font-medium">Circles with Low FTE</span>
+                  </div>
+                  <p className="text-2xl font-bold mt-1">{problemCounts['circle-low-fte']}</p>
+                </div>
+                
+                <div className="rounded-md border bg-card p-3 shadow-sm">
+                  <div className="flex items-center gap-2">
+                    <CircleAlert className="h-4 w-4 text-red-500" />
+                    <span className="text-xs font-medium">Circles with High FTE</span>
+                  </div>
+                  <p className="text-2xl font-bold mt-1">{problemCounts['circle-high-fte']}</p>
+                </div>
+                
+                <div className="rounded-md border bg-card p-3 shadow-sm">
+                  <div className="flex items-center gap-2">
+                    <Briefcase className="h-4 w-4 text-blue-500" />
+                    <span className="text-xs font-medium">Single Role Circles</span>
+                  </div>
+                  <p className="text-2xl font-bold mt-1">{problemCounts['circle-single-role']}</p>
+                </div>
+                
+                <div className="rounded-md border bg-card p-3 shadow-sm">
+                  <div className="flex items-center gap-2">
+                    <Circle className="h-4 w-4 text-gray-500" />
+                    <span className="text-xs font-medium">Zero FTE Circles</span>
+                  </div>
+                  <p className="text-2xl font-bold mt-1">{problemCounts['circle-zero-fte']}</p>
+                </div>
+              </div>
+              
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Type</TableHead>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Details</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {problems.map((problem, index) => (
+                    <TableRow key={`${problem.type}-${problem.name}-${index}`}>
+                      <TableCell className="flex items-center gap-2">
+                        {getProblemIcon(problem.type)}
+                        <span className="text-xs sm:text-sm">
+                          {getProblemDescription(problem.type)}
+                        </span>
+                      </TableCell>
+                      <TableCell className="font-medium">
+                        <button 
+                          onClick={() => handleItemClick(problem)}
+                          className="hover:text-primary hover:underline focus:outline-none focus:text-primary transition-colors"
+                        >
+                          {problem.name}
+                        </button>
+                      </TableCell>
+                      <TableCell>{problem.details}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </>
           )}
         </CardContent>
       </Card>
