@@ -1,6 +1,5 @@
 
 import * as React from 'react';
-import { Link } from 'react-router-dom';
 import { toast } from "sonner";
 import FileUpload from '@/components/FileUpload';
 import CirclePackingChart from '@/components/CirclePackingChart';
@@ -13,7 +12,7 @@ import StructureProblems from '@/components/StructureProblems';
 import { HierarchyNode, PeopleData } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { CircleDot, RefreshCw, Settings, CircleAlert } from 'lucide-react';
+import { CircleDot, RefreshCw, CircleAlert } from 'lucide-react';
 
 const Index = () => {
   const [organizationData, setOrganizationData] = React.useState<HierarchyNode | null>(null);
@@ -118,15 +117,6 @@ const Index = () => {
               hasOrganizationData={!!organizationData}
               hasPeopleData={peopleData.length > 0}
             />
-            
-            <div className="flex gap-2">
-              <Button variant="outline" size="sm" asChild>
-                <Link to="/admin" className="flex items-center gap-2">
-                  <Settings className="h-4 w-4" />
-                  <span>Admin Zone</span>
-                </Link>
-              </Button>
-            </div>
           </div>
           
           {(organizationData || peopleData.length > 0) && (
