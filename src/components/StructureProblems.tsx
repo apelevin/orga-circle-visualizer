@@ -21,7 +21,8 @@ import {
   Briefcase, 
   CircleAlert, 
   List, 
-  Users 
+  Users,
+  Ban
 } from 'lucide-react';
 
 interface StructureProblemsProps {
@@ -45,6 +46,7 @@ const StructureProblems: React.FC<StructureProblemsProps> = ({
       'circle-low-fte': 0,
       'circle-high-fte': 0,
       'circle-single-role': 0,
+      'circle-zero-fte': 0,
       total: 0
     };
     
@@ -66,6 +68,8 @@ const StructureProblems: React.FC<StructureProblemsProps> = ({
         return <CircleAlert className="h-4 w-4 text-red-500" />;
       case 'circle-single-role':
         return <Briefcase className="h-4 w-4 text-blue-500" />;
+      case 'circle-zero-fte':
+        return <Ban className="h-4 w-4 text-red-600" />;
       default:
         return <List className="h-4 w-4" />;
     }
@@ -81,6 +85,8 @@ const StructureProblems: React.FC<StructureProblemsProps> = ({
         return 'Circle exceeding 12 FTE (too large)';
       case 'circle-single-role':
         return 'Circle with only one role';
+      case 'circle-zero-fte':
+        return 'Circle with no assigned FTE';
       default:
         return 'Unknown issue';
     }
@@ -90,7 +96,7 @@ const StructureProblems: React.FC<StructureProblemsProps> = ({
     if (problem.type === 'person-low-fte' && onPersonClick) {
       onPersonClick(problem.name);
     } else if (
-      ['circle-low-fte', 'circle-high-fte', 'circle-single-role'].includes(problem.type) && 
+      ['circle-low-fte', 'circle-high-fte', 'circle-single-role', 'circle-zero-fte'].includes(problem.type) && 
       onCircleClick
     ) {
       onCircleClick(problem.name);
@@ -127,7 +133,7 @@ const StructureProblems: React.FC<StructureProblemsProps> = ({
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+              <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
                 <StatCard 
                   title="Low FTE People" 
                   count={problemStats['person-low-fte']} 
@@ -151,6 +157,12 @@ const StructureProblems: React.FC<StructureProblemsProps> = ({
                   count={problemStats['circle-single-role']} 
                   icon={<Briefcase className="h-5 w-5 text-blue-500" />}
                   description="Circles with only one role"
+                />
+                <StatCard 
+                  title="Zero FTE Circles" 
+                  count={problemStats['circle-zero-fte']} 
+                  icon={<Ban className="h-5 w-5 text-red-600" />}
+                  description="Circles with no assigned FTE"
                 />
               </div>
               <Table>
