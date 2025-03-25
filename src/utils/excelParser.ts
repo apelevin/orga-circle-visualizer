@@ -36,14 +36,14 @@ export const parseExcelFile = async (file: File, isPeopleData = false): Promise<
             circleName: row[0]?.toString().trim() || 'Unknown Circle',
             roleName: row[1]?.toString().trim() || 'Unknown Role',
             personName: row[2]?.toString().trim() || 'Unknown Person',
-            fte: parseFloat(row[3]) || 0
+            fte: parseFloat(normalizeDecimal(row[3])) || 0
           }));
           resolve(jsonData);
         } else {
           const jsonData = nonEmptyRows.slice(1).map(row => ({
             circleName: row[0]?.toString().trim() || 'Unknown Circle',
             role: row[1]?.toString().trim() || 'Unknown Role',
-            fte: parseFloat(row[2]) || 0,
+            fte: parseFloat(normalizeDecimal(row[2])) || 0,
             // Extract circle type from the 4th column, default to "Undefined" if null/empty
             circleType: row[3]?.toString().trim() || 'Undefined'
           }));
@@ -62,6 +62,21 @@ export const parseExcelFile = async (file: File, isPeopleData = false): Promise<
   });
 };
 
+// Helper function to normalize decimal numbers that might use comma as separator
+function normalizeDecimal(value: any): string {
+  if (value === null || value === undefined) return '0';
+  
+  // Convert to string if it's not already
+  const strValue = value.toString().trim();
+  
+  // If the value contains a comma and no period, assume comma is the decimal separator
+  if (strValue.includes(',') && !strValue.includes('.')) {
+    return strValue.replace(',', '.');
+  }
+  
+  return strValue;
+}
+
 export const processExcelData = (data: any[]): Circle[] => {
   // Create a Map to store unique circles and their roles
   const circleMap = new Map<string, Circle>();
@@ -79,7 +94,7 @@ export const processExcelData = (data: any[]): Circle[] => {
     let fte = 0;
     if (row.fte !== undefined && row.fte !== null) {
       // Convert to number and ensure it's valid
-      fte = parseFloat(row.fte.toString());
+      fte = parseFloat(normalizeDecimal(row.fte.toString()));
       if (isNaN(fte)) fte = 0;
     }
     
@@ -121,7 +136,7 @@ export const processPeopleData = (data: any[]): PeopleData[] => {
     circleName: row.circleName,
     roleName: row.roleName,
     personName: row.personName,
-    fte: parseFloat(row.fte) || 0
+    fte: parseFloat(normalizeDecimal(row.fte)) || 0
   }));
 };
 
