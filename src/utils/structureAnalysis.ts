@@ -26,8 +26,7 @@ export const analyzeStructure = (
   });
 
   peopleWithLowFte.forEach((totalFte, personName) => {
-    // Changed from < 1 to < 1.0 to not count equal values (exactly 1.0) as errors
-    if (totalFte < 1.0) {
+    if (totalFte < 1) {
       problems.push({
         type: 'person-low-fte',
         name: personName,
@@ -68,7 +67,6 @@ export const analyzeStructure = (
     }
 
     // Check for circles with Assigned FTE < Total FTE
-    // Changed from < to < (not <=) to not count equal values as errors
     if (assignedFte < totalFte && totalFte > 0) {
       problems.push({
         type: 'circle-low-fte',
