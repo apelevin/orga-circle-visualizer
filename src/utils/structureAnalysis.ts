@@ -67,6 +67,7 @@ export const analyzeStructure = (
     }
 
     // Check for circles with Assigned FTE < Total FTE
+    // Now only consider it a problem if assignedFte is strictly less than totalFte
     if (assignedFte < totalFte && totalFte > 0) {
       problems.push({
         type: 'circle-low-fte',
