@@ -67,9 +67,10 @@ export const analyzeStructure = (
     }
 
     // Check for circles with Assigned FTE < Total FTE
-    // Only consider it a problem if assignedFte is strictly less than totalFte
-    // (not when they're equal)
-    if (assignedFte < totalFte && totalFte > 0) {
+    // Only flag it as a problem if assignedFte is STRICTLY LESS than totalFte
+    // We're now checking with a small epsilon value to handle floating-point precision issues
+    const epsilon = 0.01; // Small tolerance value to account for floating-point precision
+    if (totalFte > 0 && (totalFte - assignedFte) > epsilon) {
       problems.push({
         type: 'circle-low-fte',
         name: circleName,
