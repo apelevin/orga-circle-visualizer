@@ -1,5 +1,6 @@
 
 import { StructureProblem } from '@/utils/structureAnalysis';
+import { HierarchyNode, PeopleData } from '@/types';
 
 export interface StructureProblemStats {
   'person-low-fte': number;
