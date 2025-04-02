@@ -9,14 +9,26 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Users, CircleAlert, Briefcase, Ban, UserX, List, AlertTriangle } from 'lucide-react';
+import { Users, CircleAlert, Briefcase, Ban, UserX, List, AlertTriangle, Scale } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 interface ProblemsTableProps {
   problems: StructureProblem[];
   onItemClick: (problem: StructureProblem) => void;
+  onNormalizeClick?: (problem: StructureProblem) => void;
 }
 
-const ProblemsTable: React.FC<ProblemsTableProps> = ({ problems, onItemClick }) => {
+const ProblemsTable: React.FC<ProblemsTableProps> = ({ 
+  problems, 
+  onItemClick,
+  onNormalizeClick
+}) => {
   const getProblemIcon = (type: StructureProblem['type']) => {
     switch (type) {
       case 'person-low-fte':
@@ -65,7 +77,7 @@ const ProblemsTable: React.FC<ProblemsTableProps> = ({ problems, onItemClick }) 
         <TableRow>
           <TableHead>Type</TableHead>
           <TableHead>Name</TableHead>
-          <TableHead>Details</TableHead>
+          {onNormalizeClick && <TableHead className="w-16 text-right">Actions</TableHead>}
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -85,7 +97,31 @@ const ProblemsTable: React.FC<ProblemsTableProps> = ({ problems, onItemClick }) 
                 {problem.name}
               </button>
             </TableCell>
-            <TableCell>{problem.details}</TableCell>
+            {onNormalizeClick && (
+              <TableCell className="text-right">
+                {(problem.type === 'person-low-fte' || problem.type === 'person-high-fte') && (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button 
+                        variant="outline" 
+                        size="icon" 
+                        className="h-8 w-8" 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onNormalizeClick(problem);
+                        }}
+                      >
+                        <Scale className="h-4 w-4" />
+                        <span className="sr-only">Normalize FTE</span>
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Normalize FTE to 1.0</p>
+                    </TooltipContent>
+                  </Tooltip>
+                )}
+              </TableCell>
+            )}
           </TableRow>
         ))}
       </TableBody>

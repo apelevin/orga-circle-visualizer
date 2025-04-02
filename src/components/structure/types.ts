@@ -18,4 +18,5 @@ export interface StructureProblemsProps {
   peopleData: PeopleData[];
   onCircleClick?: (circleName: string) => void;
   onPersonClick?: (personName: string) => void;
+  onNormalizePerson?: (personName: string) => void;
 }

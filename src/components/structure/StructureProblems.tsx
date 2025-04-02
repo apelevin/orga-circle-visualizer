@@ -18,7 +18,8 @@ const StructureProblems: React.FC<StructureProblemsProps> = ({
   organizationData, 
   peopleData,
   onCircleClick,
-  onPersonClick
+  onPersonClick,
+  onNormalizePerson
 }) => {
   const problems = analyzeStructure(organizationData, peopleData);
   
@@ -58,6 +59,12 @@ const StructureProblems: React.FC<StructureProblemsProps> = ({
     }
   };
 
+  const handleNormalizeClick = (problem: StructureProblem) => {
+    if ((problem.type === 'person-low-fte' || problem.type === 'person-high-fte') && onNormalizePerson) {
+      onNormalizePerson(problem.name);
+    }
+  };
+
   if (!organizationData) {
     return (
       <div className="flex items-center justify-center h-full">
@@ -92,6 +99,7 @@ const StructureProblems: React.FC<StructureProblemsProps> = ({
               <ProblemsTable 
                 problems={problems}
                 onItemClick={handleItemClick}
+                onNormalizeClick={onNormalizePerson ? handleNormalizeClick : undefined}
               />
             </>
           )}
