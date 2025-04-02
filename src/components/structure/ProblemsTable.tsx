@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { StructureProblem } from '@/utils/structureAnalysis';
 import {
@@ -71,7 +72,6 @@ const ProblemsTable: React.FC<ProblemsTableProps> = ({ problems, onItemClick, on
         <TableRow>
           <TableHead>Type</TableHead>
           <TableHead>Name</TableHead>
-          <TableHead>Details</TableHead>
           <TableHead className="w-[100px] text-right">Actions</TableHead>
         </TableRow>
       </TableHeader>
@@ -92,7 +92,6 @@ const ProblemsTable: React.FC<ProblemsTableProps> = ({ problems, onItemClick, on
                 {problem.name}
               </button>
             </TableCell>
-            <TableCell>{problem.details}</TableCell>
             <TableCell className="text-right">
               {shouldShowNormalizeButton(problem.type) && onNormalize && (
                 <TooltipProvider>
