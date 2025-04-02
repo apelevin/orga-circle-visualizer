@@ -1,5 +1,5 @@
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { HierarchyNode, PeopleData } from '@/types';
 import { analyzeStructure, StructureProblem } from '@/utils/structureAnalysis';
 import { 
@@ -13,15 +13,28 @@ import { CircleAlert } from 'lucide-react';
 import StructureStats from './StructureStats';
 import ProblemsTable from './ProblemsTable';
 import type { StructureProblemsProps } from './types';
+import EditFTEDialog from '../EditFTEDialog';
+import { toast } from 'sonner';
 
 const StructureProblems: React.FC<StructureProblemsProps> = ({ 
   organizationData, 
   peopleData,
   onCircleClick,
   onPersonClick,
-  onNormalizePerson
+  onUpdatePerson,
 }) => {
   const problems = analyzeStructure(organizationData, peopleData);
+  const [normalizeDialog, setNormalizeDialog] = useState<{
+    isOpen: boolean;
+    problem: StructureProblem | null;
+    person: string;
+    currentFTE: number;
+  }>({
+    isOpen: false,
+    problem: null,
+    person: '',
+    currentFTE: 0
+  });
   
   const problemStats = useMemo(() => {
     const stats = {
@@ -59,9 +72,37 @@ const StructureProblems: React.FC<StructureProblemsProps> = ({
     }
   };
 
-  const handleNormalizeClick = (problem: StructureProblem) => {
-    if ((problem.type === 'person-low-fte' || problem.type === 'person-high-fte') && onNormalizePerson) {
-      onNormalizePerson(problem.name);
+  const handleNormalize = (problem: StructureProblem) => {
+    if ((problem.type === 'person-low-fte' || problem.type === 'person-high-fte') && onUpdatePerson) {
+      // Get current FTE from the details string
+      const match = problem.details.match(/FTE:\s+([\d.]+)/);
+      if (match && match[1]) {
+        const currentFTE = parseFloat(match[1]);
+        setNormalizeDialog({
+          isOpen: true,
+          problem: problem,
+          person: problem.name,
+          currentFTE: currentFTE
+        });
+      }
+    }
+  };
+
+  const handleSaveNormalization = (newFTE: number) => {
+    if (onUpdatePerson && normalizeDialog.person) {
+      // Find all roles for this person
+      const personRoles = peopleData.filter(p => p.personName === normalizeDialog.person);
+      
+      if (personRoles.length > 0) {
+        // Calculate how to distribute 1.0 FTE across all roles
+        const newRoleFTE = 1.0 / personRoles.length;
+        
+        personRoles.forEach(role => {
+          onUpdatePerson(role.personName, role.roleName, role.circleName, newRoleFTE);
+        });
+        
+        toast.success(`Normalized ${normalizeDialog.person}'s FTE to 1.0`);
+      }
     }
   };
 
@@ -99,8 +140,21 @@ const StructureProblems: React.FC<StructureProblemsProps> = ({
               <ProblemsTable 
                 problems={problems}
                 onItemClick={handleItemClick}
-                onNormalizeClick={onNormalizePerson ? handleNormalizeClick : undefined}
+                onNormalize={onUpdatePerson ? handleNormalize : undefined}
               />
+              
+              {normalizeDialog.isOpen && (
+                <EditFTEDialog
+                  isOpen={normalizeDialog.isOpen}
+                  onClose={() => setNormalizeDialog(prev => ({ ...prev, isOpen: false }))}
+                  onSave={handleSaveNormalization}
+                  title="Normalize FTE to 1.0"
+                  description={`Distribute a total of 1.0 FTE across all of ${normalizeDialog.person}'s roles`}
+                  currentFTE={1.0}
+                  entityName={normalizeDialog.person}
+                  entityType="person"
+                />
+              )}
             </>
           )}
         </CardContent>
