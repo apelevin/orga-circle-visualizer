@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { StructureProblem } from '@/utils/structureAnalysis';
 import {
@@ -11,6 +10,7 @@ import {
 } from '@/components/ui/table';
 import { Users, CircleAlert, Briefcase, Ban, UserX, List, AlertTriangle, Scale } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface ProblemsTableProps {
   problems: StructureProblem[];
@@ -95,14 +95,22 @@ const ProblemsTable: React.FC<ProblemsTableProps> = ({ problems, onItemClick, on
             <TableCell>{problem.details}</TableCell>
             <TableCell className="text-right">
               {shouldShowNormalizeButton(problem.type) && onNormalize && (
-                <Button 
-                  variant="outline" 
-                  size="icon" 
-                  title="Normalize FTE to 1.0"
-                  onClick={() => onNormalize(problem)}
-                >
-                  <Scale className="h-4 w-4" />
-                </Button>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button 
+                        variant="outline" 
+                        size="icon" 
+                        onClick={() => onNormalize(problem)}
+                      >
+                        <Scale className="h-4 w-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Normalize FTE to 1.0</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               )}
             </TableCell>
           </TableRow>
