@@ -25,6 +25,7 @@ const StructureProblems: React.FC<StructureProblemsProps> = ({
   const problemStats = useMemo(() => {
     const stats = {
       'person-low-fte': 0,
+      'person-high-fte': 0,
       'circle-low-fte': 0,
       'circle-high-fte': 0,
       'circle-single-role': 0,
@@ -42,7 +43,7 @@ const StructureProblems: React.FC<StructureProblemsProps> = ({
   }, [problems]);
   
   const handleItemClick = (problem: StructureProblem) => {
-    if (problem.type === 'person-low-fte' && onPersonClick) {
+    if ((problem.type === 'person-low-fte' || problem.type === 'person-high-fte') && onPersonClick) {
       onPersonClick(problem.name);
     } else if (
       ['circle-low-fte', 'circle-high-fte', 'circle-single-role', 'circle-zero-fte'].includes(problem.type) && 

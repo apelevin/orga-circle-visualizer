@@ -4,6 +4,7 @@ import { HierarchyNode, PeopleData } from '@/types';
 
 export interface StructureProblemStats {
   'person-low-fte': number;
+  'person-high-fte': number;
   'circle-low-fte': number;
   'circle-high-fte': number;
   'circle-single-role': number;

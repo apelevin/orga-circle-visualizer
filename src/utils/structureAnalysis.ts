@@ -2,7 +2,7 @@
 import { HierarchyNode, PeopleData } from '@/types';
 
 export interface StructureProblem {
-  type: 'person-low-fte' | 'circle-low-fte' | 'circle-high-fte' | 'circle-single-role' | 'circle-zero-fte' | 'role-unassigned';
+  type: 'person-low-fte' | 'circle-low-fte' | 'circle-high-fte' | 'circle-single-role' | 'circle-zero-fte' | 'role-unassigned' | 'person-high-fte';
   name: string;
   details: string;
   severity: 'low' | 'medium' | 'high';
@@ -18,17 +18,30 @@ export const analyzeStructure = (
 
   const problems: StructureProblem[] = [];
 
-  // Check for people with FTE < 1
-  const peopleWithLowFte = new Map<string, number>();
+  // Check for people with FTE < 1 or FTE > 1
+  const peopleWithFte = new Map<string, number>();
   peopleData.forEach(person => {
-    const currentFte = peopleWithLowFte.get(person.personName) || 0;
-    peopleWithLowFte.set(person.personName, currentFte + person.fte);
+    const currentFte = peopleWithFte.get(person.personName) || 0;
+    peopleWithFte.set(person.personName, currentFte + person.fte);
   });
 
-  peopleWithLowFte.forEach((totalFte, personName) => {
+  peopleWithFte.forEach((totalFte, personName) => {
+    // Check for people with FTE < 1
     if (totalFte < 1) {
       problems.push({
         type: 'person-low-fte',
+        name: personName,
+        details: `Total FTE: ${totalFte.toFixed(2)}`,
+        severity: 'medium',
+      });
+    }
+    
+    // Check for people with FTE > 1 (but not exactly 1)
+    // Using a small epsilon value to handle floating-point precision issues
+    const epsilon = 0.01;
+    if (totalFte > 1 && Math.abs(totalFte - 1) > epsilon) {
+      problems.push({
+        type: 'person-high-fte',
         name: personName,
         details: `Total FTE: ${totalFte.toFixed(2)}`,
         severity: 'medium',

@@ -9,7 +9,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Users, CircleAlert, Briefcase, Ban, UserX, List } from 'lucide-react';
+import { Users, CircleAlert, Briefcase, Ban, UserX, List, AlertTriangle } from 'lucide-react';
 
 interface ProblemsTableProps {
   problems: StructureProblem[];
@@ -21,6 +21,8 @@ const ProblemsTable: React.FC<ProblemsTableProps> = ({ problems, onItemClick }) 
     switch (type) {
       case 'person-low-fte':
         return <Users className="h-4 w-4 text-amber-500" />;
+      case 'person-high-fte':
+        return <AlertTriangle className="h-4 w-4 text-orange-500" />;
       case 'circle-low-fte':
         return <CircleAlert className="h-4 w-4 text-red-500" />;
       case 'circle-high-fte':
@@ -40,6 +42,8 @@ const ProblemsTable: React.FC<ProblemsTableProps> = ({ problems, onItemClick }) 
     switch (type) {
       case 'person-low-fte':
         return 'Person with less than 1.0 FTE';
+      case 'person-high-fte':
+        return 'Person with more than 1.0 FTE';
       case 'circle-low-fte':
         return 'Circle with insufficient assigned FTE';
       case 'circle-high-fte':
