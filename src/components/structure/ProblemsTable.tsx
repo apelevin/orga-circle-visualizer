@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { StructureProblem } from '@/utils/structureAnalysis';
 import {
@@ -8,17 +9,14 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Users, CircleAlert, Briefcase, Ban, UserX, List, AlertTriangle, Scale } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Users, CircleAlert, Briefcase, Ban, UserX, List, AlertTriangle } from 'lucide-react';
 
 interface ProblemsTableProps {
   problems: StructureProblem[];
   onItemClick: (problem: StructureProblem) => void;
-  onNormalize?: (problem: StructureProblem) => void;
 }
 
-const ProblemsTable: React.FC<ProblemsTableProps> = ({ problems, onItemClick, onNormalize }) => {
+const ProblemsTable: React.FC<ProblemsTableProps> = ({ problems, onItemClick }) => {
   const getProblemIcon = (type: StructureProblem['type']) => {
     switch (type) {
       case 'person-low-fte':
@@ -61,10 +59,6 @@ const ProblemsTable: React.FC<ProblemsTableProps> = ({ problems, onItemClick, on
     }
   };
 
-  const shouldShowNormalizeButton = (type: StructureProblem['type']) => {
-    return type === 'person-low-fte' || type === 'person-high-fte';
-  };
-
   return (
     <Table>
       <TableHeader>
@@ -72,7 +66,6 @@ const ProblemsTable: React.FC<ProblemsTableProps> = ({ problems, onItemClick, on
           <TableHead>Type</TableHead>
           <TableHead>Name</TableHead>
           <TableHead>Details</TableHead>
-          <TableHead className="w-[100px] text-right">Actions</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -93,26 +86,6 @@ const ProblemsTable: React.FC<ProblemsTableProps> = ({ problems, onItemClick, on
               </button>
             </TableCell>
             <TableCell>{problem.details}</TableCell>
-            <TableCell className="text-right">
-              {shouldShowNormalizeButton(problem.type) && onNormalize && (
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button 
-                        variant="outline" 
-                        size="icon" 
-                        onClick={() => onNormalize(problem)}
-                      >
-                        <Scale className="h-4 w-4" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Normalize FTE to 1.0</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              )}
-            </TableCell>
           </TableRow>
         ))}
       </TableBody>
