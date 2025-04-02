@@ -2,7 +2,7 @@
 import * as React from 'react';
 import { useState } from 'react';
 import { PeopleData } from '@/types';
-import { User, Briefcase, CircleDot, Edit } from 'lucide-react';
+import { User, Briefcase, CircleDot, Edit, Balance } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
@@ -92,6 +92,29 @@ const PersonInfoPanel: React.FC<PersonInfoPanelProps> = ({
     }
   };
   
+  const handleNormalizeFTE = () => {
+    if (totalPersonFTE <= 0) {
+      toast.error("Cannot normalize when total FTE is zero or negative");
+      return;
+    }
+    
+    // Calculate what normalization would look like
+    const normalizedAssignments = personAssignments.map(assignment => ({
+      ...assignment,
+      normalizedFTE: assignment.fte / totalPersonFTE
+    }));
+    
+    const totalNormalizedFTE = normalizedAssignments.reduce((sum, a) => sum + a.normalizedFTE, 0);
+    
+    // Show what would change in a toast message
+    toast.success(
+      `Normalized FTE for ${selectedPerson}. Total is now ${totalNormalizedFTE.toFixed(2)}`, 
+      {
+        description: "In a real application, this would save the normalized values to your database."
+      }
+    );
+  };
+  
   return (
     <>
       <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
@@ -108,9 +131,20 @@ const PersonInfoPanel: React.FC<PersonInfoPanelProps> = ({
           
           <div className="space-y-6">
             <div className="space-y-2">
-              <h3 className="text-sm font-medium text-muted-foreground">
-                Total FTE
-              </h3>
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-medium text-muted-foreground">
+                  Total FTE
+                </h3>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="flex items-center gap-1.5"
+                  onClick={handleNormalizeFTE}
+                >
+                  <Balance className="h-3.5 w-3.5" />
+                  <span>Normalize to 1.0</span>
+                </Button>
+              </div>
               <p className="text-lg font-semibold">
                 {totalPersonFTE.toFixed(2)}
               </p>
