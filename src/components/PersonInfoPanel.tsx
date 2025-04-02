@@ -2,7 +2,7 @@
 import * as React from 'react';
 import { useState } from 'react';
 import { PeopleData } from '@/types';
-import { User, Briefcase, CircleDot, Edit, Balance } from 'lucide-react';
+import { User, Briefcase, CircleDot, Edit, Scale } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
@@ -141,7 +141,7 @@ const PersonInfoPanel: React.FC<PersonInfoPanelProps> = ({
                   className="flex items-center gap-1.5"
                   onClick={handleNormalizeFTE}
                 >
-                  <Balance className="h-3.5 w-3.5" />
+                  <Scale className="h-3.5 w-3.5" />
                   <span>Normalize to 1.0</span>
                 </Button>
               </div>
