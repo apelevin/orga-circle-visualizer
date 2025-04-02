@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { StructureProblem } from '@/utils/structureAnalysis';
 import {
@@ -9,14 +8,16 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Users, CircleAlert, Briefcase, Ban, UserX, List, AlertTriangle } from 'lucide-react';
+import { Users, CircleAlert, Briefcase, Ban, UserX, List, AlertTriangle, Scale } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface ProblemsTableProps {
   problems: StructureProblem[];
   onItemClick: (problem: StructureProblem) => void;
+  onNormalize?: (problem: StructureProblem) => void;
 }
 
-const ProblemsTable: React.FC<ProblemsTableProps> = ({ problems, onItemClick }) => {
+const ProblemsTable: React.FC<ProblemsTableProps> = ({ problems, onItemClick, onNormalize }) => {
   const getProblemIcon = (type: StructureProblem['type']) => {
     switch (type) {
       case 'person-low-fte':
@@ -59,6 +60,10 @@ const ProblemsTable: React.FC<ProblemsTableProps> = ({ problems, onItemClick }) 
     }
   };
 
+  const shouldShowNormalizeButton = (type: StructureProblem['type']) => {
+    return type === 'person-low-fte' || type === 'person-high-fte';
+  };
+
   return (
     <Table>
       <TableHeader>
@@ -66,6 +71,7 @@ const ProblemsTable: React.FC<ProblemsTableProps> = ({ problems, onItemClick }) 
           <TableHead>Type</TableHead>
           <TableHead>Name</TableHead>
           <TableHead>Details</TableHead>
+          <TableHead className="w-[120px]">Actions</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -86,6 +92,18 @@ const ProblemsTable: React.FC<ProblemsTableProps> = ({ problems, onItemClick }) 
               </button>
             </TableCell>
             <TableCell>{problem.details}</TableCell>
+            <TableCell>
+              {shouldShowNormalizeButton(problem.type) && onNormalize && (
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="flex items-center gap-1 whitespace-nowrap"
+                  onClick={() => onNormalize(problem)}
+                >
+                  <Scale className="h-4 w-4" /> Normalize to 1.0
+                </Button>
+              )}
+            </TableCell>
           </TableRow>
         ))}
       </TableBody>
