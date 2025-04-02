@@ -72,7 +72,7 @@ const ProblemsTable: React.FC<ProblemsTableProps> = ({ problems, onItemClick, on
           <TableHead>Type</TableHead>
           <TableHead>Name</TableHead>
           <TableHead>Details</TableHead>
-          <TableHead className="w-[160px] text-right">Actions</TableHead>
+          <TableHead className="w-[100px] text-right">Actions</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -97,11 +97,11 @@ const ProblemsTable: React.FC<ProblemsTableProps> = ({ problems, onItemClick, on
               {shouldShowNormalizeButton(problem.type) && onNormalize && (
                 <Button 
                   variant="outline" 
-                  size="sm" 
-                  className="flex items-center gap-1"
+                  size="icon" 
+                  title="Normalize FTE to 1.0"
                   onClick={() => onNormalize(problem)}
                 >
-                  <Scale className="h-4 w-4" /> Normalize
+                  <Scale className="h-4 w-4" />
                 </Button>
               )}
             </TableCell>
