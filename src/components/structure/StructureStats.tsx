@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Users, CircleAlert, Briefcase, Ban, UserX } from 'lucide-react';
+import { Users, CircleAlert, Briefcase, Ban, UserX, AlertTriangle } from 'lucide-react';
 import StatCard from './StatCard';
 import { StructureProblemStats } from './types';
 
@@ -24,10 +24,10 @@ const StructureStats: React.FC<StructureStatsProps> = ({ stats }) => {
         description="Circles with insufficient FTE"
       />
       <StatCard 
-        title="Large Circles" 
-        count={stats['circle-high-fte']} 
-        icon={<CircleAlert className="h-5 w-5 text-orange-500" />}
-        description="Circles exceeding 12 FTE"
+        title="High FTE People" 
+        count={stats['person-high-fte']} 
+        icon={<AlertTriangle className="h-5 w-5 text-orange-500" />}
+        description="People exceeding 1.0 FTE"
       />
       <StatCard 
         title="Single Role Circles" 
