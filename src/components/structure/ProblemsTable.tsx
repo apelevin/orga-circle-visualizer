@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { StructureProblem } from '@/utils/structureAnalysis';
 import {
@@ -71,7 +72,7 @@ const ProblemsTable: React.FC<ProblemsTableProps> = ({ problems, onItemClick, on
           <TableHead>Type</TableHead>
           <TableHead>Name</TableHead>
           <TableHead>Details</TableHead>
-          <TableHead className="w-[120px]">Actions</TableHead>
+          <TableHead className="w-[160px] text-right">Actions</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -92,15 +93,15 @@ const ProblemsTable: React.FC<ProblemsTableProps> = ({ problems, onItemClick, on
               </button>
             </TableCell>
             <TableCell>{problem.details}</TableCell>
-            <TableCell>
+            <TableCell className="text-right">
               {shouldShowNormalizeButton(problem.type) && onNormalize && (
                 <Button 
                   variant="outline" 
                   size="sm" 
-                  className="flex items-center gap-1 whitespace-nowrap"
+                  className="flex items-center gap-1"
                   onClick={() => onNormalize(problem)}
                 >
-                  <Scale className="h-4 w-4" /> Normalize to 1.0
+                  <Scale className="h-4 w-4" /> Normalize
                 </Button>
               )}
             </TableCell>

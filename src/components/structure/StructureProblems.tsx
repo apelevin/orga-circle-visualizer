@@ -26,10 +26,12 @@ const StructureProblems: React.FC<StructureProblemsProps> = ({
   const problems = analyzeStructure(organizationData, peopleData);
   const [normalizeDialog, setNormalizeDialog] = useState<{
     isOpen: boolean;
+    problem: StructureProblem | null;
     person: string;
     currentFTE: number;
   }>({
     isOpen: false,
+    problem: null,
     person: '',
     currentFTE: 0
   });
@@ -78,6 +80,7 @@ const StructureProblems: React.FC<StructureProblemsProps> = ({
         const currentFTE = parseFloat(match[1]);
         setNormalizeDialog({
           isOpen: true,
+          problem: problem,
           person: problem.name,
           currentFTE: currentFTE
         });
@@ -87,7 +90,7 @@ const StructureProblems: React.FC<StructureProblemsProps> = ({
 
   const handleSaveNormalization = (newFTE: number) => {
     if (onUpdatePerson && normalizeDialog.person) {
-      // Update all roles for this person to distribute the FTE evenly
+      // Find all roles for this person
       const personRoles = peopleData.filter(p => p.personName === normalizeDialog.person);
       
       if (personRoles.length > 0) {
